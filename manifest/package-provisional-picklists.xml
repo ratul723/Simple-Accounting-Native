@@ -1,0 +1,21 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>Party_Accounting_Profile__c.Preferred_Payment_Method__c</members>
+        <members>Document_Sequence__c.Document_Type__c</members>
+        <members>Accounting_Event__c.Event_Type__c</members>
+        <members>Accounting_Period_Action__c.Previous_Status__c</members>
+        <members>Accounting_Period_Action__c.New_Status__c</members>
+        <members>Allocation_Rule__c.Rounding_Policy__c</members>
+        <members>FX_Revaluation_Run__c.Reversal_Policy__c</members>
+        <members>Consolidation_Member__c.Control_Type__c</members>
+        <members>Import_Job__c.Import_Type__c</members>
+        <name>CustomField</name>
+    </types>
+    <types>
+        <members>SAB_Remaining_Fields_Admin</members>
+        <members>SAB_Remaining_Fields_Visible</members>
+        <name>PermissionSet</name>
+    </types>
+    <version>65.0</version>
+</Package>
