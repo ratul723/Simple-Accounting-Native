@@ -1,0 +1,2 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata"><fullName>User_Is_Required</fullName><active>true</active><description>Enforces User as required by business rule because User lookups cannot safely use schema-level required plus delete constraint.</description><errorConditionFormula>ISBLANK(User__c)</errorConditionFormula><errorMessage>User is required for Company User Access.</errorMessage></ValidationRule>

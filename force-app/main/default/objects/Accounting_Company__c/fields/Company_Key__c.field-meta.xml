@@ -4,7 +4,7 @@
     <caseSensitive>false</caseSensitive>
     <externalId>true</externalId>
     <label>Company Key</label>
-    <length>2</length>
+    <length>50</length>
     <required>true</required>
     <trackHistory>false</trackHistory>
     <trackTrending>false</trackTrending>

@@ -1,0 +1,2 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata"><fullName>Active_Dates_Valid</fullName><active>true</active><description>Prevents invalid department effective date ranges.</description><errorConditionFormula>AND(NOT(ISBLANK(Active_From__c)), NOT(ISBLANK(Active_To__c)), Active_To__c &lt; Active_From__c)</errorConditionFormula><errorMessage>Active To must be on or after Active From.</errorMessage></ValidationRule>

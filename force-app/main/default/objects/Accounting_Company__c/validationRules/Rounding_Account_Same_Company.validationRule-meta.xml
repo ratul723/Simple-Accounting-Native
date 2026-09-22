@@ -1,0 +1,2 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata"><fullName>Rounding_Account_Same_Company</fullName><active>true</active><description>Prevents a company from using a rounding GL account belonging to another company.</description><errorConditionFormula>AND(NOT(ISBLANK(Default_Rounding_Account__c)), Default_Rounding_Account__r.Company__c &lt;&gt; Id)</errorConditionFormula><errorMessage>The Default Rounding Account must belong to this Accounting Company.</errorMessage></ValidationRule>

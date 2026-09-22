@@ -1,0 +1,2 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata"><fullName>Country_Code_Format</fullName><active>true</active><description>Validates the stored country code format.</description><errorConditionFormula>NOT(REGEX(Country_Code__c, "^[A-Z]{2}$"))</errorConditionFormula><errorMessage>Country Code must be a 2-letter uppercase country code, for example US, GB, or BD.</errorMessage></ValidationRule>

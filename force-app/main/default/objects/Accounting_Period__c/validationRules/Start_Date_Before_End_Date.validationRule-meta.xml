@@ -1,0 +1,2 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata"><fullName>Start_Date_Before_End_Date</fullName><active>true</active><description>Prevents an accounting period from ending before it starts.</description><errorConditionFormula>Start_Date__c &gt; End_Date__c</errorConditionFormula><errorMessage>Start Date must be on or before End Date.</errorMessage></ValidationRule>

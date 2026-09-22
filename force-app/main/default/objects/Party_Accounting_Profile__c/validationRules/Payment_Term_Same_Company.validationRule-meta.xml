@@ -1,0 +1,2 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata"><fullName>Payment_Term_Same_Company</fullName><active>true</active><description>Prevents use of another company's payment-term configuration.</description><errorConditionFormula>AND(NOT(ISBLANK(Payment_Term__c)), NOT(ISBLANK(Payment_Term__r.Company__c)), Payment_Term__r.Company__c &lt;&gt; Company__c)</errorConditionFormula><errorMessage>Payment Term must be global or belong to the same Accounting Company.</errorMessage></ValidationRule>

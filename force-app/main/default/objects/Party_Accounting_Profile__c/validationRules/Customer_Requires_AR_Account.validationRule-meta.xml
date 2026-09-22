@@ -1,0 +1,2 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata"><fullName>Customer_Requires_AR_Account</fullName><active>true</active><description>Ensures customer profiles have an accounts receivable control account.</description><errorConditionFormula>AND(Is_Customer__c, ISBLANK(AR_Control_Account__c))</errorConditionFormula><errorMessage>AR Control Account is required when the party is a Customer.</errorMessage></ValidationRule>

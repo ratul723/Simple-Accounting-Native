@@ -1,0 +1,2 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata"><fullName>Parent_Account_Not_Self</fullName><active>true</active><description>Prevents direct self-referencing account hierarchy.</description><errorConditionFormula>AND(NOT(ISBLANK(Parent_Account__c)), Parent_Account__c = Id)</errorConditionFormula><errorMessage>A GL Account cannot be its own Parent Account.</errorMessage></ValidationRule>

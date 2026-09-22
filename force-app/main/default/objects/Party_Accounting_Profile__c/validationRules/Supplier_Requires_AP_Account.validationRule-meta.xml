@@ -1,0 +1,2 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata"><fullName>Supplier_Requires_AP_Account</fullName><active>true</active><description>Ensures supplier profiles have an accounts payable control account.</description><errorConditionFormula>AND(Is_Supplier__c, ISBLANK(AP_Control_Account__c))</errorConditionFormula><errorMessage>AP Control Account is required when the party is a Supplier.</errorMessage></ValidationRule>

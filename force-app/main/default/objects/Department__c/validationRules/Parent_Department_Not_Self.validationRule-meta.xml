@@ -1,0 +1,2 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata"><fullName>Parent_Department_Not_Self</fullName><active>true</active><description>Prevents direct self-referencing department hierarchy.</description><errorConditionFormula>AND(NOT(ISBLANK(Parent_Department__c)), Parent_Department__c = Id)</errorConditionFormula><errorMessage>A Department cannot be its own Parent Department.</errorMessage></ValidationRule>

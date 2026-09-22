@@ -1,0 +1,2 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata"><fullName>Fiscal_Quarter_Valid</fullName><active>true</active><description>Restricts the fiscal quarter number to the supported range.</description><errorConditionFormula>OR(Fiscal_Quarter__c &lt; 1, Fiscal_Quarter__c &gt; 4)</errorConditionFormula><errorMessage>Fiscal Quarter must be between 1 and 4.</errorMessage></ValidationRule>

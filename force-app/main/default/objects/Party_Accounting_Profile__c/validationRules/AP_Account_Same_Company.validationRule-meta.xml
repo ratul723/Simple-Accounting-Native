@@ -1,0 +1,2 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata"><fullName>AP_Account_Same_Company</fullName><active>true</active><description>Prevents cross-company AP control-account mappings.</description><errorConditionFormula>AND(NOT(ISBLANK(AP_Control_Account__c)), AP_Control_Account__r.Company__c &lt;&gt; Company__c)</errorConditionFormula><errorMessage>AP Control Account must belong to the same Accounting Company.</errorMessage></ValidationRule>

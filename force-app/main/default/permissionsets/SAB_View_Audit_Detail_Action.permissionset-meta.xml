@@ -1,0 +1,2 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata"><description>Simple Accounting Books action permission set. Layer this on top of object/field access permission sets.</description><hasActivationRequired>false</hasActivationRequired><label>SAB View Audit Detail Action</label><customPermissions><enabled>true</enabled><name>SAB_View_Audit_Detail</name></customPermissions></PermissionSet>

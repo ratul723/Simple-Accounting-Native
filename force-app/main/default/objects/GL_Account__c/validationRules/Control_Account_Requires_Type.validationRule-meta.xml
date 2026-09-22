@@ -1,0 +1,2 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata"><fullName>Control_Account_Requires_Type</fullName><active>true</active><description>Requires AR/AP/Bank/Payroll/Tax/etc. classification for control accounts.</description><errorConditionFormula>AND(Is_Control_Account__c, OR(ISBLANK(TEXT(Control_Type__c)), ISPICKVAL(Control_Type__c, "None")))</errorConditionFormula><errorMessage>Select a Control Type when the account is marked as a Control Account.</errorMessage></ValidationRule>

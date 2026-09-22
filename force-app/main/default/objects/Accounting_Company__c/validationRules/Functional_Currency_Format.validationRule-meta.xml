@@ -1,0 +1,2 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata"><fullName>Functional_Currency_Format</fullName><active>true</active><description>Validates the stored functional currency code format.</description><errorConditionFormula>NOT(REGEX(Functional_Currency__c, "^[A-Z]{3}$"))</errorConditionFormula><errorMessage>Functional Currency must be a 3-letter uppercase currency code, for example USD, EUR, or BDT.</errorMessage></ValidationRule>

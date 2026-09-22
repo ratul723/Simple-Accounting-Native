@@ -1,0 +1,2 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata"><fullName>Customer_Or_Supplier_Required</fullName><active>true</active><description>Requires at least one accounting role for a party profile.</description><errorConditionFormula>AND(NOT(Is_Customer__c), NOT(Is_Supplier__c))</errorConditionFormula><errorMessage>The party must be marked as Customer, Supplier, or both.</errorMessage></ValidationRule>
