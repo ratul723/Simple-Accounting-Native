@@ -6,7 +6,7 @@
     <label>Accumulated Depreciation Account</label>
     <referenceTo>GL_Account__c</referenceTo>
     <relationshipLabel>Asset Category Accumulated Depreciation </relationshipLabel>
-    <relationshipName>Asset_Category_Accumulated_Depreciation_</relationshipName>
+    <relationshipName>Asset_Category_Accum_Dep_Accounts</relationshipName>
     <required>true</required>
     <type>Lookup</type>
 </CustomField>

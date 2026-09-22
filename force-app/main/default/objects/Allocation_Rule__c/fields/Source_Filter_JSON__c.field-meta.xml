@@ -4,7 +4,6 @@
     <description>Simple Accounting Books blueprint field. Source specification: Long Text Area(32768), Required</description>
     <label>Source Filter JSON</label>
     <length>32768</length>
-    <required>true</required>
     <type>LongTextArea</type>
     <visibleLines>5</visibleLines>
 </CustomField>

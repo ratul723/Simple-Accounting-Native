@@ -1,0 +1,21 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <deploymentStatus>Deployed</deploymentStatus>
+    <enableLicensing>false</enableLicensing><enableActivities>true</enableActivities>
+    <enableBulkApi>true</enableBulkApi>
+    <enableFeeds>true</enableFeeds>
+    <enableHistory>true</enableHistory>
+    <enableReports>true</enableReports>
+    <enableSearch>true</enableSearch>
+    <enableSharing>true</enableSharing>
+    <enableStreamingApi>true</enableStreamingApi>
+    <label>Company Feature</label>
+    <nameField>
+        <label>Company Feature Number</label>
+        <displayFormat>CF-{000000}</displayFormat>
+        <type>AutoNumber</type>
+    </nameField>
+    <pluralLabel>Company Features</pluralLabel>
+    <sharingModel>Private</sharingModel>
+    <visibility>Public</visibility>
+</CustomObject>
