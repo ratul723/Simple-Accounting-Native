@@ -1,0 +1,134 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Event_Type__c</fullName>
+    <description>Provisional accounting event categories aligned to the planned modules. Refine before production after service contracts are finalized.</description>
+    <label>Event Type</label>
+    <required>true</required>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Manual Journal</fullName>
+                <default>false</default>
+                <label>Manual Journal</label>
+            </value>
+            <value>
+                <fullName>Opening Balance</fullName>
+                <default>false</default>
+                <label>Opening Balance</label>
+            </value>
+            <value>
+                <fullName>Invoice</fullName>
+                <default>false</default>
+                <label>Invoice</label>
+            </value>
+            <value>
+                <fullName>Credit Note</fullName>
+                <default>false</default>
+                <label>Credit Note</label>
+            </value>
+            <value>
+                <fullName>Supplier Bill</fullName>
+                <default>false</default>
+                <label>Supplier Bill</label>
+            </value>
+            <value>
+                <fullName>Supplier Credit</fullName>
+                <default>false</default>
+                <label>Supplier Credit</label>
+            </value>
+            <value>
+                <fullName>Payment Receipt</fullName>
+                <default>false</default>
+                <label>Payment Receipt</label>
+            </value>
+            <value>
+                <fullName>Payment Disbursement</fullName>
+                <default>false</default>
+                <label>Payment Disbursement</label>
+            </value>
+            <value>
+                <fullName>Payroll</fullName>
+                <default>false</default>
+                <label>Payroll</label>
+            </value>
+            <value>
+                <fullName>Expense Claim</fullName>
+                <default>false</default>
+                <label>Expense Claim</label>
+            </value>
+            <value>
+                <fullName>Asset Acquisition</fullName>
+                <default>false</default>
+                <label>Asset Acquisition</label>
+            </value>
+            <value>
+                <fullName>Depreciation</fullName>
+                <default>false</default>
+                <label>Depreciation</label>
+            </value>
+            <value>
+                <fullName>Asset Disposal</fullName>
+                <default>false</default>
+                <label>Asset Disposal</label>
+            </value>
+            <value>
+                <fullName>Allocation</fullName>
+                <default>false</default>
+                <label>Allocation</label>
+            </value>
+            <value>
+                <fullName>Tax</fullName>
+                <default>false</default>
+                <label>Tax</label>
+            </value>
+            <value>
+                <fullName>FX Revaluation</fullName>
+                <default>false</default>
+                <label>FX Revaluation</label>
+            </value>
+            <value>
+                <fullName>Equity</fullName>
+                <default>false</default>
+                <label>Equity</label>
+            </value>
+            <value>
+                <fullName>Distribution</fullName>
+                <default>false</default>
+                <label>Distribution</label>
+            </value>
+            <value>
+                <fullName>Loan</fullName>
+                <default>false</default>
+                <label>Loan</label>
+            </value>
+            <value>
+                <fullName>Investment</fullName>
+                <default>false</default>
+                <label>Investment</label>
+            </value>
+            <value>
+                <fullName>Intercompany</fullName>
+                <default>false</default>
+                <label>Intercompany</label>
+            </value>
+            <value>
+                <fullName>Consolidation</fullName>
+                <default>false</default>
+                <label>Consolidation</label>
+            </value>
+            <value>
+                <fullName>Reversal</fullName>
+                <default>false</default>
+                <label>Reversal</label>
+            </value>
+            <value>
+                <fullName>Other</fullName>
+                <default>false</default>
+                <label>Other</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

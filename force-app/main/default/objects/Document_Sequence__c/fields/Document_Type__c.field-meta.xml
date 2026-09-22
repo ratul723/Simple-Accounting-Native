@@ -1,0 +1,64 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Document_Type__c</fullName>
+    <description>Provisional document categories for sequence configuration. Final legal numbering types must be confirmed per supported country pack.</description>
+    <label>Document Type</label>
+    <required>true</required>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Invoice</fullName>
+                <default>false</default>
+                <label>Invoice</label>
+            </value>
+            <value>
+                <fullName>Credit Note</fullName>
+                <default>false</default>
+                <label>Credit Note</label>
+            </value>
+            <value>
+                <fullName>Supplier Bill</fullName>
+                <default>false</default>
+                <label>Supplier Bill</label>
+            </value>
+            <value>
+                <fullName>Supplier Credit</fullName>
+                <default>false</default>
+                <label>Supplier Credit</label>
+            </value>
+            <value>
+                <fullName>Payment Receipt</fullName>
+                <default>false</default>
+                <label>Payment Receipt</label>
+            </value>
+            <value>
+                <fullName>Payment Disbursement</fullName>
+                <default>false</default>
+                <label>Payment Disbursement</label>
+            </value>
+            <value>
+                <fullName>Purchase Order</fullName>
+                <default>false</default>
+                <label>Purchase Order</label>
+            </value>
+            <value>
+                <fullName>Expense Claim</fullName>
+                <default>false</default>
+                <label>Expense Claim</label>
+            </value>
+            <value>
+                <fullName>Tax Return</fullName>
+                <default>false</default>
+                <label>Tax Return</label>
+            </value>
+            <value>
+                <fullName>Other</fullName>
+                <default>false</default>
+                <label>Other</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

@@ -1,0 +1,28 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Rounding_Policy__c</fullName>
+    <description>Provisional allocation rounding strategies. Final behavior must be implemented and tested consistently in Apex.</description>
+    <label>Rounding Policy</label>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Largest Remainder</fullName>
+                <default>false</default>
+                <label>Largest Remainder</label>
+            </value>
+            <value>
+                <fullName>Last Target</fullName>
+                <default>false</default>
+                <label>Last Target</label>
+            </value>
+            <value>
+                <fullName>Rounding Account</fullName>
+                <default>false</default>
+                <label>Rounding Account</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>
