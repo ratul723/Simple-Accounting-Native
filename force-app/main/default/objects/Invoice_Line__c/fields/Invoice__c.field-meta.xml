@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Invoice__c</fullName>
+    <description>Simple Accounting Books blueprint field. Source specification: Master-Detail(Invoice__c), Required, reparenting disabled</description>
+    <label>Invoice</label>
+    <referenceTo>Invoice__c</referenceTo>
+    <relationshipLabel>Invoice Line Invoice</relationshipLabel>
+    <relationshipName>Invoice_Line_Invoice</relationshipName>
+    <relationshipOrder>0</relationshipOrder>
+    <reparentableMasterDetail>false</reparentableMasterDetail>
+    <type>MasterDetail</type>
+    <writeRequiresMasterRead>false</writeRequiresMasterRead>
+</CustomField>

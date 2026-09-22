@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Accounting_Event__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <description>Simple Accounting Books blueprint field. Source specification: Lookup(Accounting_Event__c)</description>
+    <label>Accounting Event</label>
+    <referenceTo>Accounting_Event__c</referenceTo>
+    <relationshipLabel>Invoice Accounting Event</relationshipLabel>
+    <relationshipName>Invoice_Accounting_Event</relationshipName>
+    <type>Lookup</type>
+</CustomField>

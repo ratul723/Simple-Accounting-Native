@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FX_Revaluation_Run__c</fullName>
+    <description>Simple Accounting Books blueprint field. Source specification: Master-Detail(FX_Revaluation_Run__c), Required</description>
+    <label>FX Revaluation Run</label>
+    <referenceTo>FX_Revaluation_Run__c</referenceTo>
+    <relationshipLabel>FX Revaluation Line FX Revaluation Run</relationshipLabel>
+    <relationshipName>FX_Revaluation_Line_FX_Revaluation_Run</relationshipName>
+    <relationshipOrder>0</relationshipOrder>
+    <reparentableMasterDetail>true</reparentableMasterDetail>
+    <type>MasterDetail</type>
+    <writeRequiresMasterRead>false</writeRequiresMasterRead>
+</CustomField>

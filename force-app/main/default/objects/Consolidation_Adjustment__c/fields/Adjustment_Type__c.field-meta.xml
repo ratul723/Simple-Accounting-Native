@@ -1,0 +1,29 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Adjustment_Type__c</fullName>
+    <description>Simple Accounting Books blueprint field. Source specification: Picklist (`Translation`, `Elimination`, `Group Adjustment`), Required</description>
+    <label>Adjustment Type</label>
+    <required>true</required>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Translation</fullName>
+                <default>false</default>
+                <label>Translation</label>
+            </value>
+            <value>
+                <fullName>Elimination</fullName>
+                <default>false</default>
+                <label>Elimination</label>
+            </value>
+            <value>
+                <fullName>Group Adjustment</fullName>
+                <default>false</default>
+                <label>Group Adjustment</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

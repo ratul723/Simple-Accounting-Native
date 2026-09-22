@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>File_Hash__c</fullName>
+    <description>Simple Accounting Books blueprint field. Source specification: Text(128), Required</description>
+    <label>File Hash</label>
+    <length>128</length>
+    <required>true</required>
+    <type>Text</type>
+</CustomField>

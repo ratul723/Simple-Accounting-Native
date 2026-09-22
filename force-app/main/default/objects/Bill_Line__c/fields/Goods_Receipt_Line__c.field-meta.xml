@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Goods_Receipt_Line__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <description>Simple Accounting Books blueprint field. Source specification: Lookup(Goods_Receipt_Line__c)</description>
+    <label>Goods Receipt Line</label>
+    <referenceTo>Goods_Receipt_Line__c</referenceTo>
+    <relationshipLabel>Bill Line Goods Receipt Line</relationshipLabel>
+    <relationshipName>Bill_Line_Goods_Receipt_Line</relationshipName>
+    <type>Lookup</type>
+</CustomField>

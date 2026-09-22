@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Original_Invoice__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <description>Simple Accounting Books blueprint field. Source specification: Lookup(Invoice__c)</description>
+    <label>Original Invoice</label>
+    <referenceTo>Invoice__c</referenceTo>
+    <relationshipLabel>Invoice Original Invoice</relationshipLabel>
+    <relationshipName>Invoice_Original_Invoice</relationshipName>
+    <type>Lookup</type>
+</CustomField>

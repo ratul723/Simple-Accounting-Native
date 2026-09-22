@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Recoverable_Percent__c</fullName>
+    <description>Simple Accounting Books blueprint field. Source specification: Number(7,4)</description>
+    <label>Recoverable Percent</label>
+    <precision>7</precision>
+    <scale>4</scale>
+    <type>Number</type>
+</CustomField>

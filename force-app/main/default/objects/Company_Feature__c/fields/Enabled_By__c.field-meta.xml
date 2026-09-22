@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Enabled_By__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <description>Simple Accounting Books blueprint field. Source specification: Lookup(User)</description>
+    <label>Enabled By</label>
+    <referenceTo>User</referenceTo>
+    <relationshipLabel>Company Feature Enabled By</relationshipLabel>
+    <relationshipName>Company_Feature_Enabled_By</relationshipName>
+    <type>Lookup</type>
+</CustomField>

@@ -1,0 +1,43 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Treatment__c</fullName>
+    <description>Simple Accounting Books blueprint field. Source specification: Picklist (`Standard`, `Zero`, `Exempt`, `Reverse Charge`, `Withholding`, `Other`)</description>
+    <label>Treatment</label>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Standard</fullName>
+                <default>false</default>
+                <label>Standard</label>
+            </value>
+            <value>
+                <fullName>Zero</fullName>
+                <default>false</default>
+                <label>Zero</label>
+            </value>
+            <value>
+                <fullName>Exempt</fullName>
+                <default>false</default>
+                <label>Exempt</label>
+            </value>
+            <value>
+                <fullName>Reverse Charge</fullName>
+                <default>false</default>
+                <label>Reverse Charge</label>
+            </value>
+            <value>
+                <fullName>Withholding</fullName>
+                <default>false</default>
+                <label>Withholding</label>
+            </value>
+            <value>
+                <fullName>Other</fullName>
+                <default>false</default>
+                <label>Other</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

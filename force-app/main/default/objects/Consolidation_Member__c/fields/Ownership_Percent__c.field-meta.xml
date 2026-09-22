@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Ownership_Percent__c</fullName>
+    <description>Simple Accounting Books blueprint field. Source specification: Number(9,6)</description>
+    <label>Ownership Percent</label>
+    <precision>9</precision>
+    <scale>6</scale>
+    <type>Number</type>
+</CustomField>

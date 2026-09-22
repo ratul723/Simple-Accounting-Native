@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Company__c</fullName>
+    <deleteConstraint>Restrict</deleteConstraint>
+    <description>Simple Accounting Books blueprint field. Source specification: Lookup(Accounting_Company__c), Required</description>
+    <label>Company</label>
+    <referenceTo>Accounting_Company__c</referenceTo>
+    <relationshipLabel>Close Task Company</relationshipLabel>
+    <relationshipName>Close_Task_Company</relationshipName>
+    <required>true</required>
+    <type>Lookup</type>
+</CustomField>

@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Report_Definition__c</fullName>
+    <description>Simple Accounting Books blueprint field. Source specification: Master-Detail(Report_Definition__c), Required</description>
+    <label>Report Definition</label>
+    <referenceTo>Report_Definition__c</referenceTo>
+    <relationshipLabel>Report Mapping Report Definition</relationshipLabel>
+    <relationshipName>Report_Mapping_Report_Definition</relationshipName>
+    <relationshipOrder>0</relationshipOrder>
+    <reparentableMasterDetail>true</reparentableMasterDetail>
+    <type>MasterDetail</type>
+    <writeRequiresMasterRead>false</writeRequiresMasterRead>
+</CustomField>

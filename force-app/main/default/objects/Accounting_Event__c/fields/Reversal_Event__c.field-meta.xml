@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Reversal_Event__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <description>Simple Accounting Books blueprint field. Source specification: Lookup(Accounting_Event__c)</description>
+    <label>Reversal Event</label>
+    <referenceTo>Accounting_Event__c</referenceTo>
+    <relationshipLabel>Accounting Event Reversal Event</relationshipLabel>
+    <relationshipName>Accounting_Event_Reversal_Event</relationshipName>
+    <type>Lookup</type>
+</CustomField>

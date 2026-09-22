@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Tax_Registration__c</fullName>
+    <deleteConstraint>Restrict</deleteConstraint>
+    <description>Simple Accounting Books blueprint field. Source specification: Lookup(Tax_Registration__c), Required</description>
+    <label>Tax Registration</label>
+    <referenceTo>Tax_Registration__c</referenceTo>
+    <relationshipLabel>Tax Return Tax Registration</relationshipLabel>
+    <relationshipName>Tax_Return_Tax_Registration</relationshipName>
+    <required>true</required>
+    <type>Lookup</type>
+</CustomField>

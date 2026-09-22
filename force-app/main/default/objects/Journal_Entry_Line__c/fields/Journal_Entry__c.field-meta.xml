@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Journal_Entry__c</fullName>
+    <description>Simple Accounting Books blueprint field. Source specification: Master-Detail(Journal_Entry__c), Required, reparenting disabled</description>
+    <label>Journal Entry</label>
+    <referenceTo>Journal_Entry__c</referenceTo>
+    <relationshipLabel>Journal Entry Line Journal Entry</relationshipLabel>
+    <relationshipName>Journal_Entry_Line_Journal_Entry</relationshipName>
+    <relationshipOrder>0</relationshipOrder>
+    <reparentableMasterDetail>false</reparentableMasterDetail>
+    <type>MasterDetail</type>
+    <writeRequiresMasterRead>false</writeRequiresMasterRead>
+</CustomField>

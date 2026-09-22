@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Accounting_Period__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <description>Simple Accounting Books blueprint field. Source specification: Lookup(Accounting_Period__c), Required before posting</description>
+    <label>Accounting Period</label>
+    <referenceTo>Accounting_Period__c</referenceTo>
+    <relationshipLabel>Journal Entry Accounting Period</relationshipLabel>
+    <relationshipName>Journal_Entry_Accounting_Period</relationshipName>
+    <type>Lookup</type>
+</CustomField>

@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Distribution__c</fullName>
+    <description>Simple Accounting Books blueprint field. Source specification: Master-Detail(Distribution__c), Required</description>
+    <label>Distribution</label>
+    <referenceTo>Distribution__c</referenceTo>
+    <relationshipLabel>Distribution Line Distribution</relationshipLabel>
+    <relationshipName>Distribution_Line_Distribution</relationshipName>
+    <relationshipOrder>0</relationshipOrder>
+    <reparentableMasterDetail>true</reparentableMasterDetail>
+    <type>MasterDetail</type>
+    <writeRequiresMasterRead>false</writeRequiresMasterRead>
+</CustomField>

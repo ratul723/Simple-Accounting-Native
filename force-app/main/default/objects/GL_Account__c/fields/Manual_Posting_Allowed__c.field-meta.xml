@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Manual_Posting_Allowed__c</fullName>
+    <defaultValue>false</defaultValue>
+    <description>Simple Accounting Books blueprint field. Source specification: Checkbox, default true except control accounts</description>
+    <label>Manual Posting Allowed</label>
+    <type>Checkbox</type>
+</CustomField>

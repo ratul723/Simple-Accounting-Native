@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Reversal_Of__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <description>Simple Accounting Books blueprint field. Source specification: Lookup(Payment_Allocation__c)</description>
+    <label>Reversal Of</label>
+    <referenceTo>Payment_Allocation__c</referenceTo>
+    <relationshipLabel>Payment Allocation Reversal Of</relationshipLabel>
+    <relationshipName>Payment_Allocation_Reversal_Of</relationshipName>
+    <type>Lookup</type>
+</CustomField>

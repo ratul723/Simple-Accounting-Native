@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Debit_Base__c</fullName>
+    <defaultValue>0</defaultValue>
+    <description>Simple Accounting Books blueprint field. Source specification: Number(18,4), default 0</description>
+    <label>Debit Base</label>
+    <precision>18</precision>
+    <scale>4</scale>
+    <type>Number</type>
+</CustomField>

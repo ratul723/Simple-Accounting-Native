@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Payment__c</fullName>
+    <deleteConstraint>Restrict</deleteConstraint>
+    <description>Simple Accounting Books blueprint field. Source specification: Lookup(Payment__c), Required</description>
+    <label>Payment</label>
+    <referenceTo>Accounting_Payment__c</referenceTo>
+    <relationshipLabel>Payment Allocation Payment</relationshipLabel>
+    <relationshipName>Payment_Allocation_Payment</relationshipName>
+    <required>true</required>
+    <type>Lookup</type>
+</CustomField>

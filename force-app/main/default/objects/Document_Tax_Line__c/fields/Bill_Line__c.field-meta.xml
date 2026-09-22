@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Bill_Line__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <description>Simple Accounting Books blueprint field. Source specification: Lookup(Bill_Line__c)</description>
+    <label>Bill Line</label>
+    <referenceTo>Bill_Line__c</referenceTo>
+    <relationshipLabel>Document Tax Line Bill Line</relationshipLabel>
+    <relationshipName>Document_Tax_Line_Bill_Line</relationshipName>
+    <type>Lookup</type>
+</CustomField>

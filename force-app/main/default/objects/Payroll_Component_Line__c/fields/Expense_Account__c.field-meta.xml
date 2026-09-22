@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Expense_Account__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <description>Simple Accounting Books blueprint field. Source specification: Lookup(GL_Account__c)</description>
+    <label>Expense Account</label>
+    <referenceTo>GL_Account__c</referenceTo>
+    <relationshipLabel>Payroll Component Line Expense Account</relationshipLabel>
+    <relationshipName>Payroll_Component_Line_Expense_Account</relationshipName>
+    <type>Lookup</type>
+</CustomField>

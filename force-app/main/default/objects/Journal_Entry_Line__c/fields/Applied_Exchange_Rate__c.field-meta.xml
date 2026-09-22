@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Applied_Exchange_Rate__c</fullName>
+    <description>Simple Accounting Books blueprint field. Source specification: Number(18,10)</description>
+    <label>Applied Exchange Rate</label>
+    <precision>18</precision>
+    <scale>10</scale>
+    <type>Number</type>
+</CustomField>

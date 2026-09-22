@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Consumed_By_Payroll_Run__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <description>Simple Accounting Books blueprint field. Source specification: Lookup(Payroll_Run__c)</description>
+    <label>Consumed By Payroll Run</label>
+    <referenceTo>Payroll_Run__c</referenceTo>
+    <relationshipLabel>Benefit Award Consumed By Payroll Run</relationshipLabel>
+    <relationshipName>Benefit_Award_Consumed_By_Payroll_Run</relationshipName>
+    <type>Lookup</type>
+</CustomField>

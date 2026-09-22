@@ -1,0 +1,29 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Distribution_Type__c</fullName>
+    <description>Simple Accounting Books blueprint field. Source specification: Picklist (`Dividend`, `Owner Distribution`, `Other`), Required</description>
+    <label>Distribution Type</label>
+    <required>true</required>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Dividend</fullName>
+                <default>false</default>
+                <label>Dividend</label>
+            </value>
+            <value>
+                <fullName>Owner Distribution</fullName>
+                <default>false</default>
+                <label>Owner Distribution</label>
+            </value>
+            <value>
+                <fullName>Other</fullName>
+                <default>false</default>
+                <label>Other</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

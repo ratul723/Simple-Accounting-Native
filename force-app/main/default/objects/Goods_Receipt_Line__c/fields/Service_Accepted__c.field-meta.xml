@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Service_Accepted__c</fullName>
+    <defaultValue>false</defaultValue>
+    <description>Simple Accounting Books blueprint field. Source specification: Checkbox</description>
+    <label>Service Accepted</label>
+    <type>Checkbox</type>
+</CustomField>

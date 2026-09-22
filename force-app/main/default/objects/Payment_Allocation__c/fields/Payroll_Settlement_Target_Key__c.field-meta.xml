@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Payroll_Settlement_Target_Key__c</fullName>
+    <description>Simple Accounting Books blueprint field. Source specification: Text(180) only if adapter-based extension settlement is enabled; otherwise use extension-owned settlement object</description>
+    <label>Payroll Settlement Target Key</label>
+    <length>180</length>
+    <type>Text</type>
+</CustomField>

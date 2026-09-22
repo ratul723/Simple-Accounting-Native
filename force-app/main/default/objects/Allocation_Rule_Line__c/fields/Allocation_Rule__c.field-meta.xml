@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Allocation_Rule__c</fullName>
+    <description>Simple Accounting Books blueprint field. Source specification: Master-Detail(Allocation_Rule__c), Required</description>
+    <label>Allocation Rule</label>
+    <referenceTo>Allocation_Rule__c</referenceTo>
+    <relationshipLabel>Allocation Rule Line Allocation Rule</relationshipLabel>
+    <relationshipName>Allocation_Rule_Line_Allocation_Rule</relationshipName>
+    <relationshipOrder>0</relationshipOrder>
+    <reparentableMasterDetail>true</reparentableMasterDetail>
+    <type>MasterDetail</type>
+    <writeRequiresMasterRead>false</writeRequiresMasterRead>
+</CustomField>

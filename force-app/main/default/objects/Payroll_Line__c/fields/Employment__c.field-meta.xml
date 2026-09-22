@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Employment__c</fullName>
+    <deleteConstraint>Restrict</deleteConstraint>
+    <description>Simple Accounting Books blueprint field. Source specification: Lookup(Employment__c), Required</description>
+    <label>Employment</label>
+    <referenceTo>Employment__c</referenceTo>
+    <relationshipLabel>Payroll Line Employment</relationshipLabel>
+    <relationshipName>Payroll_Line_Employment</relationshipName>
+    <required>true</required>
+    <type>Lookup</type>
+</CustomField>

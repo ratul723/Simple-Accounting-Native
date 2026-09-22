@@ -1,0 +1,34 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Transaction_Type__c</fullName>
+    <description>Simple Accounting Books blueprint field. Source specification: Picklist (`Issue`, `Transfer`, `Redemption`, `Capital Contribution`), Required</description>
+    <label>Transaction Type</label>
+    <required>true</required>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Issue</fullName>
+                <default>false</default>
+                <label>Issue</label>
+            </value>
+            <value>
+                <fullName>Transfer</fullName>
+                <default>false</default>
+                <label>Transfer</label>
+            </value>
+            <value>
+                <fullName>Redemption</fullName>
+                <default>false</default>
+                <label>Redemption</label>
+            </value>
+            <value>
+                <fullName>Capital Contribution</fullName>
+                <default>false</default>
+                <label>Capital Contribution</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

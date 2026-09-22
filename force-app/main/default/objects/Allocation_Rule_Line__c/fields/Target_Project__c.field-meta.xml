@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Target_Project__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <description>Simple Accounting Books blueprint field. Source specification: Lookup(Project__c)</description>
+    <label>Target Project</label>
+    <referenceTo>Project__c</referenceTo>
+    <relationshipLabel>Allocation Rule Line Target Project</relationshipLabel>
+    <relationshipName>Allocation_Rule_Line_Target_Project</relationshipName>
+    <type>Lookup</type>
+</CustomField>

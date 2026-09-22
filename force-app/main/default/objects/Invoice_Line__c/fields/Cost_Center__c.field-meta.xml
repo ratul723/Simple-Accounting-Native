@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Cost_Center__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <description>Simple Accounting Books blueprint field. Source specification: Lookup(Cost_Center__c)</description>
+    <label>Cost Center</label>
+    <referenceTo>Cost_Center__c</referenceTo>
+    <relationshipLabel>Invoice Line Cost Center</relationshipLabel>
+    <relationshipName>Invoice_Line_Cost_Center</relationshipName>
+    <type>Lookup</type>
+</CustomField>

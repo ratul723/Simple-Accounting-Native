@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Payment_Term__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <description>Simple Accounting Books blueprint field. Source specification: Lookup(Payment_Term__c)</description>
+    <label>Payment Term</label>
+    <referenceTo>Payment_Term__c</referenceTo>
+    <relationshipLabel>Party Accounting Profile Payment Term</relationshipLabel>
+    <relationshipName>Party_Accounting_Profile_Payment_Term</relationshipName>
+    <type>Lookup</type>
+</CustomField>

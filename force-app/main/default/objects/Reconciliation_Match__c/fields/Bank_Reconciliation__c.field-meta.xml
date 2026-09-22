@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Bank_Reconciliation__c</fullName>
+    <description>Simple Accounting Books blueprint field. Source specification: Master-Detail(Bank_Reconciliation__c), Required</description>
+    <label>Bank Reconciliation</label>
+    <referenceTo>Bank_Reconciliation__c</referenceTo>
+    <relationshipLabel>Reconciliation Match Bank Reconciliation</relationshipLabel>
+    <relationshipName>Reconciliation_Match_Bank_Reconciliation</relationshipName>
+    <relationshipOrder>0</relationshipOrder>
+    <reparentableMasterDetail>true</reparentableMasterDetail>
+    <type>MasterDetail</type>
+    <writeRequiresMasterRead>false</writeRequiresMasterRead>
+</CustomField>

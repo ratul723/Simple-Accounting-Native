@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Pay_Component__c</fullName>
+    <deleteConstraint>Restrict</deleteConstraint>
+    <description>Simple Accounting Books blueprint field. Source specification: Lookup(Pay_Component__c), Required</description>
+    <label>Pay Component</label>
+    <referenceTo>Pay_Component__c</referenceTo>
+    <relationshipLabel>Employee Pay Component Pay Component</relationshipLabel>
+    <relationshipName>Employee_Pay_Component_Pay_Component</relationshipName>
+    <required>true</required>
+    <type>Lookup</type>
+</CustomField>

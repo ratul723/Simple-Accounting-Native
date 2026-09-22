@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Payroll_Line__c</fullName>
+    <description>Simple Accounting Books blueprint field. Source specification: Master-Detail(Payroll_Line__c), Required</description>
+    <label>Payroll Line</label>
+    <referenceTo>Payroll_Line__c</referenceTo>
+    <relationshipLabel>Payroll Component Line Payroll Line</relationshipLabel>
+    <relationshipName>Payroll_Component_Line_Payroll_Line</relationshipName>
+    <relationshipOrder>0</relationshipOrder>
+    <reparentableMasterDetail>true</reparentableMasterDetail>
+    <type>MasterDetail</type>
+    <writeRequiresMasterRead>false</writeRequiresMasterRead>
+</CustomField>

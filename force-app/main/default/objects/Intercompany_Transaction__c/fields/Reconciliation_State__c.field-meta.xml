@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Reconciliation_State__c</fullName>
+    <description>Simple Accounting Books blueprint field. Source specification: Picklist (`Open`, `Matched`, `Difference`, `Corrected`)</description>
+    <label>Reconciliation State</label>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Open</fullName>
+                <default>false</default>
+                <label>Open</label>
+            </value>
+            <value>
+                <fullName>Matched</fullName>
+                <default>false</default>
+                <label>Matched</label>
+            </value>
+            <value>
+                <fullName>Difference</fullName>
+                <default>false</default>
+                <label>Difference</label>
+            </value>
+            <value>
+                <fullName>Corrected</fullName>
+                <default>false</default>
+                <label>Corrected</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

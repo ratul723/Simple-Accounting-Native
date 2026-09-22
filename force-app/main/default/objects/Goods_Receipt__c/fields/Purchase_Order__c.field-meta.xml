@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Purchase_Order__c</fullName>
+    <deleteConstraint>Restrict</deleteConstraint>
+    <description>Simple Accounting Books blueprint field. Source specification: Lookup(Purchase_Order__c), Required</description>
+    <label>Purchase Order</label>
+    <referenceTo>Purchase_Order__c</referenceTo>
+    <relationshipLabel>Goods Receipt Purchase Order</relationshipLabel>
+    <relationshipName>Goods_Receipt_Purchase_Order</relationshipName>
+    <required>true</required>
+    <type>Lookup</type>
+</CustomField>

@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Revenue_Account__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <description>Simple Accounting Books blueprint field. Source specification: Lookup(GL_Account__c), Required before posting</description>
+    <label>Revenue Account</label>
+    <referenceTo>GL_Account__c</referenceTo>
+    <relationshipLabel>Invoice Line Revenue Account</relationshipLabel>
+    <relationshipName>Invoice_Line_Revenue_Account</relationshipName>
+    <type>Lookup</type>
+</CustomField>

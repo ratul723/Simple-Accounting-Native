@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Approval_Request__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <description>Simple Accounting Books blueprint field. Source specification: Lookup(Approval_Request__c)</description>
+    <label>Approval Request</label>
+    <referenceTo>Approval_Request__c</referenceTo>
+    <relationshipLabel>Purchase Order Approval Request</relationshipLabel>
+    <relationshipName>Purchase_Order_Approval_Request</relationshipName>
+    <type>Lookup</type>
+</CustomField>

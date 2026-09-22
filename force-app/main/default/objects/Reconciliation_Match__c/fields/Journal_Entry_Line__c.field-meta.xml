@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Journal_Entry_Line__c</fullName>
+    <deleteConstraint>Restrict</deleteConstraint>
+    <description>Simple Accounting Books blueprint field. Source specification: Lookup(Journal_Entry_Line__c), Required</description>
+    <label>Journal Entry Line</label>
+    <referenceTo>Journal_Entry_Line__c</referenceTo>
+    <relationshipLabel>Reconciliation Match Journal Entry Line</relationshipLabel>
+    <relationshipName>Reconciliation_Match_Journal_Entry_Line</relationshipName>
+    <required>true</required>
+    <type>Lookup</type>
+</CustomField>

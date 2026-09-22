@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>GL_Account__c</fullName>
+    <deleteConstraint>Restrict</deleteConstraint>
+    <description>Simple Accounting Books blueprint field. Source specification: Lookup(GL_Account__c), Required</description>
+    <label>GL Account</label>
+    <referenceTo>GL_Account__c</referenceTo>
+    <relationshipLabel>Journal Entry Line GL Account</relationshipLabel>
+    <relationshipName>Journal_Entry_Line_GL_Account</relationshipName>
+    <required>true</required>
+    <type>Lookup</type>
+</CustomField>

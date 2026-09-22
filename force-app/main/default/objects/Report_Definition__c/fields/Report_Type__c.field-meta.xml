@@ -1,0 +1,34 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Report_Type__c</fullName>
+    <description>Simple Accounting Books blueprint field. Source specification: Picklist (`P&amp;L`, `Balance Sheet`, `Cash Flow`, `Custom Statement`), Required</description>
+    <label>Report Type</label>
+    <required>true</required>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>P&amp;L</fullName>
+                <default>false</default>
+                <label>P&amp;L</label>
+            </value>
+            <value>
+                <fullName>Balance Sheet</fullName>
+                <default>false</default>
+                <label>Balance Sheet</label>
+            </value>
+            <value>
+                <fullName>Cash Flow</fullName>
+                <default>false</default>
+                <label>Cash Flow</label>
+            </value>
+            <value>
+                <fullName>Custom Statement</fullName>
+                <default>false</default>
+                <label>Custom Statement</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

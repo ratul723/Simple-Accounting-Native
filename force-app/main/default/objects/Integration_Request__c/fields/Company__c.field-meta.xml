@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Company__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <description>Simple Accounting Books blueprint field. Source specification: Lookup(Accounting_Company__c)</description>
+    <label>Company</label>
+    <referenceTo>Accounting_Company__c</referenceTo>
+    <relationshipLabel>Integration Request Company</relationshipLabel>
+    <relationshipName>Integration_Request_Company</relationshipName>
+    <type>Lookup</type>
+</CustomField>

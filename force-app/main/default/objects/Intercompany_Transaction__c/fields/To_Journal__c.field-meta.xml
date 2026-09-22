@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>To_Journal__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <description>Simple Accounting Books blueprint field. Source specification: Lookup(Journal_Entry__c)</description>
+    <label>To Journal</label>
+    <referenceTo>Journal_Entry__c</referenceTo>
+    <relationshipLabel>Intercompany Transaction To Journal</relationshipLabel>
+    <relationshipName>Intercompany_Transaction_To_Journal</relationshipName>
+    <type>Lookup</type>
+</CustomField>

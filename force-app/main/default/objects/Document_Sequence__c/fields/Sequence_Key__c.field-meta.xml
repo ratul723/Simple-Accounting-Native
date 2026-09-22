@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Sequence_Key__c</fullName>
+    <description>Simple Accounting Books blueprint field. Source specification: Text(180), Required, Unique</description>
+    <label>Sequence Key</label>
+    <length>180</length>
+    <required>true</required>
+    <type>Text</type>
+    <unique>true</unique>
+</CustomField>

@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Consolidation_Group__c</fullName>
+    <description>Simple Accounting Books blueprint field. Source specification: Master-Detail(Consolidation_Group__c), Required</description>
+    <label>Consolidation Group</label>
+    <referenceTo>Consolidation_Group__c</referenceTo>
+    <relationshipLabel>Consolidation Member Consolidation Group</relationshipLabel>
+    <relationshipName>Consolidation_Member_Consolidation_Group</relationshipName>
+    <relationshipOrder>0</relationshipOrder>
+    <reparentableMasterDetail>true</reparentableMasterDetail>
+    <type>MasterDetail</type>
+    <writeRequiresMasterRead>false</writeRequiresMasterRead>
+</CustomField>

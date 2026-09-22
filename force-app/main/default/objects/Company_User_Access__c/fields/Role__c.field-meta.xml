@@ -1,0 +1,54 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Role__c</fullName>
+    <description>Simple Accounting Books blueprint field. Source specification: Picklist (`Office Admin`, `HR`, `Bookkeeper`, `Finance Manager`, `Treasury`, `Director`, `Auditor`, `Technical Admin`), Required</description>
+    <label>Role</label>
+    <required>true</required>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Office Admin</fullName>
+                <default>false</default>
+                <label>Office Admin</label>
+            </value>
+            <value>
+                <fullName>HR</fullName>
+                <default>false</default>
+                <label>HR</label>
+            </value>
+            <value>
+                <fullName>Bookkeeper</fullName>
+                <default>false</default>
+                <label>Bookkeeper</label>
+            </value>
+            <value>
+                <fullName>Finance Manager</fullName>
+                <default>false</default>
+                <label>Finance Manager</label>
+            </value>
+            <value>
+                <fullName>Treasury</fullName>
+                <default>false</default>
+                <label>Treasury</label>
+            </value>
+            <value>
+                <fullName>Director</fullName>
+                <default>false</default>
+                <label>Director</label>
+            </value>
+            <value>
+                <fullName>Auditor</fullName>
+                <default>false</default>
+                <label>Auditor</label>
+            </value>
+            <value>
+                <fullName>Technical Admin</fullName>
+                <default>false</default>
+                <label>Technical Admin</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

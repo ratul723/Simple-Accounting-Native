@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Report_Definition__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <description>Simple Accounting Books blueprint field. Source specification: Lookup(Report_Definition__c)</description>
+    <label>Report Definition</label>
+    <referenceTo>Report_Definition__c</referenceTo>
+    <relationshipLabel>Report Run Report Definition</relationshipLabel>
+    <relationshipName>Report_Run_Report_Definition</relationshipName>
+    <type>Lookup</type>
+</CustomField>

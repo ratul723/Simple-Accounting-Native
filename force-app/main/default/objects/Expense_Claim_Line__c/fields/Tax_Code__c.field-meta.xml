@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Tax_Code__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <description>Simple Accounting Books blueprint field. Source specification: Lookup(Tax_Code__c)</description>
+    <label>Tax Code</label>
+    <referenceTo>Tax_Code__c</referenceTo>
+    <relationshipLabel>Expense Claim Line Tax Code</relationshipLabel>
+    <relationshipName>Expense_Claim_Line_Tax_Code</relationshipName>
+    <type>Lookup</type>
+</CustomField>

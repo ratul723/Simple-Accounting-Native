@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Decision_By__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <description>Simple Accounting Books blueprint field. Source specification: Lookup(User)</description>
+    <label>Decision By</label>
+    <referenceTo>User</referenceTo>
+    <relationshipLabel>Approval Step Decision By</relationshipLabel>
+    <relationshipName>Approval_Step_Decision_By</relationshipName>
+    <type>Lookup</type>
+</CustomField>
