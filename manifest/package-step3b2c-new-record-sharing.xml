@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>SABCompanyRecordSharingService</members>
+        <members>SABCompanyRecordSharingServiceTest</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>SABAccountingPeriodSharingTrigger</members>
+        <members>SABGlAccountSharingTrigger</members>
+        <members>SABJournalEntrySharingTrigger</members>
+        <members>SABInvoiceSharingTrigger</members>
+        <members>SABSupplierBillSharingTrigger</members>
+        <members>SABAccountingPaymentSharingTrigger</members>
+        <members>SABBankAccountSharingTrigger</members>
+        <members>SABBankStatementSharingTrigger</members>
+        <members>SABBankReconciliationSharingTrigger</members>
+        <members>SABGoodsReceiptSharingTrigger</members>
+        <members>SABExpenseClaimSharingTrigger</members>
+        <members>SABPayrollRunSharingTrigger</members>
+        <members>SABFixedAssetSharingTrigger</members>
+        <members>SABProjectSharingTrigger</members>
+        <members>SABBudgetSharingTrigger</members>
+        <members>SABTaxCodeSharingTrigger</members>
+        <members>SABTaxReturnSharingTrigger</members>
+        <members>SABAllocationRuleSharingTrigger</members>
+        <members>SABStakeholderSharingTrigger</members>
+        <members>SABEquityTransactionSharingTrigger</members>
+        <members>SABLoanSharingTrigger</members>
+        <members>SABInvestmentSharingTrigger</members>
+        <name>ApexTrigger</name>
+    </types>
+    <version>65.0</version>
+</Package>
