@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>SABConfigMutationContext</members>
+        <members>SABConfigProtectionService</members>
+        <members>SABConfigProtectionServiceTest</members>
+        <members>SABPeriodService</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>SABCompanyConfigGuardTrigger</members>
+        <members>SABGLAccountConfigGuardTrigger</members>
+        <members>SABPeriodConfigGuardTrigger</members>
+        <name>ApexTrigger</name>
+    </types>
+    <version>65.0</version>
+</Package>

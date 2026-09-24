@@ -197,7 +197,13 @@ public without sharing class SABPeriodService {
                 periodRecord.Close_Request_Key__c = null;
             }
 
-            update periodRecord;
+            SABConfigMutationContext.beginPeriodTransition();
+
+            try {
+                update periodRecord;
+            } finally {
+                SABConfigMutationContext.endPeriodTransition();
+            }
 
             Accounting_Period_Action__c actionRecord =
                 new Accounting_Period_Action__c(

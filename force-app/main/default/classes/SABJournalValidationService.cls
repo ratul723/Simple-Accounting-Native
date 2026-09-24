@@ -117,7 +117,12 @@ public without sharing class SABJournalValidationService {
                    GL_Account__r.Manual_Posting_Allowed__c,
                    Debit_Base__c,
                    Credit_Base__c,
+                   Transaction_Currency__c,
+                   Transaction_Amount__c,
                    Functional_Currency__c,
+                   Applied_Exchange_Rate__c,
+                   Rate_Date__c,
+                   Rate_Source__c,
                    Department__c,
                    Department__r.Company__c,
                    Department__r.Is_Active__c,
@@ -407,14 +412,21 @@ public without sharing class SABJournalValidationService {
                     ? null
                     : journal.Company__r.Functional_Currency__c;
 
-            if (
-                !String.isBlank(companyCurrency)
-                && line.Functional_Currency__c
-                    != companyCurrency
+            SABCurrencyGuardService.ValidationResult
+                currencyValidation =
+                    SABCurrencyGuardService.validateJournalLineSnapshot(
+                            line,
+                            companyCurrency
+                        );
+
+            for (
+                String currencyError :
+                currencyValidation.errors
             ) {
                 result.addError(
                     lineLabel
-                    + ': Functional Currency must match the Accounting Company functional currency.'
+                    + ': '
+                    + currencyError
                 );
             }
 
