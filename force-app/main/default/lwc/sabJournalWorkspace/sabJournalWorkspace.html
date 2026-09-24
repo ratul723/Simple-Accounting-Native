@@ -1,0 +1,511 @@
+<template>
+    <lightning-card
+        title="Journal Workspace"
+        icon-name="standard:journal"
+    >
+        <template if:true={isLoading}>
+            <lightning-spinner
+                alternative-text="Loading Journal Workspace"
+                size="small"
+            ></lightning-spinner>
+        </template>
+
+        <div class="slds-p-horizontal_medium slds-p-bottom_medium">
+            <template if:false={hasCompany}>
+                <div
+                    class="slds-notify slds-notify_alert slds-alert_info"
+                    role="alert"
+                >
+                    Select an Accounting Company above to use the Journal Workspace.
+                </div>
+            </template>
+
+            <template if:true={hasCompany}>
+                <div class="toolbar slds-m-bottom_medium">
+                    <div class="toolbar-picker">
+                        <lightning-combobox
+                            name="draftJournal"
+                            label="Existing Draft"
+                            value={selectedDraftId}
+                            options={draftOptions}
+                            placeholder="Select a Draft Journal"
+                            onchange={handleDraftChange}
+                            disabled={isReadOnly}
+                        ></lightning-combobox>
+                    </div>
+
+                    <div class="toolbar-actions">
+                        <lightning-button
+                            label="New Journal"
+                            icon-name="utility:add"
+                            onclick={handleNewJournal}
+                        ></lightning-button>
+
+                        <lightning-button
+                            label="Save Draft"
+                            icon-name="utility:save"
+                            onclick={handleSave}
+                            disabled={saveDisabled}
+                        ></lightning-button>
+
+                        <lightning-button
+                            label="Validate"
+                            icon-name="utility:check"
+                            onclick={handleValidate}
+                            disabled={validateDisabled}
+                        ></lightning-button>
+
+                        <lightning-button
+                            variant="brand"
+                            label="Post Journal"
+                            icon-name="utility:forward"
+                            onclick={handlePost}
+                            disabled={postDisabled}
+                        ></lightning-button>
+                    </div>
+                </div>
+
+                <div class="posted-picker slds-m-bottom_medium">
+                    <lightning-combobox
+                        name="postedJournal"
+                        label="Posted Journal to Review / Reverse"
+                        value={selectedPostedId}
+                        options={postedOptions}
+                        placeholder="Select a Posted Journal"
+                        onchange={handlePostedChange}
+                    ></lightning-combobox>
+                </div>
+
+                <div class="summary-bar slds-m-bottom_medium">
+                    <span>
+                        Functional Currency:
+                        <strong>{functionalCurrency}</strong>
+                    </span>
+                    <span>
+                        Status:
+                        <strong>{journalStatus}</strong>
+                    </span>
+                    <template if:true={journalName}>
+                        <span>
+                            Journal:
+                            <strong>{journalName}</strong>
+                        </span>
+                    </template>
+                    <template if:false={canPostJournal}>
+                        <span class="permission-note">
+                            Posting permission not assigned
+                        </span>
+                    </template>
+
+                    <template if:false={canReverseJournal}>
+                        <span class="permission-note">
+                            Reversal permission not assigned
+                        </span>
+                    </template>
+                </div>
+
+                <template if:true={isPosted}>
+                    <div
+                        class="slds-notify slds-notify_alert slds-alert_success slds-m-bottom_medium"
+                        role="status"
+                    >
+                        This Journal is Posted and read-only. Use the controlled reversal process below for corrections.
+                    </div>
+                </template>
+
+                <template if:true={isReversed}>
+                    <div
+                        class="slds-notify slds-notify_alert slds-theme_info slds-m-bottom_medium"
+                        role="status"
+                    >
+                        This Journal has already been Reversed and remains read-only.
+                    </div>
+                </template>
+
+                <div class="slds-grid slds-wrap slds-gutters">
+                    <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-3">
+                        <lightning-combobox
+                            name="periodId"
+                            label="Accounting Period"
+                            value={periodId}
+                            options={periodOptions}
+                            onchange={handleHeaderChange}
+                            required
+                            disabled={isReadOnly}
+                        ></lightning-combobox>
+                    </div>
+
+                    <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-3">
+                        <lightning-input
+                            type="date"
+                            name="accountingDate"
+                            label="Accounting Date"
+                            value={accountingDate}
+                            onchange={handleHeaderChange}
+                            required
+                            disabled={isReadOnly}
+                        ></lightning-input>
+                    </div>
+
+                    <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-3">
+                        <lightning-input
+                            type="text"
+                            name="description"
+                            label="Description"
+                            value={description}
+                            onchange={handleHeaderChange}
+                            disabled={isReadOnly}
+                        ></lightning-input>
+                    </div>
+                </div>
+
+                <section class="slds-m-top_large line-section" role="region" aria-labelledby="journal-lines-heading">
+                    <div class="section-heading">
+                        <div>
+                            <h2 id="journal-lines-heading" class="slds-text-heading_small">
+                                Journal Lines
+                            </h2>
+                            <p class="slds-text-body_small slds-text-color_weak">
+                                Save the Draft, run Validate, then Post Journal when all accounting checks pass.
+                            </p>
+                        </div>
+
+                        <lightning-button
+                            label="Add Line"
+                            icon-name="utility:add"
+                            onclick={handleAddLine}
+                            disabled={isReadOnly}
+                        ></lightning-button>
+                    </div>
+
+                    <div class="table-scroll">
+                        <table class="slds-table slds-table_cell-buffer slds-table_bordered journal-table">
+                            <caption class="slds-assistive-text">Draft journal lines with GL account, debit, credit, explanation and optional dimensions.</caption>
+                            <thead>
+                                <tr>
+                                    <th scope="col">#</th>
+                                    <th scope="col">GL Account</th>
+                                    <th scope="col">Debit</th>
+                                    <th scope="col">Credit</th>
+                                    <th scope="col">Explanation</th>
+                                    <th scope="col">Department</th>
+                                    <th scope="col">Cost Center</th>
+                                    <th scope="col">Project</th>
+                                    <th scope="col"></th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                <template
+                                    for:each={lines}
+                                    for:item="line"
+                                    for:index="index"
+                                >
+                                    <tr key={line.key}>
+                                        <td>{line.displayNumber}</td>
+
+                                        <td class="lookup-cell">
+                                            <lightning-combobox
+                                                variant="label-hidden"
+                                                label="GL Account"
+                                                data-index={index}
+                                                data-field="glAccountId"
+                                                value={line.glAccountId}
+                                                options={glAccountOptions}
+                                                onchange={handleLineChange}
+                                                required
+                                                disabled={isReadOnly}
+                                            ></lightning-combobox>
+                                        </td>
+
+                                        <td class="amount-cell">
+                                            <lightning-input
+                                                variant="label-hidden"
+                                                label="Debit"
+                                                type="number"
+                                                step="0.0001"
+                                                min="0"
+                                                data-index={index}
+                                                data-field="debit"
+                                                value={line.debit}
+                                                onchange={handleLineChange}
+                                                disabled={isReadOnly}
+                                            ></lightning-input>
+                                        </td>
+
+                                        <td class="amount-cell">
+                                            <lightning-input
+                                                variant="label-hidden"
+                                                label="Credit"
+                                                type="number"
+                                                step="0.0001"
+                                                min="0"
+                                                data-index={index}
+                                                data-field="credit"
+                                                value={line.credit}
+                                                onchange={handleLineChange}
+                                                disabled={isReadOnly}
+                                            ></lightning-input>
+                                        </td>
+
+                                        <td class="text-cell">
+                                            <lightning-input
+                                                variant="label-hidden"
+                                                label="Explanation"
+                                                type="text"
+                                                data-index={index}
+                                                data-field="explanation"
+                                                value={line.explanation}
+                                                onchange={handleLineChange}
+                                                disabled={isReadOnly}
+                                            ></lightning-input>
+                                        </td>
+
+                                        <td class="dimension-cell">
+                                            <lightning-combobox
+                                                variant="label-hidden"
+                                                label="Department"
+                                                data-index={index}
+                                                data-field="departmentId"
+                                                value={line.departmentId}
+                                                options={departmentOptions}
+                                                onchange={handleLineChange}
+                                                disabled={isReadOnly}
+                                            ></lightning-combobox>
+                                        </td>
+
+                                        <td class="dimension-cell">
+                                            <lightning-combobox
+                                                variant="label-hidden"
+                                                label="Cost Center"
+                                                data-index={index}
+                                                data-field="costCenterId"
+                                                value={line.costCenterId}
+                                                options={costCenterOptions}
+                                                onchange={handleLineChange}
+                                                disabled={isReadOnly}
+                                            ></lightning-combobox>
+                                        </td>
+
+                                        <td class="dimension-cell">
+                                            <lightning-combobox
+                                                variant="label-hidden"
+                                                label="Project"
+                                                data-index={index}
+                                                data-field="projectId"
+                                                value={line.projectId}
+                                                options={projectOptions}
+                                                onchange={handleLineChange}
+                                                disabled={isReadOnly}
+                                            ></lightning-combobox>
+                                        </td>
+
+                                        <td>
+                                            <lightning-button-icon
+                                                icon-name="utility:delete"
+                                                alternative-text="Remove line"
+                                                title="Remove line"
+                                                data-index={index}
+                                                onclick={handleRemoveLine}
+                                                disabled={isReadOnly}
+                                            ></lightning-button-icon>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+
+                            <tfoot>
+                                <tr>
+                                    <th colspan="2">Totals</th>
+                                    <th>{totalDebitDisplay}</th>
+                                    <th>{totalCreditDisplay}</th>
+                                    <th colspan="5">
+                                        <span class={balanceClass} aria-live="polite">
+                                            {balanceMessage}
+                                        </span>
+                                    </th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </section>
+
+                <template if:true={showReversalPanel}>
+                    <section class="reversal-panel slds-m-top_medium" role="region" aria-labelledby="reversal-panel-heading">
+                        <div class="section-heading">
+                            <div>
+                                <h2 id="reversal-panel-heading" class="slds-text-heading_small">
+                                    Reverse Posted Journal
+                                </h2>
+                                <p class="slds-text-body_small slds-text-color_weak">
+                                    A reversal creates and posts a new Journal with opposite financial lines. The original Journal is never edited.
+                                </p>
+                            </div>
+                        </div>
+
+                        <template if:true={isPosted}>
+                            <div class="slds-grid slds-wrap slds-gutters">
+                                <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-3">
+                                    <lightning-combobox
+                                        name="reversalPeriodId"
+                                        label="Reversal Accounting Period"
+                                        value={reversalPeriodId}
+                                        options={periodOptions}
+                                        onchange={handleReversalInput}
+                                        required
+                                    ></lightning-combobox>
+                                </div>
+
+                                <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-3">
+                                    <lightning-input
+                                        type="date"
+                                        name="reversalDate"
+                                        label="Reversal Accounting Date"
+                                        value={reversalDate}
+                                        onchange={handleReversalInput}
+                                        required
+                                    ></lightning-input>
+                                </div>
+
+                                <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-3">
+                                    <lightning-input
+                                        type="text"
+                                        name="reversalReason"
+                                        label="Reversal Reason"
+                                        value={reversalReason}
+                                        onchange={handleReversalInput}
+                                        required
+                                    ></lightning-input>
+                                </div>
+                            </div>
+
+                            <div class="slds-m-top_small">
+                                <lightning-button
+                                    variant="destructive"
+                                    label="Reverse Journal"
+                                    icon-name="utility:undo"
+                                    onclick={handleReverse}
+                                    disabled={reverseDisabled}
+                                ></lightning-button>
+                            </div>
+                        </template>
+
+                        <template if:true={reversalResult}>
+                            <div class="reversal-result slds-m-top_medium">
+                                <div>
+                                    Reversal Journal:
+                                    <strong>{reversalResult.reversalJournalName}</strong>
+                                </div>
+
+                                <div>
+                                    Reversal Posting Key:
+                                    <strong>{reversalResult.reversalPostingKey}</strong>
+                                </div>
+
+                                <div>
+                                    Reversal Accounting Event:
+                                    <strong>{reversalResult.reversalAccountingEventId}</strong>
+                                </div>
+
+                                <div>
+                                    Reversal Date:
+                                    <strong>{reversalResult.reversalAccountingDate}</strong>
+                                </div>
+
+                                <template if:true={reversalResult.replay}>
+                                    <div class="slds-m-top_x-small">
+                                        Repeated reversal request detected. The original reversal result was returned.
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                    </section>
+                </template>
+
+                <template if:true={showValidationPanel}>
+                    <section class="validation-panel slds-m-top_medium" role="region" aria-labelledby="validation-panel-heading">
+                        <div class="validation-heading">
+                            <h2 id="validation-panel-heading" class="slds-text-heading_small">
+                                Posting Validation
+                            </h2>
+                            <span class={validationBadgeClass}>
+                                {validationStatusText}
+                            </span>
+                        </div>
+
+                        <div class="validation-summary slds-m-top_x-small">
+                            Lines: {validationLineCount}
+                            · Debit: {validationDebitDisplay}
+                            · Credit: {validationCreditDisplay}
+                        </div>
+
+                        <template if:true={hasValidationErrors}>
+                            <ul class="slds-list_dotted slds-m-top_small">
+                                <template
+                                    for:each={validationErrors}
+                                    for:item="error"
+                                >
+                                    <li key={error}>{error}</li>
+                                </template>
+                            </ul>
+                        </template>
+                    </section>
+                </template>
+
+                <template if:true={postingResult}>
+                    <section class="posting-panel slds-m-top_medium" role="region" aria-labelledby="posting-result-heading">
+                        <h2 id="posting-result-heading" class="slds-text-heading_small">
+                            Posting Result
+                        </h2>
+
+                        <div class="slds-m-top_x-small">
+                            Posting Key:
+                            <strong>{postingResult.postingKey}</strong>
+                        </div>
+
+                        <div>
+                            Accounting Event:
+                            <strong>{postingResult.accountingEventId}</strong>
+                        </div>
+
+                        <div>
+                            Posted At:
+                            <lightning-formatted-date-time
+                                value={postingResult.postedAt}
+                                year="numeric"
+                                month="short"
+                                day="2-digit"
+                                hour="2-digit"
+                                minute="2-digit"
+                            ></lightning-formatted-date-time>
+                        </div>
+
+                        <template if:true={postingResult.replay}>
+                            <div class="slds-m-top_x-small">
+                                Repeated request detected. The original posting result was returned.
+                            </div>
+                        </template>
+                    </section>
+                </template>
+
+                <template if:true={successMessage}>
+                    <div
+                        class="slds-notify slds-notify_alert slds-alert_success slds-m-top_medium"
+                        role="status"
+                    >
+                        {successMessage}
+                    </div>
+                </template>
+
+                <template if:true={errorMessage}>
+                    <div
+                        class="slds-notify slds-notify_alert slds-alert_error slds-m-top_medium"
+                        role="alert"
+                    >
+                        {errorMessage}
+                    </div>
+                </template>
+            </template>
+        </div>
+    </lightning-card>
+</template>

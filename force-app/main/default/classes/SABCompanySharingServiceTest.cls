@@ -300,4 +300,58 @@ private class SABCompanySharingServiceTest {
             manualCompanyShareCount(company.Id, targetUser.Id)
         );
     }
+
+    @IsTest
+    static void ownerGrantDoesNotCreateRedundantCompanyShare() {
+        User targetUser = getTargetUser();
+
+        Accounting_Company__c company =
+            new Accounting_Company__c(
+                Name__c = 'Owner Grant Company',
+                Company_Key__c = 'OWN',
+                Country_Code__c = 'BD',
+                Functional_Currency__c = 'BDT',
+                Fiscal_Calendar_Type__c = 'Calendar',
+                Fiscal_Year_Start_Month__c = 1,
+                Setup_Status__c = 'Active',
+                Is_Active__c = true,
+                OwnerId = targetUser.Id
+            );
+
+        insert company;
+
+        Company_User_Access__c grant = makeGrant(
+            company.Id,
+            targetUser.Id,
+            true,
+            Date.today(),
+            null,
+            'OWNER'
+        );
+
+        Test.startTest();
+        insert grant;
+        Test.stopTest();
+
+        // The authorization record must still exist.
+        System.assertEquals(
+            1,
+            [
+                SELECT COUNT()
+                FROM Company_User_Access__c
+                WHERE Id = :grant.Id
+            ]
+        );
+
+        // The owner already has implicit record access, so the sharing service
+        // must not create a redundant Manual company share.
+        System.assertEquals(
+            0,
+            manualCompanyShareCount(
+                company.Id,
+                targetUser.Id
+            )
+        );
+    }
+
 }

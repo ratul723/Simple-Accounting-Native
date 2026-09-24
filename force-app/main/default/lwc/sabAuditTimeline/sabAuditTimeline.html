@@ -1,0 +1,187 @@
+<template>
+    <lightning-card
+        title="Audit & Action History"
+        icon-name="standard:record"
+    >
+        <template if:true={isLoading}>
+            <lightning-spinner
+                alternative-text="Loading audit history"
+                size="small"
+            ></lightning-spinner>
+        </template>
+
+        <div class="slds-p-horizontal_medium slds-p-bottom_medium">
+            <template if:false={hasCompany}>
+                <div
+                    class="slds-notify slds-notify_alert slds-alert_info"
+                    role="alert"
+                >
+                    Select an Accounting Company above to view its audit and accounting action history.
+                </div>
+            </template>
+
+            <template if:true={hasCompany}>
+                <div class="toolbar slds-m-bottom_small">
+                    <lightning-combobox
+                        class="filter-control"
+                        name="category"
+                        label="History Type"
+                        value={categoryFilter}
+                        options={categoryOptions}
+                        onchange={handleCategoryChange}
+                    ></lightning-combobox>
+
+                    <lightning-input
+                        class="search-control"
+                        type="search"
+                        label="Search History"
+                        value={searchText}
+                        onchange={handleSearchChange}
+                        placeholder="Journal, action, request key..."
+                    ></lightning-input>
+
+                    <lightning-button-icon
+                        class="refresh-button"
+                        icon-name="utility:refresh"
+                        alternative-text="Refresh history"
+                        title="Refresh history"
+                        onclick={handleRefresh}
+                    ></lightning-button-icon>
+                </div>
+
+                <div class="count-bar slds-m-bottom_small" aria-live="polite">
+                    <span>
+                        Business:
+                        <strong>{businessActionCount}</strong>
+                    </span>
+                    <span>
+                        Period:
+                        <strong>{periodActionCount}</strong>
+                    </span>
+                    <span>
+                        Journal:
+                        <strong>{journalActionCount}</strong>
+                    </span>
+                    <span>
+                        Events:
+                        <strong>{accountingEventCount}</strong>
+                    </span>
+                </div>
+
+                <template if:true={hasVisibleItems}>
+                    <div class="timeline" role="list" aria-label="Audit and action history">
+                        <template
+                            for:each={visibleItems}
+                            for:item="item"
+                        >
+                            <article
+                                key={item.itemKey}
+                                class="timeline-item"
+                                role="listitem"
+                            >
+                                <div class="timeline-marker">
+                                    <lightning-icon
+                                        icon-name={item.iconName}
+                                        size="small"
+                                        alternative-text={item.categoryLabel}
+                                    ></lightning-icon>
+                                </div>
+
+                                <div class="timeline-content">
+                                    <div class="timeline-header">
+                                        <div>
+                                            <button
+                                                type="button"
+                                                class="record-link"
+                                                data-record-id={item.recordId}
+                                                data-object-api={item.recordApiName}
+                                                onclick={handleOpenRecord}
+                                            >
+                                                {item.title}
+                                            </button>
+
+                                            <div class="meta-line">
+                                                <lightning-formatted-date-time
+                                                    value={item.occurredAt}
+                                                    year="numeric"
+                                                    month="short"
+                                                    day="2-digit"
+                                                    hour="2-digit"
+                                                    minute="2-digit"
+                                                ></lightning-formatted-date-time>
+
+                                                <template if:true={item.actorDisplay}>
+                                                    <span>· {item.actorDisplay}</span>
+                                                </template>
+                                            </div>
+                                        </div>
+
+                                        <span class={item.badgeClass}>
+                                            {item.categoryLabel}
+                                        </span>
+                                    </div>
+
+                                    <template if:true={item.detail}>
+                                        <div class="detail slds-m-top_x-small">
+                                            {item.detail}
+                                        </div>
+                                    </template>
+
+                                    <div class="technical slds-m-top_x-small">
+                                        <template if:true={item.status}>
+                                            <span>
+                                                Status:
+                                                <strong>{item.status}</strong>
+                                            </span>
+                                        </template>
+
+                                        <template if:true={item.requestKey}>
+                                            <span>
+                                                Request:
+                                                <code>{item.requestKey}</code>
+                                            </span>
+                                        </template>
+
+                                        <template if:true={item.sourceDisplay}>
+                                            <span>
+                                                Source:
+                                                <code>{item.sourceDisplay}</code>
+                                            </span>
+                                        </template>
+                                    </div>
+
+                                    <template if:true={item.relatedRecordId}>
+                                        <div class="slds-m-top_x-small">
+                                            <lightning-button
+                                                variant="base"
+                                                label="Open related record"
+                                                data-record-id={item.relatedRecordId}
+                                                data-object-api={item.relatedApiName}
+                                                onclick={handleOpenRecord}
+                                            ></lightning-button>
+                                        </div>
+                                    </template>
+                                </div>
+                            </article>
+                        </template>
+                    </div>
+                </template>
+
+                <template if:false={hasVisibleItems}>
+                    <div class="empty-state">
+                        No audit/action history matches the current filters.
+                    </div>
+                </template>
+
+                <template if:true={errorMessage}>
+                    <div
+                        class="slds-notify slds-notify_alert slds-alert_error slds-m-top_medium"
+                        role="alert"
+                    >
+                        {errorMessage}
+                    </div>
+                </template>
+            </template>
+        </div>
+    </lightning-card>
+</template>

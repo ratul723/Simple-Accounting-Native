@@ -186,4 +186,62 @@ private class SABCompanyRecordSharingServiceTest {
             periodShareCount(period.Id, u.Id)
         );
     }
+
+    @IsTest
+    static void updateWithoutCompanyOrOwnerChangeSkipsReconciliation() {
+        Accounting_Company__c company =
+            makeCompany(
+                'R5',
+                'No Sharing Reconcile Company'
+            );
+
+        Accounting_Period__c period =
+            makePeriod(
+                company.Id,
+                '2026-05'
+            );
+
+        insert period;
+
+        Accounting_Period__c oldRecord =
+            period.clone(
+                true,
+                true,
+                false,
+                false
+            );
+
+        Accounting_Period__c newRecord =
+            period.clone(
+                true,
+                true,
+                false,
+                false
+            );
+
+        // Status is not a sharing key. It must not trigger grant/share SOQL.
+        newRecord.Status__c = 'Closed';
+
+        Integer queriesBefore =
+            Limits.getQueries();
+
+        SABCompanyRecordSharingService.afterUpdate(
+            new List<SObject>{
+                newRecord
+            },
+            new Map<Id, SObject>{
+                oldRecord.Id => oldRecord
+            }
+        );
+
+        Integer queriesAfter =
+            Limits.getQueries();
+
+        System.assertEquals(
+            queriesBefore,
+            queriesAfter,
+            'An update that does not change Company__c or OwnerId must not reconcile record sharing.'
+        );
+    }
+
 }

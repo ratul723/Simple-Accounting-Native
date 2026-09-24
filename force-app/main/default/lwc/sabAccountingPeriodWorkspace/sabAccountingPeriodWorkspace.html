@@ -1,0 +1,233 @@
+<template>
+    <lightning-card
+        title="Accounting Period Workspace"
+        icon-name="standard:date_time"
+    >
+        <template if:true={isLoading}>
+            <lightning-spinner
+                alternative-text="Loading Accounting Period Workspace"
+                size="small"
+            ></lightning-spinner>
+        </template>
+
+        <div class="slds-p-horizontal_medium slds-p-bottom_medium">
+            <template if:false={hasCompany}>
+                <div
+                    class="slds-notify slds-notify_alert slds-alert_info"
+                    role="alert"
+                >
+                    Select an Accounting Company above to manage Accounting Periods.
+                </div>
+            </template>
+
+            <template if:true={hasCompany}>
+                <div class="period-picker slds-m-bottom_medium">
+                    <lightning-combobox
+                        name="period"
+                        label="Accounting Period"
+                        value={selectedPeriodId}
+                        options={periodOptions}
+                        placeholder="Select an Accounting Period"
+                        onchange={handlePeriodChange}
+                    ></lightning-combobox>
+                </div>
+
+                <template if:true={period}>
+                    <div class="period-summary slds-m-bottom_medium">
+                        <div>
+                            <span class="summary-label">Period</span>
+                            <strong>{period.periodName}</strong>
+                        </div>
+
+                        <div>
+                            <span class="summary-label">Dates</span>
+                            <strong>{periodDateRange}</strong>
+                        </div>
+
+                        <div>
+                            <span class="summary-label">Status</span>
+                            <strong>{period.status}</strong>
+                        </div>
+
+                        <div>
+                            <span class="summary-label">Fiscal</span>
+                            <strong>{fiscalLabel}</strong>
+                        </div>
+                    </div>
+
+                    <template if:true={isClosed}>
+                        <div class="closed-details slds-m-bottom_medium">
+                            <span>
+                                Closed by:
+                                <strong>{closedByDisplay}</strong>
+                            </span>
+
+                            <span>
+                                Closed at:
+                                <lightning-formatted-date-time
+                                    value={period.closedAt}
+                                    year="numeric"
+                                    month="short"
+                                    day="2-digit"
+                                    hour="2-digit"
+                                    minute="2-digit"
+                                ></lightning-formatted-date-time>
+                            </span>
+                        </div>
+                    </template>
+
+                    <section class="action-panel" role="region" aria-labelledby="period-action-heading">
+                        <div>
+                            <h2 id="period-action-heading" class="slds-text-heading_small">
+                                Period Action
+                            </h2>
+
+                            <p class="slds-text-body_small slds-text-color_weak">
+                                Close and Reopen are controlled accounting actions. A reason is always required and the resulting history is immutable.
+                            </p>
+                        </div>
+
+                        <div class="slds-m-top_small">
+                            <lightning-textarea
+                                name="reason"
+                                label={reasonLabel}
+                                value={reason}
+                                onchange={handleReasonChange}
+                                required
+                            ></lightning-textarea>
+                        </div>
+
+                        <div class="action-buttons slds-m-top_small">
+                            <template if:true={isOpen}>
+                                <lightning-button
+                                    variant="brand"
+                                    label="Close Period"
+                                    icon-name="utility:lock"
+                                    onclick={handleClose}
+                                    disabled={closeDisabled}
+                                ></lightning-button>
+                            </template>
+
+                            <template if:true={isClosed}>
+                                <lightning-button
+                                    variant="brand"
+                                    label="Reopen Period"
+                                    icon-name="utility:unlock"
+                                    onclick={handleReopen}
+                                    disabled={reopenDisabled}
+                                ></lightning-button>
+                            </template>
+
+                            <template if:false={hasRelevantPermission}>
+                                <span class="permission-note">
+                                    You do not have the required period action permission.
+                                </span>
+                            </template>
+                        </div>
+                    </section>
+
+                    <section class="history-panel slds-m-top_medium" role="region" aria-labelledby="period-history-heading">
+                        <div class="history-heading">
+                            <div>
+                                <h2 id="period-history-heading" class="slds-text-heading_small">
+                                    Immutable Period Action History
+                                </h2>
+                                <p class="slds-text-body_small slds-text-color_weak">
+                                    Close/Reopen history is retained independently of the current Period status.
+                                </p>
+                            </div>
+                        </div>
+
+                        <template if:true={hasHistory}>
+                            <div class="table-scroll slds-m-top_small">
+                                <table class="slds-table slds-table_cell-buffer slds-table_bordered history-table">
+                                    <caption class="slds-assistive-text">Immutable accounting period close and reopen history.</caption>
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Performed At</th>
+                                            <th scope="col">Action</th>
+                                            <th scope="col">Performed By</th>
+                                            <th scope="col">Reason</th>
+                                            <th scope="col">Request Key</th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody>
+                                        <template
+                                            for:each={actions}
+                                            for:item="action"
+                                        >
+                                            <tr key={action.actionId}>
+                                                <td>
+                                                    <lightning-formatted-date-time
+                                                        value={action.performedAt}
+                                                        year="numeric"
+                                                        month="short"
+                                                        day="2-digit"
+                                                        hour="2-digit"
+                                                        minute="2-digit"
+                                                    ></lightning-formatted-date-time>
+                                                </td>
+
+                                                <td>
+                                                    {action.previousStatus}
+                                                    →
+                                                    {action.newStatus}
+                                                </td>
+
+                                                <td>
+                                                    {action.performedByName}
+                                                </td>
+
+                                                <td>
+                                                    {action.reason}
+                                                </td>
+
+                                                <td>
+                                                    {action.requestKey}
+                                                </td>
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </template>
+
+                        <template if:false={hasHistory}>
+                            <div class="empty-history slds-m-top_small">
+                                No Close/Reopen actions have been recorded for this Period.
+                            </div>
+                        </template>
+                    </section>
+                </template>
+
+                <template if:false={period}>
+                    <div
+                        class="slds-notify slds-notify_alert slds-theme_info"
+                        role="status"
+                    >
+                        Select an Accounting Period to review its status and action history.
+                    </div>
+                </template>
+
+                <template if:true={successMessage}>
+                    <div
+                        class="slds-notify slds-notify_alert slds-alert_success slds-m-top_medium"
+                        role="status"
+                    >
+                        {successMessage}
+                    </div>
+                </template>
+
+                <template if:true={errorMessage}>
+                    <div
+                        class="slds-notify slds-notify_alert slds-alert_error slds-m-top_medium"
+                        role="alert"
+                    >
+                        {errorMessage}
+                    </div>
+                </template>
+            </template>
+        </div>
+    </lightning-card>
+</template>

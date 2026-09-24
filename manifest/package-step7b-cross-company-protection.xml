@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>SABCrossCompanyGuardService</members>
+        <members>SABCrossCompanyGuardServiceTest</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>SABJournalCompanyGuardTrigger</members>
+        <members>SABJournalLineCompanyGuardTrigger</members>
+        <members>SABBankCompanyGuardTrigger</members>
+        <members>SABInvoiceCompanyGuardTrigger</members>
+        <members>SABSupplierBillCompanyGuardTrigger</members>
+        <members>SABPaymentCompanyGuardTrigger</members>
+        <members>SABEventCompanyGuardTrigger</members>
+        <name>ApexTrigger</name>
+    </types>
+    <version>65.0</version>
+</Package>

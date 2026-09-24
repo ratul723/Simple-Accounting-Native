@@ -33,7 +33,108 @@ public without sharing class SABCompanyRecordSharingService {
         List<SObject> newRecords,
         Map<Id, SObject> oldMap
     ) {
-        reconcile(newRecords, oldMap);
+        if (
+            newRecords == null
+            || newRecords.isEmpty()
+            || oldMap == null
+            || oldMap.isEmpty()
+        ) {
+            return;
+        }
+
+        // Sharing depends only on the record's Accounting Company and owner.
+        // Financial lifecycle updates such as Draft -> Posted,
+        // Posted -> Reversed, posting timestamps and reversal links do not
+        // change which company users should see the record.
+        //
+        // Previously every update called reconcile(), which performs SOQL for
+        // company grants and existing __Share rows. Posting/reversal services
+        // legitimately update Journal_Entry__c several times in one
+        // transaction, so those unnecessary queries could push a reversal
+        // transaction over Salesforce's 100-query governor limit.
+        Schema.DescribeSObjectResult objectDescribe =
+            newRecords[0].getSObjectType().getDescribe();
+
+        Map<String, Schema.SObjectField> fields =
+            objectDescribe.fields.getMap();
+
+        Boolean hasCompanyField =
+            fields.containsKey('Company__c');
+
+        Boolean hasOwnerField =
+            fields.containsKey('OwnerId');
+
+        if (!hasCompanyField) {
+            return;
+        }
+
+        List<SObject> sharingRelevantRecords =
+            new List<SObject>();
+
+        Map<Id, SObject> sharingRelevantOldMap =
+            new Map<Id, SObject>();
+
+        for (SObject newRecord : newRecords) {
+            Id recordId =
+                (Id) newRecord.get('Id');
+
+            if (
+                recordId == null
+                || !oldMap.containsKey(recordId)
+            ) {
+                continue;
+            }
+
+            SObject oldRecord =
+                oldMap.get(recordId);
+
+            Id newCompanyId =
+                (Id) newRecord.get('Company__c');
+
+            Id oldCompanyId =
+                (Id) oldRecord.get('Company__c');
+
+            Boolean companyChanged =
+                newCompanyId != oldCompanyId;
+
+            Boolean ownerChanged = false;
+
+            if (hasOwnerField) {
+                Id newOwnerId =
+                    (Id) newRecord.get('OwnerId');
+
+                Id oldOwnerId =
+                    (Id) oldRecord.get('OwnerId');
+
+                ownerChanged =
+                    newOwnerId != oldOwnerId;
+            }
+
+            if (
+                !companyChanged
+                && !ownerChanged
+            ) {
+                continue;
+            }
+
+            sharingRelevantRecords.add(
+                newRecord
+            );
+
+            sharingRelevantOldMap.put(
+                recordId,
+                oldRecord
+            );
+        }
+
+        if (sharingRelevantRecords.isEmpty()) {
+            return;
+        }
+
+        reconcile(
+            sharingRelevantRecords,
+            sharingRelevantOldMap
+        );
     }
 
     public static void afterUndelete(List<SObject> newRecords) {

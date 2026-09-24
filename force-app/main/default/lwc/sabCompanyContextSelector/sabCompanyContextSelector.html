@@ -1,0 +1,83 @@
+<template>
+    <lightning-card
+        title="Accounting Company"
+        icon-name="standard:account"
+    >
+        <div class="slds-p-horizontal_medium slds-p-bottom_medium">
+            <template if:true={isLoading}>
+                <lightning-spinner
+                    alternative-text="Loading accounting companies"
+                    size="small"
+                ></lightning-spinner>
+            </template>
+
+            <template if:true={hasCompanies}>
+                <template if:true={showPicker}>
+                    <lightning-combobox
+                        name="company"
+                        label="Working Company"
+                        value={selectedCompanyId}
+                        options={companyOptions}
+                        onchange={handleCompanyChange}
+                        required
+                    ></lightning-combobox>
+                </template>
+
+                <template if:true={selectedCompany}>
+                    <div class="context-panel slds-m-top_small" aria-live="polite">
+                        <div class="context-primary">
+                            <span class="slds-assistive-text">
+                                Working Company:
+                            </span>
+                            <span class="context-name">
+                                {selectedCompany.companyName}
+                            </span>
+                            <span class="context-key">
+                                {selectedCompany.companyKey}
+                            </span>
+                        </div>
+
+                        <div class="context-meta">
+                            <lightning-badge
+                                label={currencyLabel}
+                            ></lightning-badge>
+
+                            <lightning-badge
+                                label={setupStatusLabel}
+                            ></lightning-badge>
+                        </div>
+                    </div>
+
+                    <p class="slds-text-body_small slds-text-color_weak slds-m-top_x-small">
+                        This company context is used by financial screens.
+                        Switching company clears company-specific selections in subscribing components.
+                    </p>
+                </template>
+            </template>
+
+            <template if:true={hasNoCompanies}>
+                <div
+                    class="slds-notify slds-notify_alert slds-alert_warning"
+                    role="alert"
+                >
+                    <span class="slds-assistive-text">
+                        Warning
+                    </span>
+                    You do not currently have an active Accounting Company available.
+                </div>
+            </template>
+
+            <template if:true={errorMessage}>
+                <div
+                    class="slds-notify slds-notify_alert slds-alert_error slds-m-top_small"
+                    role="alert"
+                >
+                    <span class="slds-assistive-text">
+                        Error
+                    </span>
+                    {errorMessage}
+                </div>
+            </template>
+        </div>
+    </lightning-card>
+</template>

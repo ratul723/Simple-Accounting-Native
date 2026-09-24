@@ -398,33 +398,34 @@ private class SABJournalValidationServiceTest {
     }
 
     @IsTest
-    static void wrongCompanyAndInactiveGLFail() {
+    static void inactiveGLFailsAfterCrossCompanyGuardAdded() {
         User u = testUser();
 
-        Accounting_Company__c companyA =
-            makeCompany('JV4', 'Validation Company A');
-
-        Accounting_Company__c companyB =
-            makeCompany('JV5', 'Validation Company B');
+        Accounting_Company__c company =
+            makeCompany('JV4', 'Validation Company');
 
         Accounting_Period__c period =
             makePeriod(
-                companyA.Id,
+                company.Id,
                 'JV4',
                 'Open'
             );
 
         GL_Account__c validAccount =
             makeGLAccount(
-                companyA.Id,
+                company.Id,
                 '1300',
                 true,
                 true
             );
 
-        GL_Account__c wrongCompanyInactive =
+        // Keep this account in the SAME company so Step 7B's
+        // cross-company trigger allows the draft line to be inserted.
+        // This test is now focused only on the journal validation
+        // service's inactive-GL rule.
+        GL_Account__c inactiveAccount =
             makeGLAccount(
-                companyB.Id,
+                company.Id,
                 '5300',
                 false,
                 true
@@ -432,7 +433,7 @@ private class SABJournalValidationServiceTest {
 
         Journal_Entry__c journal =
             makeJournal(
-                companyA.Id,
+                company.Id,
                 period.Id,
                 Date.newInstance(2026, 9, 15)
             );
@@ -447,7 +448,7 @@ private class SABJournalValidationServiceTest {
             ),
             makeLine(
                 journal.Id,
-                wrongCompanyInactive.Id,
+                inactiveAccount.Id,
                 2,
                 0,
                 75
@@ -455,7 +456,7 @@ private class SABJournalValidationServiceTest {
         };
 
         grantCompanyAccess(
-            companyA.Id,
+            company.Id,
             u.Id,
             'JVAL-4'
         );
@@ -468,9 +469,6 @@ private class SABJournalValidationServiceTest {
                 String.join(result.errors, ' ');
 
             System.assertEquals(false, result.isValid);
-            System.assert(
-                messages.contains('same Accounting Company')
-            );
             System.assert(
                 messages.contains('must be active')
             );

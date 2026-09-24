@@ -1,0 +1,263 @@
+<template>
+    <lightning-card
+        title="Company Setup Wizard"
+        icon-name="standard:settings"
+    >
+        <template if:true={isLoading}>
+            <lightning-spinner
+                alternative-text="Validating company setup"
+                size="small"
+            ></lightning-spinner>
+        </template>
+
+        <div class="slds-p-horizontal_medium slds-p-bottom_medium">
+            <template if:false={hasCompany}>
+                <div
+                    class="slds-notify slds-notify_alert slds-alert_info"
+                    role="alert"
+                >
+                    Select an Accounting Company above to review its setup.
+                </div>
+            </template>
+
+            <template if:true={hasCompany}>
+                <template if:true={state}>
+                    <div class="wizard-header">
+                        <div>
+                            <h2 class="slds-text-heading_small">
+                                {state.companyName}
+                            </h2>
+                            <div class="company-meta">
+                                <span>{state.companyKey}</span>
+                                <span>· {state.countryCode}</span>
+                                <span>· {state.functionalCurrency}</span>
+                                <span>· {state.setupStatus}</span>
+                            </div>
+                        </div>
+
+                        <div class={readinessClass} aria-live="polite">
+                            {readinessLabel}
+                        </div>
+                    </div>
+
+                    <div class="step-grid slds-m-top_medium" role="list" aria-label="Company setup steps">
+                        <article class="step-card" role="listitem">
+                            <div class="step-number">1</div>
+                            <div class="step-body">
+                                <h3>Company Foundation</h3>
+                                <p>
+                                    Identity, country, functional currency and fiscal calendar.
+                                </p>
+
+                                <div class="metric-row">
+                                    <span>
+                                        Active:
+                                        <strong>{companyActiveLabel}</strong>
+                                    </span>
+                                    <span>
+                                        Fiscal start:
+                                        <strong>{state.fiscalYearStartMonth}</strong>
+                                    </span>
+                                </div>
+
+                                <lightning-button
+                                    variant="base"
+                                    label="Open Accounting Company"
+                                    data-object-api="Accounting_Company__c"
+                                    data-record-id={state.companyId}
+                                    onclick={handleOpenRecord}
+                                ></lightning-button>
+                            </div>
+                        </article>
+
+                        <article class="step-card" role="listitem">
+                            <div class="step-number">2</div>
+                            <div class="step-body">
+                                <h3>Accounting Periods</h3>
+                                <p>
+                                    At least one period and one Open period are required for core posting readiness.
+                                </p>
+
+                                <div class="metric-row">
+                                    <span>
+                                        Periods:
+                                        <strong>{state.periodCount}</strong>
+                                    </span>
+                                    <span>
+                                        Open:
+                                        <strong>{state.openPeriodCount}</strong>
+                                    </span>
+                                </div>
+
+                                <lightning-button
+                                    variant="base"
+                                    label="Open Accounting Periods"
+                                    data-object-api="Accounting_Period__c"
+                                    onclick={handleOpenObject}
+                                ></lightning-button>
+                            </div>
+                        </article>
+
+                        <article class="step-card" role="listitem">
+                            <div class="step-number">3</div>
+                            <div class="step-body">
+                                <h3>Chart of Accounts</h3>
+                                <p>
+                                    Active GL accounts are required. Control-account and manual-posting rules are validated by the service.
+                                </p>
+
+                                <div class="metric-row">
+                                    <span>
+                                        Active GL Accounts:
+                                        <strong>{state.activeGLAccountCount}</strong>
+                                    </span>
+                                </div>
+
+                                <lightning-button
+                                    variant="base"
+                                    label="Open GL Accounts"
+                                    data-object-api="GL_Account__c"
+                                    onclick={handleOpenObject}
+                                ></lightning-button>
+                            </div>
+                        </article>
+
+                        <article class="step-card" role="listitem">
+                            <div class="step-number">4</div>
+                            <div class="step-body">
+                                <h3>Document Numbering</h3>
+                                <p>
+                                    Active sequences are validated by the controlled sequence service. They are optional for manual-ledger-only use.
+                                </p>
+
+                                <div class="metric-row">
+                                    <span>
+                                        Active Sequences:
+                                        <strong>{state.activeSequenceCount}</strong>
+                                    </span>
+                                </div>
+
+                                <lightning-button
+                                    variant="base"
+                                    label="Open Document Sequences"
+                                    data-object-api="Document_Sequence__c"
+                                    onclick={handleOpenObject}
+                                ></lightning-button>
+                            </div>
+                        </article>
+
+                        <article class="step-card" role="listitem">
+                            <div class="step-number">5</div>
+                            <div class="step-body">
+                                <h3>Enabled Features</h3>
+                                <p>
+                                    Every enabled Company Feature must have Configuration Status = Valid.
+                                </p>
+
+                                <div class="metric-row">
+                                    <span>
+                                        Enabled Features:
+                                        <strong>{state.enabledFeatureCount}</strong>
+                                    </span>
+                                </div>
+
+                                <lightning-button
+                                    variant="base"
+                                    label="Open Company Features"
+                                    data-object-api="Company_Feature__c"
+                                    onclick={handleOpenObject}
+                                ></lightning-button>
+                            </div>
+                        </article>
+
+                        <article class="step-card final-card" role="listitem">
+                            <div class="step-number">6</div>
+                            <div class="step-body">
+                                <h3>Validate Core Readiness</h3>
+                                <p>
+                                    Re-run the authoritative setup service after configuration changes.
+                                </p>
+
+                                <lightning-button
+                                    variant="brand"
+                                    label="Validate Setup"
+                                    icon-name="utility:check"
+                                    onclick={handleValidate}
+                                    disabled={isLoading}
+                                ></lightning-button>
+                            </div>
+                        </article>
+                    </div>
+
+                    <template if:true={hasErrors}>
+                        <section class="result-panel error-panel slds-m-top_medium" role="alert">
+                            <h3 class="slds-text-heading_small">
+                                Blocking Setup Errors
+                            </h3>
+
+                            <ul class="slds-list_dotted slds-m-top_x-small">
+                                <template
+                                    for:each={state.errors}
+                                    for:item="message"
+                                >
+                                    <li key={message}>
+                                        {message}
+                                    </li>
+                                </template>
+                            </ul>
+                        </section>
+                    </template>
+
+                    <template if:true={hasWarnings}>
+                        <section class="result-panel warning-panel slds-m-top_medium" role="status">
+                            <h3 class="slds-text-heading_small">
+                                Setup Warnings
+                            </h3>
+
+                            <ul class="slds-list_dotted slds-m-top_x-small">
+                                <template
+                                    for:each={state.warnings}
+                                    for:item="message"
+                                >
+                                    <li key={message}>
+                                        {message}
+                                    </li>
+                                </template>
+                            </ul>
+                        </section>
+                    </template>
+
+                    <template if:true={state.readyForCoreAccounting}>
+                        <section class="result-panel ready-panel slds-m-top_medium" role="status">
+                            <h3 class="slds-text-heading_small">
+                                Core Accounting Readiness Passed
+                            </h3>
+
+                            <p class="slds-m-top_x-small">
+                                The currently implemented core setup checks passed for this company.
+                            </p>
+                        </section>
+                    </template>
+
+                    <section class="scope-note slds-m-top_medium">
+                        <strong>Current validation boundary:</strong>
+                        this Stage 8G wizard uses the existing
+                        SABCompanySetupService. The service does not yet claim
+                        complete localization-pack or opening-balance validation
+                        because those authoritative contracts are not currently
+                        implemented.
+                    </section>
+                </template>
+
+                <template if:true={errorMessage}>
+                    <div
+                        class="slds-notify slds-notify_alert slds-alert_error slds-m-top_medium"
+                        role="alert"
+                    >
+                        {errorMessage}
+                    </div>
+                </template>
+            </template>
+        </div>
+    </lightning-card>
+</template>

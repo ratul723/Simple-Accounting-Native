@@ -1,0 +1,30 @@
+.context-panel {
+    border: 1px solid var(--lwc-colorBorder, #dddbda);
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    background: var(--lwc-colorBackgroundAlt, #ffffff);
+}
+
+.context-primary {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.context-name {
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.context-key {
+    color: var(--lwc-colorTextWeak, #706e6b);
+    font-size: 0.75rem;
+}
+
+.context-meta {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: 0.5rem;
+}

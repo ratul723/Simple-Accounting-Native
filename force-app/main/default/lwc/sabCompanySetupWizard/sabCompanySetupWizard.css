@@ -1,0 +1,148 @@
+.wizard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.company-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    margin-top: 0.125rem;
+    color: var(
+        --lwc-colorTextWeak,
+        #706e6b
+    );
+    font-size: 0.75rem;
+}
+
+.readiness {
+    border-radius: 999px;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.readiness-ready {
+    background: #e3fcef;
+}
+
+.readiness-warning {
+    background: #fef1e6;
+}
+
+.step-grid {
+    display: grid;
+    grid-template-columns:
+        repeat(
+            auto-fit,
+            minmax(16rem, 1fr)
+        );
+    gap: 0.75rem;
+}
+
+.step-card {
+    display: grid;
+    grid-template-columns: 2rem 1fr;
+    gap: 0.625rem;
+    min-height: 10rem;
+    padding: 0.875rem;
+    border: 1px solid var(
+        --lwc-colorBorder,
+        #dddbda
+    );
+    border-radius: 0.5rem;
+    background: var(
+        --lwc-colorBackgroundAlt,
+        #ffffff
+    );
+}
+
+.step-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 50%;
+    background: var(
+        --lwc-brandPrimary,
+        #0176d3
+    );
+    color: #ffffff;
+    font-weight: 700;
+}
+
+.step-body {
+    min-width: 0;
+}
+
+.step-body h3 {
+    font-weight: 700;
+}
+
+.step-body p {
+    margin-top: 0.25rem;
+    margin-bottom: 0.75rem;
+    color: var(
+        --lwc-colorTextWeak,
+        #706e6b
+    );
+}
+
+.metric-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 0.625rem;
+    font-size: 0.78rem;
+}
+
+.final-card {
+    background: var(
+        --lwc-colorBackground,
+        #f3f3f3
+    );
+}
+
+.result-panel,
+.scope-note {
+    border: 1px solid var(
+        --lwc-colorBorder,
+        #dddbda
+    );
+    border-radius: 0.5rem;
+    padding: 0.875rem;
+}
+
+.error-panel {
+    background: #fef1ee;
+}
+
+.warning-panel {
+    background: #fef7e6;
+}
+
+.ready-panel {
+    background: #e3fcef;
+}
+
+.scope-note {
+    color: var(
+        --lwc-colorTextWeak,
+        #706e6b
+    );
+    font-size: 0.78rem;
+}
+
+@media (max-width: 48rem) {
+    .wizard-header {
+        flex-direction: column;
+    }
+
+    .step-grid {
+        grid-template-columns: 1fr;
+    }
+}

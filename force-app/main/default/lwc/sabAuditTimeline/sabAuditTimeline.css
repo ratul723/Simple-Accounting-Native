@@ -1,0 +1,157 @@
+.toolbar {
+    display: grid;
+    grid-template-columns:
+        minmax(9rem, 0.8fr)
+        minmax(12rem, 1.4fr)
+        auto;
+    gap: 0.5rem;
+    align-items: end;
+}
+
+.refresh-button {
+    margin-bottom: 0.1rem;
+}
+
+.count-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    padding: 0.625rem 0.75rem;
+    border-radius: 0.375rem;
+    background: var(
+        --lwc-colorBackgroundAlt,
+        #f3f3f3
+    );
+    font-size: 0.75rem;
+}
+
+.timeline {
+    position: relative;
+}
+
+.timeline-item {
+    display: grid;
+    grid-template-columns: 2rem 1fr;
+    gap: 0.625rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(
+        --lwc-colorBorder,
+        #dddbda
+    );
+}
+
+.timeline-item:last-child {
+    border-bottom: 0;
+}
+
+.timeline-marker {
+    padding-top: 0.125rem;
+}
+
+.timeline-content {
+    min-width: 0;
+}
+
+.timeline-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.5rem;
+}
+
+.record-link {
+    appearance: none;
+    border: 0;
+    padding: 0;
+    background: transparent;
+    font: inherit;
+    font-weight: 700;
+    color: var(
+        --lwc-brandTextLink,
+        #0176d3
+    );
+    cursor: pointer;
+    text-align: left;
+}
+
+.record-link:hover,
+.record-link:focus {
+    text-decoration: underline;
+}
+
+.meta-line {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    margin-top: 0.125rem;
+    color: var(
+        --lwc-colorTextWeak,
+        #706e6b
+    );
+    font-size: 0.75rem;
+}
+
+.detail {
+    overflow-wrap: anywhere;
+}
+
+.technical {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    color: var(
+        --lwc-colorTextWeak,
+        #706e6b
+    );
+    font-size: 0.72rem;
+}
+
+.technical code {
+    overflow-wrap: anywhere;
+}
+
+.type-badge {
+    flex: 0 0 auto;
+    border-radius: 999px;
+    padding: 0.125rem 0.5rem;
+    background: var(
+        --lwc-colorBackgroundAlt,
+        #f3f3f3
+    );
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+
+.empty-state {
+    padding: 1rem;
+    border-radius: 0.375rem;
+    background: var(
+        --lwc-colorBackgroundAlt,
+        #f3f3f3
+    );
+    text-align: center;
+    color: var(
+        --lwc-colorTextWeak,
+        #706e6b
+    );
+}
+
+@media (max-width: 48rem) {
+    .toolbar {
+        grid-template-columns: 1fr;
+    }
+
+    .refresh-button {
+        justify-self: start;
+    }
+
+    .timeline-header {
+        flex-direction: column;
+    }
+}
+
+
+.record-link:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+}

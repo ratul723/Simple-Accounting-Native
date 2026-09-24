@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningMessageChannel xmlns="http://soap.sforce.com/2006/04/metadata">
+    <masterLabel>SAB Company Context</masterLabel>
+    <isExposed>true</isExposed>
+    <description>
+        Broadcasts the selected Accounting Company to Simple Accounting Books Lightning components.
+    </description>
+    <lightningMessageFields>
+        <fieldName>companyId</fieldName>
+        <description>Selected Accounting Company record Id.</description>
+    </lightningMessageFields>
+    <lightningMessageFields>
+        <fieldName>companyName</fieldName>
+        <description>Selected Accounting Company display name.</description>
+    </lightningMessageFields>
+    <lightningMessageFields>
+        <fieldName>companyKey</fieldName>
+        <description>Selected Accounting Company key.</description>
+    </lightningMessageFields>
+    <lightningMessageFields>
+        <fieldName>functionalCurrency</fieldName>
+        <description>Selected company functional currency.</description>
+    </lightningMessageFields>
+    <lightningMessageFields>
+        <fieldName>setupStatus</fieldName>
+        <description>Selected company setup status.</description>
+    </lightningMessageFields>
+    <lightningMessageFields>
+        <fieldName>companySwitched</fieldName>
+        <description>True when the user switched from one company to another.</description>
+    </lightningMessageFields>
+    <lightningMessageFields>
+        <fieldName>companyCleared</fieldName>
+        <description>True when no authorized Accounting Company is available and subscribers must clear stale company state.</description>
+    </lightningMessageFields>
+</LightningMessageChannel>

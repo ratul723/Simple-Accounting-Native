@@ -177,6 +177,24 @@ public without sharing class SABCompanySharingService {
         Set<Id> companyIds,
         Set<Id> userIds
     ) {
+        // The Accounting Company owner already has implicit full access.
+        // Salesforce can reject an explicit Manual __Share row to that same
+        // owner with INSUFFICIENT_ACCESS_ON_CROSS_REFERENCE_ENTITY.
+        Map<Id, Id> ownerByCompanyId =
+            new Map<Id, Id>();
+
+        for (Accounting_Company__c companyRecord : [
+            SELECT Id,
+                   OwnerId
+            FROM Accounting_Company__c
+            WHERE Id IN :companyIds
+        ]) {
+            ownerByCompanyId.put(
+                companyRecord.Id,
+                companyRecord.OwnerId
+            );
+        }
+
         Map<String, List<Accounting_Company__Share>> sharesByPair =
             new Map<String, List<Accounting_Company__Share>>();
 
@@ -229,6 +247,16 @@ public without sharing class SABCompanySharingService {
                 sharesByPair.containsKey(keyValue)
                     ? sharesByPair.get(keyValue)
                     : new List<Accounting_Company__Share>();
+
+            // Never create or retain an explicit Manual share for the owner.
+            // The owner already has implicit access to the company.
+            if (
+                ownerByCompanyId.containsKey(companyId)
+                && ownerByCompanyId.get(companyId) == userId
+            ) {
+                toDelete.addAll(existingShares);
+                continue;
+            }
 
             if (effectivePairs.contains(keyValue)) {
                 if (existingShares.isEmpty()) {
