@@ -1,0 +1,374 @@
+<template>
+    <lightning-card
+        title="Trial Balance"
+        icon-name="standard:report"
+    >
+        <template if:true={isLoading}>
+            <lightning-spinner
+                alternative-text="Generating Trial Balance"
+                size="small"
+            ></lightning-spinner>
+        </template>
+
+        <div class="slds-p-horizontal_medium slds-p-bottom_medium">
+            <template if:false={hasCompany}>
+                <div
+                    class="slds-notify slds-notify_alert slds-alert_info"
+                    role="alert"
+                >
+                    Select an Accounting Company above to run the Trial Balance.
+                </div>
+            </template>
+
+            <template if:true={hasCompany}>
+                <div class="filters">
+                    <lightning-combobox
+                        name="periodId"
+                        label="Accounting Period"
+                        value={periodId}
+                        options={periodOptions}
+                        placeholder="Optional: choose a fiscal period"
+                        onchange={handlePeriodChange}
+                    ></lightning-combobox>
+
+                    <lightning-input
+                        type="date"
+                        name="fromDate"
+                        label="From Date"
+                        value={fromDate}
+                        onchange={handleDateChange}
+                        required
+                    ></lightning-input>
+
+                    <lightning-input
+                        type="date"
+                        name="toDate"
+                        label="To Date"
+                        value={toDate}
+                        onchange={handleDateChange}
+                        required
+                    ></lightning-input>
+
+                    <lightning-input
+                        type="checkbox"
+                        name="includeZeroBalance"
+                        label="Show zero-balance accounts"
+                        checked={includeZeroBalance}
+                        onchange={handleZeroChange}
+                    ></lightning-input>
+
+                    <lightning-button
+                        variant="brand"
+                        label="Generate Trial Balance"
+                        icon-name="utility:chart"
+                        onclick={handleGenerate}
+                        disabled={generateDisabled}
+                    ></lightning-button>
+                </div>
+
+                <template if:true={report}>
+                    <div class="report-meta slds-m-top_medium">
+                        <span>
+                            Company:
+                            <strong>{report.companyName}</strong>
+                        </span>
+
+                        <span>
+                            Currency:
+                            <strong>{report.functionalCurrency}</strong>
+                        </span>
+
+                        <span>
+                            Range:
+                            <strong>{report.fromDate} → {report.toDate}</strong>
+                        </span>
+
+                        <span>
+                            Generated:
+                            <lightning-formatted-date-time
+                                value={report.generatedAt}
+                                year="numeric"
+                                month="short"
+                                day="2-digit"
+                                hour="2-digit"
+                                minute="2-digit"
+                            ></lightning-formatted-date-time>
+                        </span>
+
+                        <span class={balanceClass} aria-live="polite">
+                            {balanceLabel}
+                        </span>
+                    </div>
+
+                    <div class="table-scroll slds-m-top_medium">
+                        <table
+                            class="slds-table slds-table_cell-buffer slds-table_bordered report-table"
+                        >
+                            <caption class="slds-assistive-text">
+                                Trial Balance with opening, period movement and closing debit and credit balances by GL Account.
+                            </caption>
+
+                            <thead>
+                                <tr>
+                                    <th rowspan="2" scope="col">Account</th>
+                                    <th rowspan="2" scope="col">Type</th>
+                                    <th colspan="2" scope="colgroup">Opening</th>
+                                    <th colspan="2" scope="colgroup">Movement</th>
+                                    <th colspan="2" scope="colgroup">Closing</th>
+                                    <th rowspan="2" scope="col">Drilldown</th>
+                                </tr>
+                                <tr>
+                                    <th scope="col">Debit</th>
+                                    <th scope="col">Credit</th>
+                                    <th scope="col">Debit</th>
+                                    <th scope="col">Credit</th>
+                                    <th scope="col">Debit</th>
+                                    <th scope="col">Credit</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                <template
+                                    for:each={report.rows}
+                                    for:item="row"
+                                >
+                                    <tr key={row.glAccountId}>
+                                        <td>
+                                            <div class="account-code">
+                                                {row.accountCode}
+                                            </div>
+                                            <div class="account-name">
+                                                {row.accountName}
+                                            </div>
+                                            <template if:false={row.active}>
+                                                <div class="inactive-label">
+                                                    Inactive
+                                                </div>
+                                            </template>
+                                        </td>
+
+                                        <td>{row.accountType}</td>
+
+                                        <td class="amount">
+                                            <lightning-formatted-number
+                                                value={row.openingDebit}
+                                                minimum-fraction-digits="2"
+                                                maximum-fraction-digits="4"
+                                            ></lightning-formatted-number>
+                                        </td>
+
+                                        <td class="amount">
+                                            <lightning-formatted-number
+                                                value={row.openingCredit}
+                                                minimum-fraction-digits="2"
+                                                maximum-fraction-digits="4"
+                                            ></lightning-formatted-number>
+                                        </td>
+
+                                        <td class="amount">
+                                            <lightning-formatted-number
+                                                value={row.movementDebit}
+                                                minimum-fraction-digits="2"
+                                                maximum-fraction-digits="4"
+                                            ></lightning-formatted-number>
+                                        </td>
+
+                                        <td class="amount">
+                                            <lightning-formatted-number
+                                                value={row.movementCredit}
+                                                minimum-fraction-digits="2"
+                                                maximum-fraction-digits="4"
+                                            ></lightning-formatted-number>
+                                        </td>
+
+                                        <td class="amount">
+                                            <lightning-formatted-number
+                                                value={row.closingDebit}
+                                                minimum-fraction-digits="2"
+                                                maximum-fraction-digits="4"
+                                            ></lightning-formatted-number>
+                                        </td>
+
+                                        <td class="amount">
+                                            <lightning-formatted-number
+                                                value={row.closingCredit}
+                                                minimum-fraction-digits="2"
+                                                maximum-fraction-digits="4"
+                                            ></lightning-formatted-number>
+                                        </td>
+
+                                        <td>
+                                            <lightning-button
+                                                variant="base"
+                                                label="View Lines"
+                                                data-account-id={row.glAccountId}
+                                                data-account-code={row.accountCode}
+                                                data-account-name={row.accountName}
+                                                onclick={handleViewLines}
+                                            ></lightning-button>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+
+                            <tfoot>
+                                <tr>
+                                    <th colspan="2" scope="row">Totals</th>
+                                    <th class="amount">
+                                        <lightning-formatted-number
+                                            value={report.totalOpeningDebit}
+                                            minimum-fraction-digits="2"
+                                            maximum-fraction-digits="4"
+                                        ></lightning-formatted-number>
+                                    </th>
+                                    <th class="amount">
+                                        <lightning-formatted-number
+                                            value={report.totalOpeningCredit}
+                                            minimum-fraction-digits="2"
+                                            maximum-fraction-digits="4"
+                                        ></lightning-formatted-number>
+                                    </th>
+                                    <th class="amount">
+                                        <lightning-formatted-number
+                                            value={report.totalMovementDebit}
+                                            minimum-fraction-digits="2"
+                                            maximum-fraction-digits="4"
+                                        ></lightning-formatted-number>
+                                    </th>
+                                    <th class="amount">
+                                        <lightning-formatted-number
+                                            value={report.totalMovementCredit}
+                                            minimum-fraction-digits="2"
+                                            maximum-fraction-digits="4"
+                                        ></lightning-formatted-number>
+                                    </th>
+                                    <th class="amount">
+                                        <lightning-formatted-number
+                                            value={report.totalClosingDebit}
+                                            minimum-fraction-digits="2"
+                                            maximum-fraction-digits="4"
+                                        ></lightning-formatted-number>
+                                    </th>
+                                    <th class="amount">
+                                        <lightning-formatted-number
+                                            value={report.totalClosingCredit}
+                                            minimum-fraction-digits="2"
+                                            maximum-fraction-digits="4"
+                                        ></lightning-formatted-number>
+                                    </th>
+                                    <th></th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </template>
+
+                <template if:true={selectedAccountLabel}>
+                    <section
+                        class="drilldown slds-m-top_medium"
+                        role="region"
+                        aria-labelledby="trial-balance-drilldown-heading"
+                    >
+                        <div class="drilldown-heading">
+                            <div>
+                                <h2
+                                    id="trial-balance-drilldown-heading"
+                                    class="slds-text-heading_small"
+                                >
+                                    Movement Drilldown — {selectedAccountLabel}
+                                </h2>
+                                <p class="slds-text-body_small slds-text-color_weak">
+                                    Posted/Reversed ledger lines inside the selected reporting range.
+                                </p>
+                            </div>
+
+                            <lightning-button-icon
+                                icon-name="utility:close"
+                                alternative-text="Close drilldown"
+                                title="Close drilldown"
+                                onclick={handleCloseDrilldown}
+                            ></lightning-button-icon>
+                        </div>
+
+                        <template if:true={hasDrilldownLines}>
+                            <div class="table-scroll slds-m-top_small">
+                                <table
+                                    class="slds-table slds-table_cell-buffer slds-table_bordered drilldown-table"
+                                >
+                                    <caption class="slds-assistive-text">
+                                        Ledger lines contributing to the selected account movement.
+                                    </caption>
+
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Date</th>
+                                            <th scope="col">Journal</th>
+                                            <th scope="col">Type</th>
+                                            <th scope="col">Status</th>
+                                            <th scope="col">Line</th>
+                                            <th scope="col">Debit</th>
+                                            <th scope="col">Credit</th>
+                                            <th scope="col">Explanation</th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody>
+                                        <template
+                                            for:each={drilldownLines}
+                                            for:item="line"
+                                        >
+                                            <tr key={line.journalLineId}>
+                                                <td>{line.accountingDate}</td>
+                                                <td>
+                                                    <lightning-button
+                                                        variant="base"
+                                                        label={line.journalName}
+                                                        data-record-id={line.journalId}
+                                                        onclick={handleOpenJournal}
+                                                    ></lightning-button>
+                                                </td>
+                                                <td>{line.entryType}</td>
+                                                <td>{line.journalStatus}</td>
+                                                <td>{line.lineNumber}</td>
+                                                <td class="amount">
+                                                    <lightning-formatted-number
+                                                        value={line.debit}
+                                                        minimum-fraction-digits="2"
+                                                        maximum-fraction-digits="4"
+                                                    ></lightning-formatted-number>
+                                                </td>
+                                                <td class="amount">
+                                                    <lightning-formatted-number
+                                                        value={line.credit}
+                                                        minimum-fraction-digits="2"
+                                                        maximum-fraction-digits="4"
+                                                    ></lightning-formatted-number>
+                                                </td>
+                                                <td>{line.explanation}</td>
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </template>
+
+                        <template if:false={hasDrilldownLines}>
+                            <div class="empty-state slds-m-top_small">
+                                No movement lines were found for this account in the selected range.
+                            </div>
+                        </template>
+                    </section>
+                </template>
+
+                <template if:true={errorMessage}>
+                    <div
+                        class="slds-notify slds-notify_alert slds-alert_error slds-m-top_medium"
+                        role="alert"
+                    >
+                        {errorMessage}
+                    </div>
+                </template>
+            </template>
+        </div>
+    </lightning-card>
+</template>

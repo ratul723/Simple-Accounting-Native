@@ -1,0 +1,114 @@
+.filters {
+    display: grid;
+    grid-template-columns:
+        minmax(14rem, 1.5fr)
+        minmax(9rem, 0.8fr)
+        minmax(9rem, 0.8fr)
+        minmax(11rem, 0.8fr)
+        auto;
+    gap: 0.75rem;
+    align-items: end;
+}
+
+.report-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    background: var(
+        --lwc-colorBackgroundAlt,
+        #f3f3f3
+    );
+    font-size: 0.78rem;
+}
+
+.balance-status {
+    border-radius: 999px;
+    padding: 0.125rem 0.5rem;
+    font-weight: 700;
+}
+
+.balance-good {
+    background: #e3fcef;
+}
+
+.balance-bad {
+    background: #fef1ee;
+}
+
+.table-scroll {
+    overflow-x: auto;
+}
+
+.report-table {
+    min-width: 1050px;
+}
+
+.drilldown-table {
+    min-width: 900px;
+}
+
+.amount {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.account-code {
+    font-weight: 700;
+}
+
+.account-name {
+    color: var(
+        --lwc-colorTextWeak,
+        #706e6b
+    );
+    font-size: 0.75rem;
+}
+
+.inactive-label {
+    margin-top: 0.125rem;
+    font-size: 0.68rem;
+    font-weight: 700;
+}
+
+.drilldown {
+    border: 1px solid var(
+        --lwc-colorBorder,
+        #dddbda
+    );
+    border-radius: 0.5rem;
+    padding: 0.875rem;
+}
+
+.drilldown-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.empty-state {
+    padding: 0.75rem;
+    border-radius: 0.375rem;
+    background: var(
+        --lwc-colorBackgroundAlt,
+        #f3f3f3
+    );
+}
+
+@media (max-width: 64rem) {
+    .filters {
+        grid-template-columns:
+            repeat(
+                2,
+                minmax(0, 1fr)
+            );
+    }
+}
+
+@media (max-width: 40rem) {
+    .filters {
+        grid-template-columns: 1fr;
+    }
+}

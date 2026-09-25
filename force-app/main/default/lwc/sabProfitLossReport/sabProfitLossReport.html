@@ -1,0 +1,295 @@
+<template>
+    <lightning-card title="Profit & Loss" icon-name="standard:report">
+        <template if:true={isLoading}>
+            <lightning-spinner
+                alternative-text="Generating Profit and Loss"
+                size="small">
+            </lightning-spinner>
+        </template>
+
+        <div class="slds-p-horizontal_medium slds-p-bottom_medium">
+            <template if:false={hasCompany}>
+                <div
+                    class="slds-notify slds-notify_alert slds-alert_info"
+                    role="alert">
+                    Select an Accounting Company above to run Profit & Loss.
+                </div>
+            </template>
+
+            <template if:true={hasCompany}>
+                <div class="filters">
+                    <lightning-combobox
+                        label="P&L Definition"
+                        value={definitionId}
+                        options={definitionOptions}
+                        onchange={handleDefinitionChange}
+                        required>
+                    </lightning-combobox>
+
+                    <lightning-combobox
+                        label="Accounting Period"
+                        value={periodId}
+                        options={periodOptions}
+                        placeholder="Optional period shortcut"
+                        onchange={handlePeriodChange}>
+                    </lightning-combobox>
+
+                    <lightning-input
+                        type="date"
+                        name="fromDate"
+                        label="From Date"
+                        value={fromDate}
+                        onchange={handleDateChange}
+                        required>
+                    </lightning-input>
+
+                    <lightning-input
+                        type="date"
+                        name="toDate"
+                        label="To Date"
+                        value={toDate}
+                        onchange={handleDateChange}
+                        required>
+                    </lightning-input>
+
+                    <lightning-button
+                        variant="brand"
+                        label="Generate P&L"
+                        onclick={handleGenerate}
+                        disabled={generateDisabled}>
+                    </lightning-button>
+                </div>
+
+                <div class="filters slds-m-top_small">
+                    <lightning-combobox
+                        name="departmentId"
+                        label="Department"
+                        value={departmentId}
+                        options={departmentOptions}
+                        onchange={handleDimensionChange}>
+                    </lightning-combobox>
+
+                    <lightning-combobox
+                        name="costCenterId"
+                        label="Cost Center"
+                        value={costCenterId}
+                        options={costCenterOptions}
+                        onchange={handleDimensionChange}>
+                    </lightning-combobox>
+
+                    <lightning-combobox
+                        name="projectId"
+                        label="Project"
+                        value={projectId}
+                        options={projectOptions}
+                        onchange={handleDimensionChange}>
+                    </lightning-combobox>
+
+                    <lightning-input
+                        type="checkbox"
+                        label="Compare another period"
+                        checked={comparisonEnabled}
+                        onchange={handleComparisonToggle}>
+                    </lightning-input>
+                </div>
+
+                <template if:true={comparisonEnabled}>
+                    <div class="compare-dates slds-m-top_small">
+                        <lightning-input
+                            type="date"
+                            name="comparisonFromDate"
+                            label="Compare From"
+                            value={comparisonFromDate}
+                            onchange={handleComparisonDateChange}
+                            required>
+                        </lightning-input>
+
+                        <lightning-input
+                            type="date"
+                            name="comparisonToDate"
+                            label="Compare To"
+                            value={comparisonToDate}
+                            onchange={handleComparisonDateChange}
+                            required>
+                        </lightning-input>
+                    </div>
+                </template>
+
+                <template if:true={missingDefinition}>
+                    <div
+                        class="slds-notify slds-notify_alert slds-alert_warning slds-m-top_small"
+                        role="status">
+                        No Active P&amp;L Report Definition is configured for this company.
+                    </div>
+                </template>
+
+                <template if:true={report}>
+                    <div class="summary slds-m-top_medium">
+                        <div>
+                            <span>Revenue</span>
+                            <strong>
+                                <lightning-formatted-number
+                                    value={report.currentRevenue}
+                                    minimum-fraction-digits="2"
+                                    maximum-fraction-digits="4">
+                                </lightning-formatted-number>
+                            </strong>
+                        </div>
+
+                        <div>
+                            <span>Expenses</span>
+                            <strong>
+                                <lightning-formatted-number
+                                    value={report.currentExpense}
+                                    minimum-fraction-digits="2"
+                                    maximum-fraction-digits="4">
+                                </lightning-formatted-number>
+                            </strong>
+                        </div>
+
+                        <div>
+                            <span>Net Profit / (Loss)</span>
+                            <strong>
+                                <lightning-formatted-number
+                                    value={report.currentNetProfitLoss}
+                                    minimum-fraction-digits="2"
+                                    maximum-fraction-digits="4">
+                                </lightning-formatted-number>
+                            </strong>
+                        </div>
+                    </div>
+
+                    <template for:each={report.groups} for:item="statementGroup">
+                        <section
+                            key={statementGroup.groupKey}
+                            class="statement-group slds-m-top_medium">
+                            <h2 class="slds-text-heading_small">
+                                {statementGroup.groupKey}
+                            </h2>
+
+                            <div class="table-scroll slds-m-top_small">
+                                <table class="slds-table slds-table_cell-buffer slds-table_bordered">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Row</th>
+                                            <th scope="col">Current</th>
+                                            <template if:true={report.hasComparison}>
+                                                <th scope="col">Comparison</th>
+                                                <th scope="col">Variance</th>
+                                            </template>
+                                            <th scope="col">Source</th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody>
+                                        <template
+                                            for:each={statementGroup.rows}
+                                            for:item="row">
+                                            <tr key={row.rowKey}>
+                                                <td>{row.rowKey}</td>
+                                                <td class="amount">
+                                                    <lightning-formatted-number
+                                                        value={row.currentAmount}
+                                                        minimum-fraction-digits="2"
+                                                        maximum-fraction-digits="4">
+                                                    </lightning-formatted-number>
+                                                </td>
+
+                                                <template if:true={report.hasComparison}>
+                                                    <td class="amount">
+                                                        <lightning-formatted-number
+                                                            value={row.comparisonAmount}
+                                                            minimum-fraction-digits="2"
+                                                            maximum-fraction-digits="4">
+                                                        </lightning-formatted-number>
+                                                    </td>
+                                                    <td class="amount">
+                                                        <lightning-formatted-number
+                                                            value={row.varianceAmount}
+                                                            minimum-fraction-digits="2"
+                                                            maximum-fraction-digits="4">
+                                                        </lightning-formatted-number>
+                                                    </td>
+                                                </template>
+
+                                                <td>
+                                                    <lightning-button
+                                                        variant="base"
+                                                        label="View Lines"
+                                                        data-row-key={row.rowKey}
+                                                        onclick={handleDrilldown}>
+                                                    </lightning-button>
+                                                </td>
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </section>
+                    </template>
+                </template>
+
+                <template if:true={drilldownTitle}>
+                    <section class="drilldown slds-m-top_medium">
+                        <div class="drilldown-heading">
+                            <h2 class="slds-text-heading_small">
+                                {drilldownTitle}
+                            </h2>
+                            <lightning-button-icon
+                                icon-name="utility:close"
+                                alternative-text="Close"
+                                onclick={handleCloseDrilldown}>
+                            </lightning-button-icon>
+                        </div>
+
+                        <template if:true={hasDrilldownLines}>
+                            <div class="table-scroll slds-m-top_small">
+                                <table class="slds-table slds-table_cell-buffer slds-table_bordered">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Date</th>
+                                            <th scope="col">Account</th>
+                                            <th scope="col">Journal</th>
+                                            <th scope="col">Debit</th>
+                                            <th scope="col">Credit</th>
+                                            <th scope="col">Presented</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <template for:each={drilldownLines} for:item="line">
+                                            <tr key={line.journalLineId}>
+                                                <td>{line.accountingDate}</td>
+                                                <td>
+                                                    {line.accountCode} · {line.accountName}
+                                                </td>
+                                                <td>
+                                                    <lightning-button
+                                                        variant="base"
+                                                        label={line.journalName}
+                                                        data-record-id={line.journalId}
+                                                        onclick={handleOpenJournal}>
+                                                    </lightning-button>
+                                                </td>
+                                                <td class="amount">{line.debit}</td>
+                                                <td class="amount">{line.credit}</td>
+                                                <td class="amount">{line.presentedAmount}</td>
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </template>
+                    </section>
+                </template>
+
+                <template if:true={errorMessage}>
+                    <div
+                        class="slds-notify slds-notify_alert slds-alert_error slds-m-top_medium"
+                        role="alert">
+                        {errorMessage}
+                    </div>
+                </template>
+            </template>
+        </div>
+    </lightning-card>
+</template>

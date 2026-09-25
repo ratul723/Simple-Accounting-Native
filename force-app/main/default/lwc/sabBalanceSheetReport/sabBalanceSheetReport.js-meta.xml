@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>65.0</apiVersion>
+    <isExposed>true</isExposed>
+    <masterLabel>SAB Balance Sheet Report</masterLabel>
+    <description>Mapping-driven Balance Sheet with as-of balances, current-year earnings, comparison and source drilldown.</description>
+    <targets>
+        <target>lightning__AppPage</target>
+        <target>lightning__HomePage</target>
+        <target>lightning__Tab</target>
+    </targets>
+</LightningComponentBundle>

@@ -95,6 +95,7 @@ public without sharing class SABPostingService {
                    Company__c,
                    Accounting_Period__c,
                    Accounting_Date__c,
+                   Entry_Type__c,
                    Status__c,
                    Posting_Key__c,
                    Accounting_Event__c,
@@ -144,6 +145,7 @@ public without sharing class SABPostingService {
                        Company__c,
                        Accounting_Period__c,
                        Accounting_Date__c,
+                       Entry_Type__c,
                        Status__c,
                        Posting_Key__c,
                        Accounting_Event__c,
@@ -191,6 +193,10 @@ public without sharing class SABPostingService {
                     'Journal Entry already contains a different Posting Key.'
                 );
             }
+
+            assertControlAccountPostingPolicy(
+                journal
+            );
 
             SABAccountingEventService.ReservationRequest
                 normalizedEventRequest =
@@ -306,6 +312,8 @@ public without sharing class SABPostingService {
             SELECT Id,
                    Company__c,
                    Event_Key__c,
+                   Source_Type__c,
+                   Source_Record_Id__c,
                    State__c,
                    Journal_Entry__c
             FROM Accounting_Event__c
@@ -317,6 +325,13 @@ public without sharing class SABPostingService {
             eventRecord.Company__c != journal.Company__c
             || eventRecord.Event_Key__c
                 != request.eventRequest.eventKey.trim()
+            || eventRecord.Source_Type__c
+                != request.eventRequest.sourceType.trim()
+            || (
+                !String.isBlank(request.eventRequest.sourceRecordId)
+                && eventRecord.Source_Record_Id__c
+                    != request.eventRequest.sourceRecordId.trim()
+            )
             || eventRecord.State__c != EVENT_STATE_POSTED
             || eventRecord.Journal_Entry__c != journal.Id
         ) {
@@ -329,6 +344,58 @@ public without sharing class SABPostingService {
             journal,
             eventRecord.Id,
             true
+        );
+    }
+
+    /**
+     * G3B hardening:
+     * - Manual/Opening style posting must not use protected control accounts.
+     * - Trusted Subledger journals are allowed to use configured control
+     *   accounts and are still validated by SABJournalValidationService.
+     *
+     * This guard is intentionally explicit in SABPostingService so adding
+     * subledger support cannot accidentally weaken the existing manual
+     * control-account rule.
+     */
+    private static void assertControlAccountPostingPolicy(
+        Journal_Entry__c journal
+    ) {
+        if (journal.Entry_Type__c == 'Subledger') {
+            return;
+        }
+
+        List<Journal_Entry_Line__c> blockedLines = [
+            SELECT Id,
+                   GL_Account__c,
+                   GL_Account__r.Account_Code__c,
+                   GL_Account__r.Name
+            FROM Journal_Entry_Line__c
+            WHERE Journal_Entry__c = :journal.Id
+              AND GL_Account__r.Is_Control_Account__c = true
+              AND GL_Account__r.Manual_Posting_Allowed__c = false
+            LIMIT 1
+        ];
+
+        if (blockedLines.isEmpty()) {
+            return;
+        }
+
+        Journal_Entry_Line__c blockedLine =
+            blockedLines[0];
+
+        String accountLabel =
+            String.isBlank(
+                blockedLine.GL_Account__r.Account_Code__c
+            )
+                ? blockedLine.GL_Account__r.Name
+                : blockedLine.GL_Account__r.Account_Code__c
+                    + ' - '
+                    + blockedLine.GL_Account__r.Name;
+
+        throw new PostingException(
+            'GL Account '
+            + accountLabel
+            + ' is a control account and does not allow manual/opening posting.'
         );
     }
 
@@ -345,15 +412,30 @@ public without sharing class SABPostingService {
         }
 
         String journalIdText = String.valueOf(journal.Id);
+        String normalizedSourceRecordId;
 
-        if (
-            !String.isBlank(sourceRequest.sourceRecordId)
-            && sourceRequest.sourceRecordId.trim()
-                != journalIdText
-        ) {
-            throw new PostingException(
-                'Accounting Event Source Record Id must match the Journal Entry being posted.'
-            );
+        if (journal.Entry_Type__c == 'Subledger') {
+            if (String.isBlank(sourceRequest.sourceRecordId)) {
+                throw new PostingException(
+                    'Subledger posting requires the Accounting Event Source Record Id.'
+                );
+            }
+
+            normalizedSourceRecordId =
+                sourceRequest.sourceRecordId.trim();
+        } else {
+            if (
+                !String.isBlank(sourceRequest.sourceRecordId)
+                && sourceRequest.sourceRecordId.trim()
+                    != journalIdText
+            ) {
+                throw new PostingException(
+                    'Accounting Event Source Record Id must match the Journal Entry for non-subledger posting.'
+                );
+            }
+
+            normalizedSourceRecordId =
+                journalIdText;
         }
 
         SABAccountingEventService.ReservationRequest normalized =
@@ -372,7 +454,7 @@ public without sharing class SABPostingService {
         normalized.sourceBusinessKey =
             sourceRequest.sourceBusinessKey;
         normalized.sourceRecordId =
-            journalIdText;
+            normalizedSourceRecordId;
         normalized.sourceType =
             sourceRequest.sourceType;
         normalized.sourceVersion =
@@ -419,9 +501,7 @@ public without sharing class SABPostingService {
         String postingKey
     ) {
         Integer maxLength =
-            Journal_Entry__c.Posting_Key__c
-                .getDescribe()
-                .getLength();
+            Journal_Entry__c.Posting_Key__c.getDescribe().getLength();
 
         if (
             postingKey != null

@@ -1,0 +1,423 @@
+<template>
+    <lightning-card
+        title="General Ledger"
+        icon-name="standard:ledger"
+    >
+        <template if:true={isLoading}>
+            <lightning-spinner
+                alternative-text="Generating General Ledger"
+                size="small"
+            ></lightning-spinner>
+        </template>
+
+        <div class="slds-p-horizontal_medium slds-p-bottom_medium">
+            <template if:false={hasCompany}>
+                <div
+                    class="slds-notify slds-notify_alert slds-alert_info"
+                    role="alert"
+                >
+                    Select an Accounting Company above to run the General Ledger.
+                </div>
+            </template>
+
+            <template if:true={hasCompany}>
+                <div class="filters">
+                    <lightning-combobox
+                        name="periodId"
+                        label="Accounting Period"
+                        value={periodId}
+                        options={periodOptions}
+                        placeholder="Optional: choose a fiscal period"
+                        onchange={handlePeriodChange}
+                    ></lightning-combobox>
+
+                    <lightning-combobox
+                        name="glAccountId"
+                        label="GL Account"
+                        value={glAccountId}
+                        options={accountOptions}
+                        placeholder="All Accounts"
+                        onchange={handleAccountChange}
+                    ></lightning-combobox>
+
+                    <lightning-input
+                        type="date"
+                        name="fromDate"
+                        label="From Date"
+                        value={fromDate}
+                        onchange={handleDateChange}
+                        required
+                    ></lightning-input>
+
+                    <lightning-input
+                        type="date"
+                        name="toDate"
+                        label="To Date"
+                        value={toDate}
+                        onchange={handleDateChange}
+                        required
+                    ></lightning-input>
+
+                    <lightning-button
+                        variant="brand"
+                        label="Generate General Ledger"
+                        icon-name="utility:table"
+                        onclick={handleGenerate}
+                        disabled={generateDisabled}
+                    ></lightning-button>
+                </div>
+
+                <template if:true={report}>
+                    <div class="report-meta slds-m-top_medium">
+                        <span>
+                            Company:
+                            <strong>{report.companyName}</strong>
+                        </span>
+
+                        <span>
+                            Currency:
+                            <strong>{report.functionalCurrency}</strong>
+                        </span>
+
+                        <span>
+                            Range:
+                            <strong>{report.fromDate} → {report.toDate}</strong>
+                        </span>
+
+                        <span>
+                            Accounts:
+                            <strong>{report.accountCount}</strong>
+                        </span>
+
+                        <span>
+                            Lines:
+                            <strong>
+                                {report.displayedLineCount}/{report.totalMovementLineCount}
+                            </strong>
+                        </span>
+
+                        <span>
+                            Generated:
+                            <lightning-formatted-date-time
+                                value={report.generatedAt}
+                                year="numeric"
+                                month="short"
+                                day="2-digit"
+                                hour="2-digit"
+                                minute="2-digit"
+                            ></lightning-formatted-date-time>
+                        </span>
+
+                        <template if:true={report.fullLedgerScope}>
+                            <span class={balanceClass} aria-live="polite">
+                                {balanceLabel}
+                            </span>
+                        </template>
+
+                        <template if:false={report.fullLedgerScope}>
+                            <span class="scope-badge">
+                                Account View
+                            </span>
+                        </template>
+                    </div>
+
+                    <template if:true={report.truncated}>
+                        <div
+                            class="slds-notify slds-notify_alert slds-alert_warning slds-m-top_small"
+                            role="status"
+                        >
+                            The financial totals cover the complete requested scope, but line detail is limited to the first 2,000 ledger lines. Narrow the account or date range for complete drilldown.
+                        </div>
+                    </template>
+
+                    <template if:true={hasAccounts}>
+                        <div class="account-list slds-m-top_medium">
+                            <template
+                                for:each={report.accounts}
+                                for:item="account"
+                            >
+                                <section
+                                    key={account.glAccountId}
+                                    class="account-section"
+                                >
+                                    <div class="account-header">
+                                        <div>
+                                            <div class="account-title">
+                                                {account.accountCode}
+                                                ·
+                                                {account.accountName}
+                                            </div>
+
+                                            <div class="account-subtitle">
+                                                {account.accountType}
+                                                · Normal balance:
+                                                {account.normalBalance}
+                                                · Lines:
+                                                {account.displayedLineCount}/{account.movementLineCount}
+                                            </div>
+                                        </div>
+
+                                        <template if:false={account.active}>
+                                            <span class="inactive-badge">
+                                                Inactive
+                                            </span>
+                                        </template>
+                                    </div>
+
+                                    <div class="balance-strip">
+                                        <div>
+                                            <span>Opening Debit</span>
+                                            <strong>
+                                                <lightning-formatted-number
+                                                    value={account.openingDebit}
+                                                    minimum-fraction-digits="2"
+                                                    maximum-fraction-digits="4"
+                                                ></lightning-formatted-number>
+                                            </strong>
+                                        </div>
+
+                                        <div>
+                                            <span>Opening Credit</span>
+                                            <strong>
+                                                <lightning-formatted-number
+                                                    value={account.openingCredit}
+                                                    minimum-fraction-digits="2"
+                                                    maximum-fraction-digits="4"
+                                                ></lightning-formatted-number>
+                                            </strong>
+                                        </div>
+
+                                        <div>
+                                            <span>Movement Debit</span>
+                                            <strong>
+                                                <lightning-formatted-number
+                                                    value={account.movementDebit}
+                                                    minimum-fraction-digits="2"
+                                                    maximum-fraction-digits="4"
+                                                ></lightning-formatted-number>
+                                            </strong>
+                                        </div>
+
+                                        <div>
+                                            <span>Movement Credit</span>
+                                            <strong>
+                                                <lightning-formatted-number
+                                                    value={account.movementCredit}
+                                                    minimum-fraction-digits="2"
+                                                    maximum-fraction-digits="4"
+                                                ></lightning-formatted-number>
+                                            </strong>
+                                        </div>
+
+                                        <div>
+                                            <span>Closing Debit</span>
+                                            <strong>
+                                                <lightning-formatted-number
+                                                    value={account.closingDebit}
+                                                    minimum-fraction-digits="2"
+                                                    maximum-fraction-digits="4"
+                                                ></lightning-formatted-number>
+                                            </strong>
+                                        </div>
+
+                                        <div>
+                                            <span>Closing Credit</span>
+                                            <strong>
+                                                <lightning-formatted-number
+                                                    value={account.closingCredit}
+                                                    minimum-fraction-digits="2"
+                                                    maximum-fraction-digits="4"
+                                                ></lightning-formatted-number>
+                                            </strong>
+                                        </div>
+                                    </div>
+
+                                    <template if:true={account.lines.length}>
+                                        <div class="table-scroll slds-m-top_small">
+                                            <table
+                                                class="slds-table slds-table_cell-buffer slds-table_bordered ledger-table"
+                                            >
+                                                <caption class="slds-assistive-text">
+                                                    Chronological General Ledger lines with running balance for {account.accountCode} {account.accountName}.
+                                                </caption>
+
+                                                <thead>
+                                                    <tr>
+                                                        <th scope="col">Date</th>
+                                                        <th scope="col">Journal</th>
+                                                        <th scope="col">Type</th>
+                                                        <th scope="col">Status</th>
+                                                        <th scope="col">Line</th>
+                                                        <th scope="col">Explanation</th>
+                                                        <th scope="col">Debit</th>
+                                                        <th scope="col">Credit</th>
+                                                        <th scope="col">Running Debit</th>
+                                                        <th scope="col">Running Credit</th>
+                                                    </tr>
+                                                </thead>
+
+                                                <tbody>
+                                                    <template
+                                                        for:each={account.lines}
+                                                        for:item="line"
+                                                    >
+                                                        <tr key={line.journalLineId}>
+                                                            <td>{line.accountingDate}</td>
+
+                                                            <td>
+                                                                <lightning-button
+                                                                    variant="base"
+                                                                    label={line.journalName}
+                                                                    data-record-id={line.journalId}
+                                                                    onclick={handleOpenJournal}
+                                                                ></lightning-button>
+                                                            </td>
+
+                                                            <td>{line.entryType}</td>
+                                                            <td>{line.journalStatus}</td>
+                                                            <td>{line.lineNumber}</td>
+                                                            <td>{line.explanation}</td>
+
+                                                            <td class="amount">
+                                                                <lightning-formatted-number
+                                                                    value={line.debit}
+                                                                    minimum-fraction-digits="2"
+                                                                    maximum-fraction-digits="4"
+                                                                ></lightning-formatted-number>
+                                                            </td>
+
+                                                            <td class="amount">
+                                                                <lightning-formatted-number
+                                                                    value={line.credit}
+                                                                    minimum-fraction-digits="2"
+                                                                    maximum-fraction-digits="4"
+                                                                ></lightning-formatted-number>
+                                                            </td>
+
+                                                            <td class="amount">
+                                                                <lightning-formatted-number
+                                                                    value={line.runningDebit}
+                                                                    minimum-fraction-digits="2"
+                                                                    maximum-fraction-digits="4"
+                                                                ></lightning-formatted-number>
+                                                            </td>
+
+                                                            <td class="amount">
+                                                                <lightning-formatted-number
+                                                                    value={line.runningCredit}
+                                                                    minimum-fraction-digits="2"
+                                                                    maximum-fraction-digits="4"
+                                                                ></lightning-formatted-number>
+                                                            </td>
+                                                        </tr>
+                                                    </template>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </template>
+
+                                    <template if:false={account.lines.length}>
+                                        <div class="empty-lines slds-m-top_small">
+                                            No ledger movement occurred in this date range. The displayed opening and closing balance is carried from earlier posted history.
+                                        </div>
+                                    </template>
+                                </section>
+                            </template>
+                        </div>
+
+                        <template if:true={report.fullLedgerScope}>
+                            <section class="ledger-totals slds-m-top_medium">
+                                <h2 class="slds-text-heading_small">
+                                    Ledger Control Totals
+                                </h2>
+
+                                <div class="balance-strip slds-m-top_small">
+                                    <div>
+                                        <span>Opening Debit</span>
+                                        <strong>
+                                            <lightning-formatted-number
+                                                value={report.totalOpeningDebit}
+                                                minimum-fraction-digits="2"
+                                                maximum-fraction-digits="4"
+                                            ></lightning-formatted-number>
+                                        </strong>
+                                    </div>
+
+                                    <div>
+                                        <span>Opening Credit</span>
+                                        <strong>
+                                            <lightning-formatted-number
+                                                value={report.totalOpeningCredit}
+                                                minimum-fraction-digits="2"
+                                                maximum-fraction-digits="4"
+                                            ></lightning-formatted-number>
+                                        </strong>
+                                    </div>
+
+                                    <div>
+                                        <span>Movement Debit</span>
+                                        <strong>
+                                            <lightning-formatted-number
+                                                value={report.totalMovementDebit}
+                                                minimum-fraction-digits="2"
+                                                maximum-fraction-digits="4"
+                                            ></lightning-formatted-number>
+                                        </strong>
+                                    </div>
+
+                                    <div>
+                                        <span>Movement Credit</span>
+                                        <strong>
+                                            <lightning-formatted-number
+                                                value={report.totalMovementCredit}
+                                                minimum-fraction-digits="2"
+                                                maximum-fraction-digits="4"
+                                            ></lightning-formatted-number>
+                                        </strong>
+                                    </div>
+
+                                    <div>
+                                        <span>Closing Debit</span>
+                                        <strong>
+                                            <lightning-formatted-number
+                                                value={report.totalClosingDebit}
+                                                minimum-fraction-digits="2"
+                                                maximum-fraction-digits="4"
+                                            ></lightning-formatted-number>
+                                        </strong>
+                                    </div>
+
+                                    <div>
+                                        <span>Closing Credit</span>
+                                        <strong>
+                                            <lightning-formatted-number
+                                                value={report.totalClosingCredit}
+                                                minimum-fraction-digits="2"
+                                                maximum-fraction-digits="4"
+                                            ></lightning-formatted-number>
+                                        </strong>
+                                    </div>
+                                </div>
+                            </section>
+                        </template>
+                    </template>
+
+                    <template if:false={hasAccounts}>
+                        <div class="empty-state slds-m-top_medium">
+                            No posted ledger activity or opening balance exists for the selected scope.
+                        </div>
+                    </template>
+                </template>
+
+                <template if:true={errorMessage}>
+                    <div
+                        class="slds-notify slds-notify_alert slds-alert_error slds-m-top_medium"
+                        role="alert"
+                    >
+                        {errorMessage}
+                    </div>
+                </template>
+            </template>
+        </div>
+    </lightning-card>
+</template>

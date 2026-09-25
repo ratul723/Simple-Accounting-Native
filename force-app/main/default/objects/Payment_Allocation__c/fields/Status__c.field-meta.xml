@@ -1,7 +1,6 @@
-<?xml version='1.0' encoding='UTF-8'?>
+<?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Status__c</fullName>
-    <description>Simple Accounting Books blueprint field. Source specification: Picklist (`Effective`, `Reversed`)</description>
     <label>Status</label>
     <type>Picklist</type>
     <valueSet>
@@ -9,14 +8,19 @@
         <valueSetDefinition>
             <sorted>false</sorted>
             <value>
-                <fullName>Effective</fullName>
-                <default>false</default>
-                <label>Effective</label>
+                <fullName>Allocated</fullName>
+                <default>true</default>
+                <label>Allocated</label>
             </value>
             <value>
                 <fullName>Reversed</fullName>
                 <default>false</default>
                 <label>Reversed</label>
+            </value>
+            <value>
+                <fullName>Cancelled</fullName>
+                <default>false</default>
+                <label>Cancelled</label>
             </value>
         </valueSetDefinition>
     </valueSet>
