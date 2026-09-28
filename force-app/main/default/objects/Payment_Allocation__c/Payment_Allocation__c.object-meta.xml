@@ -3,10 +3,18 @@
     <label>Payment Allocation</label>
     <pluralLabel>Payment Allocations</pluralLabel>
     <nameField>
-        <displayFormat>PA-{000000}</displayFormat>
         <label>Payment Allocation Number</label>
         <type>AutoNumber</type>
+        <displayFormat>PA-{00000}</displayFormat>
     </nameField>
     <deploymentStatus>Deployed</deploymentStatus>
     <sharingModel>Private</sharingModel>
+    <enableActivities>false</enableActivities>
+    <enableBulkApi>true</enableBulkApi>
+    <enableFeeds>false</enableFeeds>
+    <enableHistory>false</enableHistory>
+    <enableReports>true</enableReports>
+    <enableSearch>true</enableSearch>
+    <enableSharing>true</enableSharing>
+    <enableStreamingApi>true</enableStreamingApi>
 </CustomObject>

@@ -13,5 +13,6 @@
     "**/Thumbs.db": true,
     ".mule": true
   },
-  "xml.preferences.showSchemaDocumentationType": "none"
+  "xml.preferences.showSchemaDocumentationType": "none",
+  "xml.validation.enabled": false
 }

@@ -2,7 +2,6 @@
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Status__c</fullName>
     <label>Status</label>
-    <type>Picklist</type>
     <valueSet>
         <restricted>true</restricted>
         <valueSetDefinition>
@@ -24,4 +23,5 @@
             </value>
         </valueSetDefinition>
     </valueSet>
+    <type>Picklist</type>
 </CustomField>
