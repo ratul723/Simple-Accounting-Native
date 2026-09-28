@@ -4,9 +4,12 @@
  * Trusted subledger path:
  * Approved Supplier Bill -> Accounting Event -> balanced Subledger Journal -> Posted Supplier Bill.
  *
- * Current G3B tax boundary:
- * - Nonrecoverable tax is included in the expense/asset cost.
- * - Recoverable tax is blocked until G4 supplies validated tax-account mapping.
+ * G6B tax integration:
+ * - Nonrecoverable tax remains included in expense/asset cost.
+ * - Recoverable tax is posted to the materialized Input Tax control account.
+ * - Properly materialized Document_Tax_Line__c snapshots are required before
+ *   recoverable tax can be posted.
+ * - Legacy nonrecoverable-only bills without snapshots remain compatible.
  *
  * The existing manual/opening control-account restriction remains intact.
  */
@@ -141,15 +144,30 @@ public without sharing class SABSupplierBillPostingService {
                 );
             }
 
+            Boolean hasRecoverableTax = false;
+
             for (Bill_Line__c billLine : billLines) {
                 if (
                     nullToZero(billLine.Recoverable_Tax_Amount__c)
                     != ZERO
                 ) {
-                    throw new SupplierBillPostingException(
-                        'G3B does not post recoverable tax yet. Complete the G4 tax-account mapping before posting Supplier Bills with Recoverable Tax Amount.'
-                    );
+                    hasRecoverableTax = true;
+                    break;
                 }
+            }
+
+            Boolean hasTaxSnapshots =
+                hasMaterializedTaxSnapshots(
+                    bill.Id
+                );
+
+            if (
+                hasRecoverableTax
+                && !hasTaxSnapshots
+            ) {
+                throw new SupplierBillPostingException(
+                    'Supplier Bill contains recoverable tax but does not have materialized Document Tax Lines. Recalculate/materialize tax while the bill is Draft before posting.'
+                );
             }
 
             Accounting_Period__c period =
@@ -262,6 +280,37 @@ public without sharing class SABSupplierBillPostingService {
 
                 journalLines.add(journalLine);
                 nextLineNumber++;
+            }
+
+            if (hasTaxSnapshots) {
+                try {
+                    SABTaxPostingIntegrationService.JournalTaxBundle taxBundle =
+                        SABTaxPostingIntegrationService.buildSupplierBillJournalTaxLines(
+                                bill.Id,
+                                journal.Id,
+                                nextLineNumber,
+                                transactionCurrency,
+                                functionalCurrency,
+                                effectiveRate,
+                                bill.Accounting_Date__c
+                            );
+
+                    journalLines.addAll(
+                        taxBundle.lines
+                    );
+
+                    functionalSourceTotal +=
+                        taxBundle.functionalMagnitude;
+
+                    nextLineNumber =
+                        taxBundle.nextLineNumber;
+                } catch (
+                    SABTaxPostingIntegrationService.TaxPostingException ex
+                ) {
+                    throw new SupplierBillPostingException(
+                        ex.getMessage()
+                    );
+                }
             }
 
             if (journalLines.isEmpty()) {
@@ -644,6 +693,21 @@ public without sharing class SABSupplierBillPostingService {
 
     private static Decimal nullToZero(Decimal value) {
         return value == null ? ZERO : value;
+    }
+
+    private static Boolean hasMaterializedTaxSnapshots(
+        Id supplierBillId
+    ) {
+        if (supplierBillId == null) {
+            return false;
+        }
+
+        return [
+            SELECT COUNT()
+            FROM Document_Tax_Line__c
+            WHERE Bill_Line__r.Supplier_Bill__c =
+                    :supplierBillId
+        ] > 0;
     }
 
     private static void validateRequest(PostingRequest request) {

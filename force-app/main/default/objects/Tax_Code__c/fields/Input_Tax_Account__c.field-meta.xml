@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Input_Tax_Account__c</fullName>
+    <deleteConstraint>Restrict</deleteConstraint>
+    <description>GL control account used for recoverable purchase/input tax when this Tax Code is materialized on Supplier Bills.</description>
+    <label>Input Tax Account</label>
+    <referenceTo>GL_Account__c</referenceTo>
+    <relationshipLabel>Tax Codes - Input Tax Account</relationshipLabel>
+    <relationshipName>Tax_Code_Input_Tax_Account</relationshipName>
+    <type>Lookup</type>
+</CustomField>

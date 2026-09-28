@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Locked_Source_Hash__c</fullName>
+    <description>SHA-256 hash of the reviewed Tax Return line snapshot. Used to prove that a Reviewed/Submitted return has not changed.</description>
+    <label>Locked Source Hash</label>
+    <length>64</length>
+    <type>Text</type>
+</CustomField>

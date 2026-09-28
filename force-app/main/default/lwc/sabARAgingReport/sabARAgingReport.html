@@ -1,0 +1,231 @@
+<template>
+    <lightning-card
+        title="Accounts Receivable Aging"
+        icon-name="standard:report"
+    >
+        <template if:true={isLoading}>
+            <lightning-spinner
+                alternative-text="Generating Accounts Receivable Aging"
+                size="small"
+            ></lightning-spinner>
+        </template>
+
+        <div class="slds-p-horizontal_medium slds-p-bottom_medium">
+            <template if:false={hasCompany}>
+                <div
+                    class="slds-notify slds-notify_alert slds-alert_info"
+                    role="alert"
+                >
+                    Select an Accounting Company above to run Accounts Receivable Aging.
+                </div>
+            </template>
+
+            <template if:true={hasCompany}>
+                <div class="filters">
+                    <lightning-input
+                        type="date"
+                        label="As Of Date"
+                        value={asOfDate}
+                        onchange={handleDateChange}
+                        required
+                    ></lightning-input>
+
+                    <lightning-combobox
+                        label="Customer"
+                        value={partyProfileId}
+                        options={customerOptions}
+                        placeholder="All customers"
+                        onchange={handleCustomerChange}
+                    ></lightning-combobox>
+
+                    <lightning-input
+                        type="checkbox"
+                        label="Include fully settled invoices"
+                        checked={includeSettled}
+                        onchange={handleSettledChange}
+                    ></lightning-input>
+
+                    <lightning-button
+                        variant="brand"
+                        label="Generate AR Aging"
+                        icon-name="utility:chart"
+                        onclick={handleGenerate}
+                        disabled={generateDisabled}
+                    ></lightning-button>
+                </div>
+
+                <template if:true={report}>
+                    <div class="report-meta slds-m-top_medium">
+                        <span>
+                            Company:
+                            <strong>{report.companyName}</strong>
+                        </span>
+                        <span>
+                            Functional Currency:
+                            <strong>{report.functionalCurrency}</strong>
+                        </span>
+                        <span>
+                            As of:
+                            <strong>{report.asOfDate}</strong>
+                        </span>
+                        <span>
+                            Open invoices:
+                            <strong>{report.openInvoiceCount}</strong>
+                        </span>
+                    </div>
+
+                    <div class="summary-grid slds-m-top_medium">
+                        <div class="summary-card">
+                            <span>Current</span>
+                            <lightning-formatted-number
+                                value={report.currentAmount}
+                                minimum-fraction-digits="2"
+                                maximum-fraction-digits="4"
+                            ></lightning-formatted-number>
+                        </div>
+                        <div class="summary-card">
+                            <span>1–30</span>
+                            <lightning-formatted-number
+                                value={report.days1To30Amount}
+                                minimum-fraction-digits="2"
+                                maximum-fraction-digits="4"
+                            ></lightning-formatted-number>
+                        </div>
+                        <div class="summary-card">
+                            <span>31–60</span>
+                            <lightning-formatted-number
+                                value={report.days31To60Amount}
+                                minimum-fraction-digits="2"
+                                maximum-fraction-digits="4"
+                            ></lightning-formatted-number>
+                        </div>
+                        <div class="summary-card">
+                            <span>61–90</span>
+                            <lightning-formatted-number
+                                value={report.days61To90Amount}
+                                minimum-fraction-digits="2"
+                                maximum-fraction-digits="4"
+                            ></lightning-formatted-number>
+                        </div>
+                        <div class="summary-card">
+                            <span>91+</span>
+                            <lightning-formatted-number
+                                value={report.days91PlusAmount}
+                                minimum-fraction-digits="2"
+                                maximum-fraction-digits="4"
+                            ></lightning-formatted-number>
+                        </div>
+                        <div class="summary-card total">
+                            <span>Total Outstanding</span>
+                            <lightning-formatted-number
+                                value={report.totalOutstanding}
+                                minimum-fraction-digits="2"
+                                maximum-fraction-digits="4"
+                            ></lightning-formatted-number>
+                        </div>
+                    </div>
+
+                    <template if:true={report.truncated}>
+                        <div
+                            class="slds-notify slds-notify_alert slds-alert_warning slds-m-top_medium"
+                            role="alert"
+                        >
+                            The detail list is limited to 2,000 posted invoices. Narrow the customer filter for a complete detail view.
+                        </div>
+                    </template>
+
+                    <template if:true={hasRows}>
+                        <div class="table-scroll slds-m-top_medium">
+                            <table
+                                class="slds-table slds-table_cell-buffer slds-table_bordered report-table"
+                            >
+                                <caption class="slds-assistive-text">
+                                    Accounts Receivable Aging detail by posted invoice.
+                                </caption>
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Customer</th>
+                                        <th scope="col">Invoice</th>
+                                        <th scope="col">Due Date</th>
+                                        <th scope="col">Days Past Due</th>
+                                        <th scope="col">Bucket</th>
+                                        <th scope="col">Original</th>
+                                        <th scope="col">Allocated</th>
+                                        <th scope="col">Credits</th>
+                                        <th scope="col">Outstanding</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template
+                                        for:each={report.rows}
+                                        for:item="row"
+                                    >
+                                        <tr key={row.invoiceId}>
+                                            <td>{row.customerName}</td>
+                                            <td>
+                                                <lightning-button
+                                                    variant="base"
+                                                    label={row.legalNumber}
+                                                    data-record-id={row.invoiceId}
+                                                    onclick={handleOpenInvoice}
+                                                ></lightning-button>
+                                            </td>
+                                            <td>{row.dueDate}</td>
+                                            <td>{row.daysPastDue}</td>
+                                            <td>{row.agingBucket}</td>
+                                            <td class="amount">
+                                                <lightning-formatted-number
+                                                    value={row.originalDocumentAmount}
+                                                    minimum-fraction-digits="2"
+                                                    maximum-fraction-digits="4"
+                                                ></lightning-formatted-number>
+                                                <span class="currency">{row.transactionCurrency}</span>
+                                            </td>
+                                            <td class="amount">
+                                                <lightning-formatted-number
+                                                    value={row.allocatedDocumentAmount}
+                                                    minimum-fraction-digits="2"
+                                                    maximum-fraction-digits="4"
+                                                ></lightning-formatted-number>
+                                            </td>
+                                            <td class="amount">
+                                                <lightning-formatted-number
+                                                    value={row.creditedDocumentAmount}
+                                                    minimum-fraction-digits="2"
+                                                    maximum-fraction-digits="4"
+                                                ></lightning-formatted-number>
+                                            </td>
+                                            <td class="amount">
+                                                <lightning-formatted-number
+                                                    value={row.outstandingDocumentAmount}
+                                                    minimum-fraction-digits="2"
+                                                    maximum-fraction-digits="4"
+                                                ></lightning-formatted-number>
+                                                <span class="currency">{row.transactionCurrency}</span>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </template>
+
+                    <template if:false={hasRows}>
+                        <div class="empty-state slds-m-top_medium">
+                            No posted customer invoices matched the selected AR Aging filters.
+                        </div>
+                    </template>
+                </template>
+
+                <template if:true={errorMessage}>
+                    <div
+                        class="slds-notify slds-notify_alert slds-alert_error slds-m-top_medium"
+                        role="alert"
+                    >
+                        {errorMessage}
+                    </div>
+                </template>
+            </template>
+        </div>
+    </lightning-card>
+</template>

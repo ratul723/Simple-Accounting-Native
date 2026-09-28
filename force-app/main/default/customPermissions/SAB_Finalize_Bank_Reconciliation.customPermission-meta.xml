@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomPermission xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Finalize a completed bank reconciliation, snapshot book/statement closing balances, and mark the related bank statement reconciled.</description>
+    <label>SAB Finalize Bank Reconciliation</label>
+</CustomPermission>

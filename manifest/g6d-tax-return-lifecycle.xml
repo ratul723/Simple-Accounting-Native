@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>SABTaxReturnLifecycleService</members>
+        <members>SABTaxReturnLifecycleGuard</members>
+        <members>SABTaxReturnLifecycleServiceTest</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>SABTaxReturnLifecycleTrigger</members>
+        <members>SABTaxReturnLineLockTrigger</members>
+        <name>ApexTrigger</name>
+    </types>
+    <types>
+        <members>Tax_Return__c.Locked_Source_Hash__c</members>
+        <members>Tax_Return__c.Amends_Tax_Return__c</members>
+        <name>CustomField</name>
+    </types>
+    <types>
+        <members>SAB_Review_Tax_Return</members>
+        <members>SAB_Submit_Tax_Return</members>
+        <members>SAB_Record_Tax_Authority_Outcome</members>
+        <members>SAB_Amend_Tax_Return</members>
+        <name>CustomPermission</name>
+    </types>
+    <types>
+        <members>SAB_Review_Tax_Return_Action</members>
+        <members>SAB_Submit_Tax_Return_Action</members>
+        <members>SAB_Record_Tax_Authority_Outcome_Action</members>
+        <members>SAB_Amend_Tax_Return_Action</members>
+        <name>PermissionSet</name>
+    </types>
+    <version>65.0</version>
+</Package>

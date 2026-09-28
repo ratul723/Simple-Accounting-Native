@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>SABARAgingService</members>
+        <members>SABARAgingServiceTest</members>
+        <members>SABARAgingController</members>
+        <members>SABARAgingControllerTest</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>sabARAgingReport</members>
+        <name>LightningComponentBundle</name>
+    </types>
+    <version>65.0</version>
+</Package>

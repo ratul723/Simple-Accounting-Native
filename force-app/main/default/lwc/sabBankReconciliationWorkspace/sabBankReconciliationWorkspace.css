@@ -1,0 +1,76 @@
+.toolbar {
+    display: grid;
+    grid-template-columns: minmax(16rem, 1fr) minmax(18rem, 2fr) auto;
+    gap: 1rem;
+    align-items: end;
+}
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(10rem, 1fr));
+    gap: .75rem;
+}
+
+.card {
+    border: 1px solid #dddbda;
+    border-radius: .5rem;
+    padding: .85rem;
+    display: flex;
+    flex-direction: column;
+    gap: .35rem;
+}
+
+.import-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(12rem, 1fr));
+    gap: 1rem;
+}
+
+.section-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: end;
+    gap: 1rem;
+}
+
+.actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+    align-items: center;
+}
+
+.table-wrap {
+    overflow-x: auto;
+}
+
+.import-table {
+    min-width: 76rem;
+}
+
+.candidate-panel {
+    border: 1px solid #dddbda;
+    border-radius: .5rem;
+    padding: 1rem;
+}
+
+.summary-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.good {
+    color: #2e844a;
+}
+
+.bad {
+    color: #ba0517;
+}
+
+@media (max-width: 70rem) {
+    .toolbar,
+    .summary-grid,
+    .import-grid {
+        grid-template-columns: 1fr;
+    }
+}

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomPermission xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Allows moving a Prepared Tax Return to Reviewed and locking its source snapshot.</description>
+    <isLicensed>false</isLicensed>
+    <label>Review Tax Return</label>
+</CustomPermission>

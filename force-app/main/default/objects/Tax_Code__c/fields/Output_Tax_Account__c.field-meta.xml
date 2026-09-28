@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Output_Tax_Account__c</fullName>
+    <deleteConstraint>Restrict</deleteConstraint>
+    <description>GL control account used for customer sales/output tax when this Tax Code is materialized on Invoices.</description>
+    <label>Output Tax Account</label>
+    <referenceTo>GL_Account__c</referenceTo>
+    <relationshipLabel>Tax Codes - Output Tax Account</relationshipLabel>
+    <relationshipName>Tax_Code_Output_Tax_Account</relationshipName>
+    <type>Lookup</type>
+</CustomField>
