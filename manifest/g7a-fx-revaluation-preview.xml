@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>SABFXRevaluationPreviewService</members>
+        <members>SABFXRevaluationPreviewServiceTest</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>FX_Revaluation_Line__c.Transaction_Currency__c</members>
+        <members>FX_Revaluation_Line__c.Outstanding_Amount__c</members>
+        <members>FX_Revaluation_Line__c.Source_GL_Account__c</members>
+        <members>FX_Revaluation_Line__c.Exchange_Rate__c</members>
+        <name>CustomField</name>
+    </types>
+    <types>
+        <members>SAB_Run_FX_Revaluation</members>
+        <name>CustomPermission</name>
+    </types>
+    <types>
+        <members>SAB_Run_FX_Revaluation_Action</members>
+        <name>PermissionSet</name>
+    </types>
+    <version>65.0</version>
+</Package>

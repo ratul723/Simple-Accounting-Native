@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Source_GL_Account__c</fullName>
+    <deleteConstraint>Restrict</deleteConstraint>
+    <description>AR/AP control account whose functional carrying amount is being revalued.</description>
+    <label>Source GL Account</label>
+    <referenceTo>GL_Account__c</referenceTo>
+    <relationshipLabel>FX Revaluation Lines - Source GL Account</relationshipLabel>
+    <relationshipName>FX_Revaluation_Line_Source_GL_Account</relationshipName>
+    <required>true</required>
+    <type>Lookup</type>
+</CustomField>

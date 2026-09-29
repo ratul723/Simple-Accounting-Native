@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>SABFXSecurityPolicy</members>
+        <members>SABFXSecurityHardeningTest</members>
+        <members>SABFXRevaluationLifecycleGuard</members>
+        <members>SABForeignCurrencySettlementService</members>
+        <members>SABRealizedFXSettlementGuard</members>
+        <members>SABFXOperationsWorkspaceController</members>
+        <members>SABFXOperationsWorkspaceControllerTest</members>
+        <members>SABFXRevaluationReversalServiceTest</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>SABFXRevaluationLifecycleTrigger</members>
+        <members>SABRealizedFXSettlementGuardTrigger</members>
+        <name>ApexTrigger</name>
+    </types>
+    <types>
+        <members>SAB_FX_Operations_Workspace</members>
+        <name>PermissionSet</name>
+    </types>
+    <version>65.0</version>
+</Package>

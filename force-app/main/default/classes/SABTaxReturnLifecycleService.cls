@@ -164,9 +164,7 @@ public without sharing class SABTaxReturnLifecycleService {
         validateTextLength(
             filingReference,
             'Filing Reference',
-            Tax_Return__c.Filing_Reference__c
-                .getDescribe()
-                .getLength(),
+            Tax_Return__c.Filing_Reference__c.getDescribe().getLength(),
             true
         );
 
@@ -243,9 +241,7 @@ public without sharing class SABTaxReturnLifecycleService {
         validateTextLength(
             acknowledgementReference,
             'Acknowledgement Reference',
-            Tax_Return__c.Acknowledgement_Reference__c
-                .getDescribe()
-                .getLength(),
+            Tax_Return__c.Acknowledgement_Reference__c.getDescribe().getLength(),
             true
         );
 
@@ -708,14 +704,15 @@ public without sharing class SABTaxReturnLifecycleService {
     private static String normalizeDecimalText(
         Decimal value
     ) {
-        Decimal normalized =
-            (value == null
+        Decimal baseValue =
+            value == null
                 ? Decimal.valueOf('0')
-                : value)
-            .setScale(
-                4,
-                RoundingMode.HALF_UP
-            );
+                : value;
+
+        Decimal normalized = baseValue.setScale(
+            4,
+            RoundingMode.HALF_UP
+        );
 
         return String.valueOf(
             normalized
@@ -885,9 +882,7 @@ public without sharing class SABTaxReturnLifecycleService {
         }
 
         Integer maxLength =
-            Business_Action__c.Request_Key__c
-                .getDescribe()
-                .getLength();
+            Business_Action__c.Request_Key__c.getDescribe().getLength();
 
         if (
             requestKey.trim().length()

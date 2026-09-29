@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>SABExpenseClaimLifecycleService</members>
+        <members>SABExpenseClaimLifecycleGuard</members>
+        <members>SABExpenseClaimPostingService</members>
+        <members>SABExpenseClaimPostingServiceTest</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>SABExpenseClaimLifecycleTrigger</members>
+        <members>SABExpenseClaimLineLifecycleTrigger</members>
+        <name>ApexTrigger</name>
+    </types>
+    <types>
+        <members>Accounting_Company__c.Employee_Reimbursement_Liability_Account__c</members>\n        <members>Expense_Claim_Line__c.Tax_Rate__c</members>\n        <members>Expense_Claim_Line__c.Tax_Rate_Percent__c</members>\n        <members>Expense_Claim_Line__c.Taxable_Base__c</members>\n        <members>Expense_Claim_Line__c.Tax_Amount__c</members>\n        <members>Expense_Claim_Line__c.Recoverable_Tax_Amount__c</members>\n        <members>Expense_Claim_Line__c.Nonrecoverable_Tax_Amount__c</members>\n        <members>Expense_Claim_Line__c.Tax_Code_Key__c</members>\n        <members>Expense_Claim_Line__c.Tax_Jurisdiction__c</members>\n        <members>Expense_Claim_Line__c.Tax_Treatment__c</members>\n        <members>Expense_Claim_Line__c.Tax_Country_Pack_Version__c</members>\n        <name>CustomField</name>
+    </types>
+    <types>
+        <members>SAB_Post_Expense_Claim</members>
+        <name>CustomPermission</name>
+    </types>
+    <types>
+        <members>SAB_Post_Expense_Claim_Action</members>
+        <members>SAB_Expense_Claim_Configuration_Admin</members>
+        <name>PermissionSet</name>
+    </types>
+    <version>65.0</version>
+</Package>

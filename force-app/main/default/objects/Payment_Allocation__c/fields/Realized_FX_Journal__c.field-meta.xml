@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Realized_FX_Journal__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <description>Posted Journal Entry created for the realized FX settlement difference.</description>
+    <label>Realized FX Journal</label>
+    <referenceTo>Journal_Entry__c</referenceTo>
+    <relationshipLabel>Realized FX Payment Allocations</relationshipLabel>
+    <relationshipName>Realized_FX_Payment_Allocations</relationshipName>
+    <type>Lookup</type>
+</CustomField>

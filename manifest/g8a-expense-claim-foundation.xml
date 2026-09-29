@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>SABExpenseClaimLifecycleService</members>
+        <members>SABExpenseClaimLifecycleGuard</members>
+        <members>SABExpenseClaimLifecycleServiceTest</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>SABExpenseClaimLifecycleTrigger</members>
+        <members>SABExpenseClaimLineLifecycleTrigger</members>
+        <name>ApexTrigger</name>
+    </types>
+    <types>
+        <members>SAB_Submit_Expense_Claim</members>
+        <members>SAB_Review_Expense_Claim</members>
+        <name>CustomPermission</name>
+    </types>
+    <types>
+        <members>SAB_Submit_Expense_Claim_Action</members>
+        <members>SAB_Review_Expense_Claim_Action</members>
+        <name>PermissionSet</name>
+    </types>
+    <version>65.0</version>
+</Package>

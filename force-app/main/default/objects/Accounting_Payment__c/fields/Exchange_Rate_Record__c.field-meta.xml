@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Exchange_Rate_Record__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <description>Approved Exchange Rate record selected when a foreign-currency Receipt or Supplier Payment is authorized.</description>
+    <label>Exchange Rate Record</label>
+    <referenceTo>Exchange_Rate__c</referenceTo>
+    <relationshipLabel>Accounting Payments Using Exchange Rate</relationshipLabel>
+    <relationshipName>Accounting_Payments_Using_Exchange_Rate</relationshipName>
+    <type>Lookup</type>
+</CustomField>

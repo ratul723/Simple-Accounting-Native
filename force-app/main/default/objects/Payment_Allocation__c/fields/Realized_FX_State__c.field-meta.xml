@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Realized_FX_State__c</fullName>
+    <description>System-managed realized FX processing state for the Payment Allocation.</description>
+    <label>Realized FX State</label>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>None</fullName>
+                <default>true</default>
+                <label>None</label>
+            </value>
+            <value>
+                <fullName>Calculated</fullName>
+                <default>false</default>
+                <label>Calculated</label>
+            </value>
+            <value>
+                <fullName>Posted</fullName>
+                <default>false</default>
+                <label>Posted</label>
+            </value>
+            <value>
+                <fullName>Reversed</fullName>
+                <default>false</default>
+                <label>Reversed</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

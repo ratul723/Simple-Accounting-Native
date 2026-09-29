@@ -1,0 +1,151 @@
+.workspace {
+    padding: 1rem;
+}
+
+.header-row,
+.panel-header,
+.selection-card,
+.control-strip {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.header-row h2,
+.panel h3,
+.reversal-box h4,
+.subtable h4 {
+    margin: 0;
+}
+
+.header-row p,
+.panel-header p {
+    margin: 0.25rem 0 0;
+    color: #444;
+}
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 0.75rem;
+    margin: 1rem 0;
+}
+
+.metric-card {
+    border: 1px solid #dddbda;
+    border-radius: 0.5rem;
+    padding: 0.9rem;
+    background: #fff;
+}
+
+.metric-card span {
+    display: block;
+    font-size: 0.75rem;
+    color: #5c5c5c;
+    margin-bottom: 0.3rem;
+}
+
+.metric-card strong {
+    display: block;
+    font-size: 1.25rem;
+}
+
+.metric-card.emphasized {
+    border-width: 2px;
+}
+
+.control-strip {
+    border: 1px solid #dddbda;
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+    background: #f7f7f7;
+}
+
+.config-state {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.config-state .label {
+    font-weight: 600;
+}
+
+.ok {
+    color: #2e844a;
+    font-weight: 700;
+}
+
+.warn {
+    color: #ba0517;
+    font-weight: 700;
+}
+
+.panel {
+    border: 1px solid #dddbda;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-top: 1rem;
+    background: #fff;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+}
+
+.actions,
+.header-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: 0.75rem;
+}
+
+.selection-card {
+    margin-top: 1rem;
+    padding: 0.75rem;
+    border-left: 4px solid #1b5297;
+    background: #f7f9fb;
+}
+
+.selection-card > div:first-child {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.reversal-box {
+    border: 1px solid #c9c7c5;
+    border-radius: 0.5rem;
+    padding: 0.85rem;
+    margin-top: 1rem;
+    background: #fafafa;
+}
+
+.subtable {
+    margin-top: 1rem;
+}
+
+.empty-state {
+    padding: 2rem;
+    text-align: center;
+    color: #5c5c5c;
+    border: 1px dashed #c9c7c5;
+    border-radius: 0.5rem;
+}
+
+@media (max-width: 720px) {
+    .workspace {
+        padding: 0.5rem;
+    }
+
+    .panel {
+        padding: 0.75rem;
+    }
+}

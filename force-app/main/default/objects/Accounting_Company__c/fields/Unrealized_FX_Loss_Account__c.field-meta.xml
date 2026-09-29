@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Unrealized_FX_Loss_Account__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <description>Default Expense GL Account used for unrealized foreign-exchange losses.</description>
+    <label>Unrealized FX Loss Account</label>
+    <referenceTo>GL_Account__c</referenceTo>
+    <relationshipLabel>Companies Using Unrealized FX Loss Account</relationshipLabel>
+    <relationshipName>Companies_Unrealized_FX_Loss</relationshipName>
+    <required>false</required>
+    <type>Lookup</type>
+</CustomField>

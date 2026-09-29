@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Protected action permission for G7D foreign-currency Receipt, Supplier Payment and allocation processing.</description>
+    <hasActivationRequired>false</hasActivationRequired>
+    <label>SAB Foreign Currency Settlement Action</label>
+    <classAccesses>
+        <apexClass>SABForeignCurrencySettlementService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <customPermissions>
+        <enabled>true</enabled>
+        <name>SAB_Process_Foreign_Currency_Settlement</name>
+    </customPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Accounting_Payment__c.Exchange_Rate_Record__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Payment_Allocation__c.Realized_FX_Reversal_Journal__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Payment_Allocation__c.Realized_FX_Reversal_Event__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Payment_Allocation__c.Realized_FX_Reversed_At__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+</PermissionSet>

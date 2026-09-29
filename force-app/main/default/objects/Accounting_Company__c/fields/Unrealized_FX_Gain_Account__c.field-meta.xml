@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Unrealized_FX_Gain_Account__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <description>Default Revenue GL Account used for unrealized foreign-exchange gains.</description>
+    <label>Unrealized FX Gain Account</label>
+    <referenceTo>GL_Account__c</referenceTo>
+    <relationshipLabel>Companies Using Unrealized FX Gain Account</relationshipLabel>
+    <relationshipName>Companies_Unrealized_FX_Gain</relationshipName>
+    <required>false</required>
+    <type>Lookup</type>
+</CustomField>

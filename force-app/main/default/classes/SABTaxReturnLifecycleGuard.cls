@@ -20,8 +20,7 @@ public without sharing class SABTaxReturnLifecycleGuard {
         Map<Id, Tax_Return__c> oldMap
     ) {
         if (
-            SABTaxReturnLifecycleService
-                .isLifecycleMutationInProgress()
+            SABTaxReturnLifecycleService.isLifecycleMutationInProgress()
         ) {
             return;
         }
@@ -103,8 +102,7 @@ public without sharing class SABTaxReturnLifecycleGuard {
         List<Tax_Return__c> oldRows
     ) {
         if (
-            SABTaxReturnLifecycleService
-                .isLifecycleMutationInProgress()
+            SABTaxReturnLifecycleService.isLifecycleMutationInProgress()
         ) {
             return;
         }
@@ -122,8 +120,7 @@ public without sharing class SABTaxReturnLifecycleGuard {
         List<Tax_Return_Line__c> candidateRows
     ) {
         if (
-            SABTaxReturnLifecycleService
-                .isLifecycleMutationInProgress()
+            SABTaxReturnLifecycleService.isLifecycleMutationInProgress()
         ) {
             return;
         }

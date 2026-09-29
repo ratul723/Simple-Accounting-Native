@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomPermission xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Allows calculation and posting of realized FX settlement differences for foreign-currency payment allocations.</description>
+    <isLicensed>false</isLicensed>
+    <label>Post Realized FX Settlement</label>
+</CustomPermission>

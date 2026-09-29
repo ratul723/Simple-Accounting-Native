@@ -1,0 +1,451 @@
+<template>
+    <lightning-card title="FX Operations Workspace" icon-name="standard:currency">
+        <div class="workspace">
+            <template if:false={hasCompany}>
+                <div class="empty-state">
+                    Select an Accounting Company from the SAB Company Context Selector.
+                </div>
+            </template>
+
+            <template if:true={hasCompany}>
+                <div class="header-row">
+                    <div>
+                        <h2>{companyName}</h2>
+                        <p>Functional Currency: {functionalCurrency}</p>
+                    </div>
+                    <div class="header-actions">
+                        <lightning-button
+                            label="Refresh"
+                            icon-name="utility:refresh"
+                            onclick={handleRefresh}
+                        ></lightning-button>
+                    </div>
+                </div>
+
+                <template if:true={isLoading}>
+                    <lightning-spinner
+                        alternative-text="Loading FX operations"
+                        size="medium"
+                    ></lightning-spinner>
+                </template>
+
+                <template if:true={hasDashboard}>
+                    <div class="summary-grid">
+                        <div class="metric-card">
+                            <span>Preview Runs</span>
+                            <strong>{dashboard.previewRunCount}</strong>
+                        </div>
+                        <div class="metric-card">
+                            <span>Approved Runs</span>
+                            <strong>{dashboard.approvedRunCount}</strong>
+                        </div>
+                        <div class="metric-card">
+                            <span>Posted Runs</span>
+                            <strong>{dashboard.postedRunCount}</strong>
+                        </div>
+                        <div class="metric-card">
+                            <span>Succeeded FX Payments</span>
+                            <strong>{dashboard.succeededForeignPaymentCount}</strong>
+                        </div>
+                        <div class="metric-card">
+                            <span>Posted Realized Gains</span>
+                            <strong>{dashboard.postedRealizedGainTotal}</strong>
+                        </div>
+                        <div class="metric-card">
+                            <span>Posted Realized Losses</span>
+                            <strong>{dashboard.postedRealizedLossTotal}</strong>
+                        </div>
+                        <div class="metric-card emphasized">
+                            <span>Net Realized FX</span>
+                            <strong>{realizedNetTotal}</strong>
+                        </div>
+                    </div>
+
+                    <div class="control-strip">
+                        <div class="config-state">
+                            <span class="label">Unrealized FX Accounts</span>
+                            <template if:true={dashboard.unrealizedAccountsConfigured}>
+                                <span class="ok">Configured</span>
+                            </template>
+                            <template if:false={dashboard.unrealizedAccountsConfigured}>
+                                <span class="warn">Missing</span>
+                            </template>
+                        </div>
+                        <div class="config-state">
+                            <span class="label">Realized FX Accounts</span>
+                            <template if:true={dashboard.realizedAccountsConfigured}>
+                                <span class="ok">Configured</span>
+                            </template>
+                            <template if:false={dashboard.realizedAccountsConfigured}>
+                                <span class="warn">Missing</span>
+                            </template>
+                        </div>
+                    </div>
+
+                    <lightning-tabset>
+                        <lightning-tab label="Revaluation">
+                            <div class="panel">
+                                <h3>Create Preview</h3>
+                                <div class="form-grid">
+                                    <lightning-combobox
+                                        label="Accounting Period"
+                                        value={selectedPeriodId}
+                                        options={periodOptions}
+                                        onchange={handlePeriodChange}
+                                    ></lightning-combobox>
+
+                                    <lightning-input
+                                        label="Run Key"
+                                        value={runKey}
+                                        onchange={handleRunKeyChange}
+                                    ></lightning-input>
+
+                                    <lightning-combobox
+                                        label="Reversal Policy"
+                                        value={reversalPolicy}
+                                        options={reversalPolicyOptions}
+                                        onchange={handleReversalPolicyChange}
+                                    ></lightning-combobox>
+
+                                    <lightning-input
+                                        label="Lifecycle Reason / Note"
+                                        value={runReason}
+                                        onchange={handleRunReasonChange}
+                                    ></lightning-input>
+                                </div>
+
+                                <div class="actions">
+                                    <lightning-button
+                                        variant="brand"
+                                        label="Run FX Preview"
+                                        onclick={handlePreview}
+                                        disabled={previewDisabled}
+                                    ></lightning-button>
+                                </div>
+                            </div>
+
+                            <div class="panel">
+                                <h3>Revaluation Runs</h3>
+
+                                <lightning-datatable
+                                    key-field="runId"
+                                    data={revaluationRuns}
+                                    columns={runColumns}
+                                    max-row-selection="1"
+                                    selected-rows={selectedRunRows}
+                                    onrowselection={handleRunSelection}
+                                ></lightning-datatable>
+
+                                <template if:true={hasSelectedRun}>
+                                    <div class="selection-card">
+                                        <div>
+                                            <strong>{selectedRun.runKey}</strong>
+                                            <span>{selectedRun.status}</span>
+                                            <span>{selectedRun.reversalPolicy}</span>
+                                        </div>
+
+                                        <div class="actions">
+                                            <lightning-button
+                                                label="Approve"
+                                                variant="brand"
+                                                onclick={handleApproveRun}
+                                                disabled={approveRunDisabled}
+                                            ></lightning-button>
+
+                                            <lightning-button
+                                                label="Post"
+                                                variant="brand"
+                                                onclick={handlePostRun}
+                                                disabled={postRunDisabled}
+                                            ></lightning-button>
+
+                                            <lightning-button
+                                                label="Open Journal"
+                                                onclick={handleOpenRunJournal}
+                                            ></lightning-button>
+                                        </div>
+                                    </div>
+
+                                    <div class="reversal-box">
+                                        <h4>Reversal Controls</h4>
+
+                                        <template if:true={manualRunReversal}>
+                                            <div class="form-grid">
+                                                <lightning-combobox
+                                                    label="Reversal Period"
+                                                    value={runReversalPeriodId}
+                                                    options={periodOptions}
+                                                    onchange={handleRunReversalPeriodChange}
+                                                ></lightning-combobox>
+
+                                                <lightning-input
+                                                    type="date"
+                                                    label="Reversal Date"
+                                                    value={runReversalDate}
+                                                    onchange={handleRunReversalDateChange}
+                                                ></lightning-input>
+                                            </div>
+                                        </template>
+
+                                        <lightning-input
+                                            label="Reversal Reason"
+                                            value={runReversalReason}
+                                            onchange={handleRunReversalReasonChange}
+                                        ></lightning-input>
+
+                                        <div class="actions">
+                                            <lightning-button
+                                                label="Reverse Posted Run"
+                                                variant="destructive"
+                                                onclick={handleReverseRun}
+                                                disabled={reverseRunDisabled}
+                                            ></lightning-button>
+
+                                            <lightning-button
+                                                label="Open Reversal Journal"
+                                                onclick={handleOpenRunReversalJournal}
+                                            ></lightning-button>
+                                        </div>
+                                    </div>
+
+                                    <template if:true={selectedRunLines}>
+                                        <div class="subtable">
+                                            <h4>Exposure Lines</h4>
+
+                                            <lightning-datatable
+                                                key-field="lineId"
+                                                data={selectedRunLines}
+                                                columns={runLineColumns}
+                                                hide-checkbox-column
+                                            ></lightning-datatable>
+                                        </div>
+                                    </template>
+                                </template>
+                            </div>
+                        </lightning-tab>
+
+                        <lightning-tab label="Foreign Payments">
+                            <div class="panel">
+                                <div class="panel-header">
+                                    <div>
+                                        <h3>Foreign-Currency Payments</h3>
+                                        <p>
+                                            Use the standard Payment record to enter the bank,
+                                            party, currency, amount and effective date. Then
+                                            complete the FX lifecycle here.
+                                        </p>
+                                    </div>
+
+                                    <lightning-button
+                                        label="New Payment"
+                                        variant="brand"
+                                        icon-name="utility:new"
+                                        onclick={handleNewPayment}
+                                    ></lightning-button>
+                                </div>
+
+                                <lightning-datatable
+                                    key-field="paymentId"
+                                    data={foreignPayments}
+                                    columns={paymentColumns}
+                                    max-row-selection="1"
+                                    selected-rows={selectedPaymentRows}
+                                    onrowselection={handlePaymentSelection}
+                                ></lightning-datatable>
+
+                                <template if:true={hasSelectedPayment}>
+                                    <div class="selection-card">
+                                        <div>
+                                            <strong>{selectedPayment.reference}</strong>
+                                            <span>{selectedPaymentSummary}</span>
+                                        </div>
+
+                                        <div class="actions">
+                                            <lightning-button
+                                                label="Open Payment"
+                                                onclick={handleOpenPayment}
+                                            ></lightning-button>
+
+                                            <lightning-button
+                                                label="Open Journal"
+                                                onclick={handleOpenPaymentJournal}
+                                            ></lightning-button>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-grid">
+                                        <lightning-input
+                                            label="Provider Request Key"
+                                            value={providerRequestKey}
+                                            onchange={handleProviderKeyChange}
+                                        ></lightning-input>
+                                    </div>
+
+                                    <div class="actions">
+                                        <lightning-button
+                                            label="Authorize"
+                                            variant="brand"
+                                            onclick={handleAuthorizePayment}
+                                            disabled={authorizePaymentDisabled}
+                                        ></lightning-button>
+
+                                        <lightning-button
+                                            label="Submit"
+                                            variant="brand"
+                                            onclick={handleSubmitPayment}
+                                            disabled={submitPaymentDisabled}
+                                        ></lightning-button>
+
+                                        <lightning-button
+                                            label="Post Settlement"
+                                            variant="brand"
+                                            onclick={handlePostPayment}
+                                            disabled={postPaymentDisabled}
+                                        ></lightning-button>
+
+                                        <lightning-button
+                                            label="Load Allocation Targets"
+                                            onclick={loadEligibleTargets}
+                                            disabled={loadTargetsDisabled}
+                                        ></lightning-button>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <template if:true={hasEligibleTargets}>
+                                <div class="panel">
+                                    <h3>Allocate Settled Payment</h3>
+
+                                    <lightning-datatable
+                                        key-field="targetId"
+                                        data={eligibleTargets}
+                                        columns={targetColumns}
+                                        max-row-selection="1"
+                                        selected-rows={selectedTargetRows}
+                                        onrowselection={handleTargetSelection}
+                                    ></lightning-datatable>
+
+                                    <div class="form-grid slds-m-top_medium">
+                                        <lightning-input
+                                            type="number"
+                                            step="0.0001"
+                                            label="Allocation Amount"
+                                            value={allocationAmount}
+                                            onchange={handleAllocationAmountChange}
+                                        ></lightning-input>
+
+                                        <lightning-input
+                                            type="date"
+                                            label="Effective Date"
+                                            value={allocationEffectiveDate}
+                                            onchange={handleAllocationDateChange}
+                                        ></lightning-input>
+
+                                        <lightning-input
+                                            label="Allocation Notes"
+                                            value={allocationNotes}
+                                            onchange={handleAllocationNotesChange}
+                                        ></lightning-input>
+
+                                        <lightning-input
+                                            label="Realized FX Reason"
+                                            value={allocationReason}
+                                            onchange={handleAllocationReasonChange}
+                                        ></lightning-input>
+                                    </div>
+
+                                    <div class="actions">
+                                        <lightning-button
+                                            label="Allocate & Process Realized FX"
+                                            variant="brand"
+                                            onclick={handleAllocate}
+                                            disabled={allocateDisabled}
+                                        ></lightning-button>
+                                    </div>
+                                </div>
+                            </template>
+                        </lightning-tab>
+
+                        <lightning-tab label="Allocations & Realized FX">
+                            <div class="panel">
+                                <h3>Foreign-Currency Allocations</h3>
+
+                                <lightning-datatable
+                                    key-field="allocationId"
+                                    data={allocations}
+                                    columns={allocationColumns}
+                                    max-row-selection="1"
+                                    selected-rows={selectedAllocationRows}
+                                    onrowselection={handleAllocationSelection}
+                                ></lightning-datatable>
+
+                                <template if:true={hasSelectedAllocation}>
+                                    <div class="selection-card">
+                                        <div>
+                                            <strong>{selectedAllocation.paymentReference}</strong>
+                                            <span>{selectedAllocationSummary}</span>
+                                        </div>
+
+                                        <div class="actions">
+                                            <lightning-button
+                                                label="Open Allocation"
+                                                onclick={handleOpenAllocation}
+                                            ></lightning-button>
+
+                                            <lightning-button
+                                                label="Open Realized FX Journal"
+                                                onclick={handleOpenRealizedFXJournal}
+                                            ></lightning-button>
+
+                                            <lightning-button
+                                                label="Open FX Reversal Journal"
+                                                onclick={handleOpenRealizedFXReversalJournal}
+                                            ></lightning-button>
+                                        </div>
+                                    </div>
+
+                                    <div class="reversal-box">
+                                        <h4>Coordinated Allocation Reversal</h4>
+
+                                        <div class="form-grid">
+                                            <lightning-input
+                                                type="date"
+                                                label="Reversal Date"
+                                                value={allocationReversalDate}
+                                                onchange={handleAllocationReversalDateChange}
+                                            ></lightning-input>
+
+                                            <lightning-input
+                                                label="Reversal Reason"
+                                                value={allocationReversalReason}
+                                                onchange={handleAllocationReversalReasonChange}
+                                            ></lightning-input>
+                                        </div>
+
+                                        <div class="actions">
+                                            <lightning-button
+                                                label="Reverse Allocation + Realized FX"
+                                                variant="destructive"
+                                                onclick={handleReverseAllocation}
+                                                disabled={reverseAllocationDisabled}
+                                            ></lightning-button>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </lightning-tab>
+                    </lightning-tabset>
+                </template>
+
+                <template if:true={errorMessage}>
+                    <div
+                        class="slds-notify slds-notify_alert slds-alert_error slds-m-top_medium"
+                        role="alert"
+                    >
+                        {errorMessage}
+                    </div>
+                </template>
+            </template>
+        </div>
+    </lightning-card>
+</template>

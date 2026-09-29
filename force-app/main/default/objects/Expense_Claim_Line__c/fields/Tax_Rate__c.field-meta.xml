@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Tax_Rate__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <description>Effective Tax Rate record snapshotted by G8B when an Expense Claim is posted.</description>
+    <label>Tax Rate</label>
+    <referenceTo>Tax_Rate__c</referenceTo>
+    <relationshipLabel>Expense Claim Lines - Tax Rate</relationshipLabel>
+    <relationshipName>Expense_Claim_Line_Tax_Rate</relationshipName>
+    <type>Lookup</type>
+</CustomField>

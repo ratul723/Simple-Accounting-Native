@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>SABForeignCurrencySettlementService</members>
+        <members>SABForeignCurrencySettlementServiceTest</members>
+        <members>SABRealizedFXSettlementService</members>
+        <members>SABRealizedFXSettlementGuard</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>Accounting_Payment__c.Exchange_Rate_Record__c</members>
+        <members>Payment_Allocation__c.Realized_FX_Reversal_Journal__c</members>
+        <members>Payment_Allocation__c.Realized_FX_Reversal_Event__c</members>
+        <members>Payment_Allocation__c.Realized_FX_Reversed_At__c</members>
+        <name>CustomField</name>
+    </types>
+    <types>
+        <members>SAB_Process_Foreign_Currency_Settlement</members>
+        <members>SAB_Reverse_Realized_FX</members>
+        <name>CustomPermission</name>
+    </types>
+    <types>
+        <members>SAB_Foreign_Currency_Settlement_Action</members>
+        <members>SAB_Reverse_Realized_FX_Action</members>
+        <name>PermissionSet</name>
+    </types>
+    <version>65.0</version>
+</Package>

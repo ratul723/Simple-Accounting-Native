@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>SABFXRevaluationPostingService</members>
+        <members>SABFXRevaluationLifecycleGuard</members>
+        <members>SABFXRevaluationPostingServiceTest</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>SABFXRevaluationLifecycleTrigger</members>
+        <members>SABFXRevaluationLineLockTrigger</members>
+        <name>ApexTrigger</name>
+    </types>
+    <types>
+        <members>Accounting_Company__c.Unrealized_FX_Gain_Account__c</members>
+        <members>Accounting_Company__c.Unrealized_FX_Loss_Account__c</members>
+        <members>FX_Revaluation_Run__c.Approved_Snapshot_Hash__c</members>
+        <members>FX_Revaluation_Run__c.Approved_By__c</members>
+        <members>FX_Revaluation_Run__c.Approved_At__c</members>
+        <members>FX_Revaluation_Run__c.Posted_At__c</members>
+        <name>CustomField</name>
+    </types>
+    <types>
+        <members>SAB_Approve_FX_Revaluation</members>
+        <members>SAB_Post_FX_Revaluation</members>
+        <name>CustomPermission</name>
+    </types>
+    <types>
+        <members>SAB_Approve_FX_Revaluation_Action</members>
+        <members>SAB_Post_FX_Revaluation_Action</members>
+        <name>PermissionSet</name>
+    </types>
+    <version>65.0</version>
+</Package>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Employee_Reimbursement_Liability_Account__c</fullName>
+    <deleteConstraint>Restrict</deleteConstraint>
+    <description>Liability control account credited when an approved employee Expense Claim is posted and cleared later through reimbursement settlement.</description>
+    <label>Employee Reimbursement Liability Account</label>
+    <referenceTo>GL_Account__c</referenceTo>
+    <relationshipLabel>Companies - Reimbursement Liability</relationshipLabel>
+    <relationshipName>Reimbursement_Liability_Companies</relationshipName>
+    <type>Lookup</type>
+</CustomField>

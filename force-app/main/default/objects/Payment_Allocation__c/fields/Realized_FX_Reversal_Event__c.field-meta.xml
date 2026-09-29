@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Realized_FX_Reversal_Event__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <description>Accounting Event created by reversing the realized FX settlement journal.</description>
+    <label>Realized FX Reversal Event</label>
+    <referenceTo>Accounting_Event__c</referenceTo>
+    <relationshipLabel>Realized FX Reversal Event Allocations</relationshipLabel>
+    <relationshipName>Realized_FX_Reversal_Event_Allocations</relationshipName>
+    <type>Lookup</type>
+</CustomField>

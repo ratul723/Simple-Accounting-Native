@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Historical_Carrying_Base__c</fullName>
+    <description>Functional-currency carrying amount of the allocated document portion at the document historical exchange rate.</description>
+    <label>Historical Carrying Base</label>
+    <precision>18</precision>
+    <scale>4</scale>
+    <type>Number</type>
+</CustomField>

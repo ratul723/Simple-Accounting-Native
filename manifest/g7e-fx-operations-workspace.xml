@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>SABFXOperationsWorkspaceController</members>
+        <members>SABFXOperationsWorkspaceControllerTest</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>sabFXOperationsWorkspace</members>
+        <name>LightningComponentBundle</name>
+    </types>
+    <types>
+        <members>SAB_View_FX_Operations</members>
+        <name>CustomPermission</name>
+    </types>
+    <types>
+        <members>SAB_FX_Operations_Workspace</members>
+        <name>PermissionSet</name>
+    </types>
+    <version>65.0</version>
+</Package>

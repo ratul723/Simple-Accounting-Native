@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Amends_Tax_Return__c</fullName>
-    <deleteConstraint>Restrict</deleteConstraint>
     <description>Prior filed Tax Return version that this amendment replaces/corrects.</description>
     <label>Amends Tax Return</label>
     <referenceTo>Tax_Return__c</referenceTo>
