@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>To_Department__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <label>To Department</label>
+    <referenceTo>Department__c</referenceTo>
+    <relationshipLabel>Asset Movements To Department</relationshipLabel>
+    <relationshipName>Asset_Movement_To_Department</relationshipName>
+    <type>Lookup</type>
+</CustomField>

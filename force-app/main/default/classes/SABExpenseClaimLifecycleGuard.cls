@@ -1,5 +1,5 @@
 /**
- * G8A direct-DML lifecycle protection for Expense Claims and Claim Lines.
+ * G8A/G8B/G8C direct-DML lifecycle protection for Expense Claims and Claim Lines.
  */
 public without sharing class SABExpenseClaimLifecycleGuard {
 
@@ -7,6 +7,7 @@ public without sharing class SABExpenseClaimLifecycleGuard {
         return (
             SABExpenseClaimLifecycleService.isLifecycleMutationInProgress()
             || SABExpenseClaimPostingService.isSnapshotMutationInProgress()
+            || SABExpenseClaimSettlementService.isSettlementMutationInProgress()
         );
     }
 
@@ -19,8 +20,7 @@ public without sharing class SABExpenseClaimLifecycleGuard {
 
         for (Expense_Claim__c row : newRows) {
             if (String.isBlank(row.Status__c)) {
-                row.Status__c =
-                    'Draft';
+                row.Status__c = 'Draft';
             }
 
             if (row.Status__c != 'Draft') {
@@ -59,13 +59,11 @@ public without sharing class SABExpenseClaimLifecycleGuard {
 
         for (Expense_Claim__c current : newRows) {
             Expense_Claim__c prior =
-                oldMap.get(
-                    current.Id
-                );
+                oldMap.get(current.Id);
 
             if (current.Status__c != prior.Status__c) {
                 current.Status__c.addError(
-                    'Expense Claim Status is lifecycle-managed. Use the Submit, Approve or Reject actions.'
+                    'Expense Claim Status is lifecycle-managed. Use the controlled Expense Claim actions.'
                 );
             }
 
@@ -128,14 +126,10 @@ public without sharing class SABExpenseClaimLifecycleGuard {
         }
 
         for (Expense_Claim_Line__c row : newRows) {
-            assertNoDirectTaxSnapshot(
-                row
-            );
+            assertNoDirectTaxSnapshot(row);
         }
 
-        validateLineParents(
-            newRows
-        );
+        validateLineParents(newRows);
     }
 
     public static void beforeLineUpdate(
@@ -146,18 +140,13 @@ public without sharing class SABExpenseClaimLifecycleGuard {
             return;
         }
 
-        Set<Id> parentIds =
-            new Set<Id>();
+        Set<Id> parentIds = new Set<Id>();
 
         for (Expense_Claim_Line__c row : newRows) {
-            parentIds.add(
-                row.Expense_Claim__c
-            );
+            parentIds.add(row.Expense_Claim__c);
 
             Expense_Claim_Line__c prior =
-                oldMap.get(
-                    row.Id
-                );
+                oldMap.get(row.Id);
 
             if (taxSnapshotChanged(row, prior)) {
                 row.addError(
@@ -176,27 +165,19 @@ public without sharing class SABExpenseClaimLifecycleGuard {
         }
 
         Map<Id, Expense_Claim__c> claims =
-            loadClaims(
-                parentIds
-            );
+            loadClaims(parentIds);
 
         for (Expense_Claim_Line__c row : newRows) {
             Expense_Claim_Line__c prior =
-                oldMap.get(
-                    row.Id
-                );
+                oldMap.get(row.Id);
 
             assertDraft(
-                claims.get(
-                    prior.Expense_Claim__c
-                ),
+                claims.get(prior.Expense_Claim__c),
                 row
             );
 
             assertDraft(
-                claims.get(
-                    row.Expense_Claim__c
-                ),
+                claims.get(row.Expense_Claim__c),
                 row
             );
         }
@@ -209,25 +190,18 @@ public without sharing class SABExpenseClaimLifecycleGuard {
             return;
         }
 
-        Set<Id> parentIds =
-            new Set<Id>();
+        Set<Id> parentIds = new Set<Id>();
 
         for (Expense_Claim_Line__c row : oldRows) {
-            parentIds.add(
-                row.Expense_Claim__c
-            );
+            parentIds.add(row.Expense_Claim__c);
         }
 
         Map<Id, Expense_Claim__c> claims =
-            loadClaims(
-                parentIds
-            );
+            loadClaims(parentIds);
 
         for (Expense_Claim_Line__c row : oldRows) {
             assertDraft(
-                claims.get(
-                    row.Expense_Claim__c
-                ),
+                claims.get(row.Expense_Claim__c),
                 row
             );
         }
@@ -246,7 +220,9 @@ public without sharing class SABExpenseClaimLifecycleGuard {
             || !String.isBlank(row.Tax_Code_Key__c)
             || !String.isBlank(row.Tax_Jurisdiction__c)
             || !String.isBlank(row.Tax_Treatment__c)
-            || !String.isBlank(row.Tax_Country_Pack_Version__c)
+            || !String.isBlank(
+                row.Tax_Country_Pack_Version__c
+            )
         ) {
             row.addError(
                 'Expense Claim tax snapshot fields are system-managed by the posting service.'
@@ -285,27 +261,20 @@ public without sharing class SABExpenseClaimLifecycleGuard {
     private static void validateLineParents(
         List<Expense_Claim_Line__c> rows
     ) {
-        Set<Id> parentIds =
-            new Set<Id>();
+        Set<Id> parentIds = new Set<Id>();
 
         for (Expense_Claim_Line__c row : rows) {
             if (row.Expense_Claim__c != null) {
-                parentIds.add(
-                    row.Expense_Claim__c
-                );
+                parentIds.add(row.Expense_Claim__c);
             }
         }
 
         Map<Id, Expense_Claim__c> claims =
-            loadClaims(
-                parentIds
-            );
+            loadClaims(parentIds);
 
         for (Expense_Claim_Line__c row : rows) {
             assertDraft(
-                claims.get(
-                    row.Expense_Claim__c
-                ),
+                claims.get(row.Expense_Claim__c),
                 row
             );
         }
@@ -319,8 +288,7 @@ public without sharing class SABExpenseClaimLifecycleGuard {
         }
 
         return new Map<Id, Expense_Claim__c>([
-            SELECT Id,
-                   Status__c
+            SELECT Id, Status__c
             FROM Expense_Claim__c
             WHERE Id IN :parentIds
         ]);

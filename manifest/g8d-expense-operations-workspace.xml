@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>SABExpenseOperationsWorkspaceController</members>
+        <members>SABExpenseOperationsWorkspaceTest</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>SAB_View_Expense_Operations</members>
+        <name>CustomPermission</name>
+    </types>
+    <types>
+        <members>SAB_Expense_Operations_Workspace</members>
+        <name>PermissionSet</name>
+    </types>
+    <types>
+        <members>sabExpenseOperationsWorkspace</members>
+        <name>LightningComponentBundle</name>
+    </types>
+    <version>65.0</version>
+</Package>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Protected actions for employee expense reimbursement payment processing and Expense Claim settlement.</description>
+    <hasActivationRequired>false</hasActivationRequired>
+    <label>SAB Expense Reimbursement Action</label>
+    <classAccesses>
+        <apexClass>SABExpenseReimbursementPaymentService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>SABExpenseClaimSettlementService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <customPermissions>
+        <enabled>true</enabled>
+        <name>SAB_Process_Expense_Reimbursement</name>
+    </customPermissions>
+</PermissionSet>

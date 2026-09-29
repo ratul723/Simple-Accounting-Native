@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>SABFixedAssetScheduleService</members>
+        <members>SABFixedAssetScheduleGuard</members>
+        <members>SABFixedAssetScheduleServiceTest</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>SABFixedAssetScheduleGuardTrigger</members>
+        <name>ApexTrigger</name>
+    </types>
+    <types>
+        <members>SAB_Generate_Asset_Schedule</members>
+        <name>CustomPermission</name>
+    </types>
+    <types>
+        <members>SAB_Fixed_Asset_Schedule_Manager</members>
+        <name>PermissionSet</name>
+    </types>
+    <version>67.0</version>
+</Package>

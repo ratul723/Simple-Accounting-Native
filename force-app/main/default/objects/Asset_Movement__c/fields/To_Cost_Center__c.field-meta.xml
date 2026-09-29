@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>To_Cost_Center__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <label>To Cost Center</label>
+    <referenceTo>Cost_Center__c</referenceTo>
+    <relationshipLabel>Asset Movements To Cost Center</relationshipLabel>
+    <relationshipName>Asset_Movement_To_Cost_Center</relationshipName>
+    <type>Lookup</type>
+</CustomField>

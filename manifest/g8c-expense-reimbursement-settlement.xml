@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>SABExpenseReimbursementPaymentService</members>
+        <members>SABExpenseClaimSettlementService</members>
+        <members>SABExpenseClaimSettlementGuard</members>
+        <members>SABExpenseClaimLifecycleGuard</members>
+        <members>SABExpenseReimbursementPaymentServiceTest</members>
+        <members>SABExpenseClaimSettlementServiceTest</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>SABExpenseClaimSettlementGuardTrigger</members>
+        <name>ApexTrigger</name>
+    </types>
+    <types>
+        <members>SAB_Process_Expense_Reimbursement</members>
+        <name>CustomPermission</name>
+    </types>
+    <types>
+        <members>SAB_Expense_Reimbursement_Action</members>
+        <name>PermissionSet</name>
+    </types>
+    <version>65.0</version>
+</Package>
