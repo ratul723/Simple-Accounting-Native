@@ -79,14 +79,17 @@ private class SABFixedAssetMovementServiceTest {
                 new Department__c(
                     Name = 'Operations',
                     Company__c = company.Id,
-                    Department_Key__c = 'F9E-OPS',
+                    Code__c = 'OPS',
+                    Company_Department_Key__c = 'F9E-OPS',
                     Is_Active__c = true
                 );
+
             Department__c departmentB =
                 new Department__c(
                     Name = 'Delivery',
                     Company__c = company.Id,
-                    Department_Key__c = 'F9E-DEL',
+                    Code__c = 'DEL',
+                    Company_Department_Key__c = 'F9E-DEL',
                     Is_Active__c = true
                 );
             insert new List<Department__c>{
@@ -98,14 +101,16 @@ private class SABFixedAssetMovementServiceTest {
                 new Cost_Center__c(
                     Name = 'Operations CC',
                     Company__c = company.Id,
-                    Cost_Center_Key__c = 'F9E-OPS-CC',
+                    Code__c = 'OPS-CC',
+                    Company_Cost_Center_Key__c = 'F9E-OPS-CC',
                     Is_Active__c = true
                 );
             Cost_Center__c costCenterB =
                 new Cost_Center__c(
                     Name = 'Delivery CC',
                     Company__c = company.Id,
-                    Cost_Center_Key__c = 'F9E-DEL-CC',
+                    Code__c = 'DLV-CC',
+                    Company_Cost_Center_Key__c = 'F9E-DLV-CC',
                     Is_Active__c = true
                 );
             insert new List<Cost_Center__c>{
@@ -186,12 +191,12 @@ private class SABFixedAssetMovementServiceTest {
             Fixed_Asset__c asset = getAsset('F9E-ASSET-TRANSFER');
             Department__c toDepartment = [
                 SELECT Id FROM Department__c
-                WHERE Department_Key__c = 'F9E-DEL'
+                WHERE Name = 'Delivery'
                 LIMIT 1
             ];
             Cost_Center__c toCostCenter = [
                 SELECT Id FROM Cost_Center__c
-                WHERE Cost_Center_Key__c = 'F9E-DEL-CC'
+                WHERE Name = 'Delivery CC'
                 LIMIT 1
             ];
             Employee__c toCustodian = [
