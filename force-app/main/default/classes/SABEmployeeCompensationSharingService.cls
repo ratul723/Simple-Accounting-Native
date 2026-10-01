@@ -230,17 +230,27 @@ public without sharing class SABEmployeeCompensationSharingService {
 
     private static Map<Id, Set<Id>> effectiveUsersByCompany(Set<Id> companyIds) {
         Map<Id, Set<Id>> result = new Map<Id, Set<Id>>();
-        Date today = Date.today();
+        if (companyIds == null || companyIds.isEmpty()) return result;
 
-        for (Company_User_Access__c grant : [
-            SELECT Company__c, User__c
-            FROM Company_User_Access__c
-            WHERE Company__c IN :companyIds
-              AND User__c != null
-              AND Is_Active__c = true
-              AND Effective_From__c <= :today
-              AND (Effective_To__c = null OR Effective_To__c >= :today)
-        ]) {
+        // Resolve binds explicitly instead of relying on generated tmpVar bindings
+        // in the inline SOQL loop. This internal sharing-maintenance query must
+        // see company grants independently of the initiating user's visibility.
+        Map<String, Object> grantBinds = new Map<String, Object>{
+            'companyIds' => companyIds,
+            'asOfDate' => Date.today()
+        };
+        List<Company_User_Access__c> effectiveGrants = Database.queryWithBinds(
+            'SELECT Company__c, User__c FROM Company_User_Access__c'
+            + ' WHERE Company__c IN :companyIds'
+            + ' AND User__c != null'
+            + ' AND Is_Active__c = true'
+            + ' AND Effective_From__c <= :asOfDate'
+            + ' AND (Effective_To__c = null OR Effective_To__c >= :asOfDate)',
+            grantBinds,
+            AccessLevel.SYSTEM_MODE
+        );
+
+        for (Company_User_Access__c grant : effectiveGrants) {
             if (!result.containsKey(grant.Company__c)) {
                 result.put(grant.Company__c, new Set<Id>());
             }

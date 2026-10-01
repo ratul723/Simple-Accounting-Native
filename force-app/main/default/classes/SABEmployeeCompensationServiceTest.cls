@@ -35,7 +35,10 @@ private class SABEmployeeCompensationServiceTest {
             TimeZoneSidKey = 'Asia/Dhaka',
             Username = token + '@example.test'
         );
-        insert u;
+        // Setup-object DML needs a runAs boundary in standalone Apex tests.
+        System.runAs(new User(Id = UserInfo.getUserId())) {
+            insert u;
+        }
         return u;
     }
 
@@ -46,10 +49,14 @@ private class SABEmployeeCompensationServiceTest {
             WHERE Name = :permissionSetName
             LIMIT 1
         ];
-        insert new PermissionSetAssignment(
-            AssigneeId = user.Id,
-            PermissionSetId = ps.Id
-        );
+        // Keep permission assignment separate from Accounting Company fixtures.
+        // All test scenarios use this helper, including coverageActor.
+        System.runAs(new User(Id = UserInfo.getUserId())) {
+            insert new PermissionSetAssignment(
+                AssigneeId = user.Id,
+                PermissionSetId = ps.Id
+            );
+        }
     }
 
     private static void grantCompany(
@@ -407,29 +414,324 @@ private class SABEmployeeCompensationServiceTest {
                 [SELECT COUNT() FROM Employment__Share
                  WHERE ParentId = :employment.Id
                  AND UserOrGroupId = :target.Id
-                 AND RowCause = 'Manual']
+                 AND RowCause = 'Manual'],
+                'Employment must have a Manual share for the authorized company user.'
             );
             System.assertEquals(
                 1,
                 [SELECT COUNT() FROM Pay_Component__Share
                  WHERE ParentId = :component.Id
                  AND UserOrGroupId = :target.Id
-                 AND RowCause = 'Manual']
+                 AND RowCause = 'Manual'],
+                'Pay Component must have a Manual share for the authorized company user.'
             );
             System.assertEquals(
                 1,
                 [SELECT COUNT() FROM Employee_Pay_Component__Share
                  WHERE ParentId = :assignment.Id
                  AND UserOrGroupId = :target.Id
-                 AND RowCause = 'Manual']
+                 AND RowCause = 'Manual'],
+                'Compensation assignment must have a Manual share for the authorized company user.'
             );
             System.assertEquals(
                 1,
                 [SELECT COUNT() FROM Benefit_Award__Share
                  WHERE ParentId = :award.Id
                  AND UserOrGroupId = :target.Id
-                 AND RowCause = 'Manual']
+                 AND RowCause = 'Manual'],
+                'Benefit Award must have a Manual share for the authorized company user.'
             );
+            System.assertEquals(
+                1,
+                [SELECT COUNT() FROM Employee__Share
+                 WHERE ParentId = :employee.Id
+                 AND UserOrGroupId = :target.Id
+                 AND RowCause = 'Manual'],
+                'Employee sharing must continue to work alongside Employment sharing.'
+            );
+        }
+    }
+
+
+    @IsTest
+    static void employmentSharesSurviveUpdateAndEnding() {
+        Accounting_Company__c company = makeCompany('G10A-06');
+        User actor = makeUser('g10alifeactor' + DateTime.now().getTime(), 'G10A Lifecycle Actor');
+        User target = makeUser('g10alifetgt' + DateTime.now().getTime(), 'G10A Lifecycle Target');
+        assignPermissionSet(actor, 'SAB_Employee_Compensation_User');
+        assignPermissionSet(actor, 'SAB_Manage_Employee_Compensation_Action');
+        grantCompany(company.Id, actor.Id, 'G10A-GRANT-06-A');
+        grantCompany(company.Id, target.Id, 'G10A-GRANT-06-B');
+
+        System.runAs(actor) {
+            Employee__c employee = employeeRecord('EMP-G10A-006', 'Active');
+            insert employee;
+            Employment__c employment = new Employment__c(
+                Employee__c = employee.Id,
+                Company__c = company.Id,
+                Employment_Status__c = 'Active',
+                Start_Date__c = Date.newInstance(2026, 1, 1)
+            );
+            Test.startTest();
+            insert employment;
+            employment.Start_Date__c = Date.newInstance(2026, 1, 2);
+            update employment;
+            System.assertEquals(1, [SELECT COUNT() FROM Employment__Share
+                WHERE ParentId = :employment.Id AND UserOrGroupId = :target.Id
+                AND RowCause = 'Manual'], 'An unrelated edit must preserve the Employment share.');
+            employment.Employment_Status__c = 'Ended';
+            employment.End_Date__c = Date.newInstance(2026, 12, 31);
+            update employment;
+            Test.stopTest();
+            System.assertEquals(1, [SELECT COUNT() FROM Employment__Share
+                WHERE ParentId = :employment.Id AND UserOrGroupId = :target.Id
+                AND RowCause = 'Manual'], 'Ending employment must preserve exactly one historical Employment share.');
+        }
+    }
+
+
+    private static User coverageActor(String token) {
+        User actor = makeUser(token + DateTime.now().getTime(), 'G10A Coverage');
+        assignPermissionSet(actor, 'SAB_Employee_Compensation_User');
+        assignPermissionSet(actor, 'SAB_Manage_Employee_Compensation_Action');
+        assignPermissionSet(actor, 'SAB_Approve_Employee_Compensation_Action');
+        return actor;
+    }
+
+    private static void rejectsRequest(String kind, String payload, String expected) {
+        Boolean rejected = false;
+        try {
+            if (kind == 'Employee') {
+                SABEmployeeCompensationService.createEmployee((SABEmployeeCompensationService.EmployeeRequest)
+                    JSON.deserialize(payload, SABEmployeeCompensationService.EmployeeRequest.class));
+            } else if (kind == 'Employment') {
+                SABEmployeeCompensationService.createOrUpdateEmployment((SABEmployeeCompensationService.EmploymentRequest)
+                    JSON.deserialize(payload, SABEmployeeCompensationService.EmploymentRequest.class));
+            } else if (kind == 'Component') {
+                SABEmployeeCompensationService.createOrUpdatePayComponent((SABEmployeeCompensationService.PayComponentRequest)
+                    JSON.deserialize(payload, SABEmployeeCompensationService.PayComponentRequest.class));
+            } else if (kind == 'Assignment') {
+                SABEmployeeCompensationService.createOrUpdateAssignment((SABEmployeeCompensationService.AssignmentRequest)
+                    JSON.deserialize(payload, SABEmployeeCompensationService.AssignmentRequest.class));
+            } else if (kind == 'Award') {
+                SABEmployeeCompensationService.createBenefitAward((SABEmployeeCompensationService.BenefitAwardRequest)
+                    JSON.deserialize(payload, SABEmployeeCompensationService.BenefitAwardRequest.class));
+            } else {
+                System.assert(false, 'Unknown validation case: ' + kind);
+            }
+        } catch (SABEmployeeCompensationService.EmployeeCompensationException ex) {
+            rejected = true;
+            System.assertEquals(expected, ex.getMessage(), kind + ' must report the intended validation error.');
+        }
+        System.assert(rejected, kind + ' request should have failed: ' + payload);
+    }
+
+    @IsTest
+    static void serviceUpdatesEmploymentAndFiltersEndedRecords() {
+        Accounting_Company__c company = makeCompany('C07');
+        User actor = coverageActor('g10aempupdate');
+        grantCompany(company.Id, actor.Id, 'G10A-C07');
+        System.runAs(actor) {
+            Employee__c employee = employeeRecord('EMP-C07', 'Active');
+            insert employee;
+            Employment__c employment = new Employment__c(Employee__c=employee.Id,
+                Company__c=company.Id, Employment_Status__c='Active', Start_Date__c=Date.today().addDays(-30));
+            insert employment;
+            SABEmployeeCompensationService.EmploymentRequest r = new SABEmployeeCompensationService.EmploymentRequest();
+            r.employmentId=employment.Id; r.employeeId=employee.Id; r.companyId=company.Id;
+            r.startDate=employment.Start_Date__c; r.endDate=Date.today(); r.employmentStatus='Ended';
+            Test.startTest();
+            System.assertEquals(1, SABEmployeeCompensationService.getEmployments(company.Id, false).size());
+            System.assertEquals(employment.Id, SABEmployeeCompensationService.createOrUpdateEmployment(r));
+            List<SABEmployeeCompensationService.EmploymentDTO> allRows = SABEmployeeCompensationService.getEmployments(company.Id, true);
+            System.assertEquals(1, allRows.size());
+            System.assertEquals('Ended', allRows[0].employmentStatus);
+            System.assertEquals(employee.Id, allRows[0].employeeId);
+            System.assertEquals('EMP-C07', allRows[0].employeeReference);
+            System.assertEquals(0, SABEmployeeCompensationService.getEmployments(company.Id, false).size());
+            Test.stopTest();
+        }
+    }
+
+    @IsTest
+    static void serviceCreatesAndUpdatesPayComponents() {
+        Accounting_Company__c company = makeCompany('C08');
+        User actor = coverageActor('g10acomponent');
+        User target = makeUser('g10acomptgt'+DateTime.now().getTime(), 'Component reader');
+        grantCompany(company.Id, actor.Id, 'G10A-C08-A');
+        grantCompany(company.Id, target.Id, 'G10A-C08-B');
+        System.runAs(actor) {
+            SABEmployeeCompensationService.PayComponentRequest r = new SABEmployeeCompensationService.PayComponentRequest();
+            r.name='  Base Pay  '; r.componentKey='G10A-C08'; r.companyId=company.Id; r.category='Basic Salary';
+            Test.startTest();
+            Id componentId=SABEmployeeCompensationService.createOrUpdatePayComponent(r);
+            r.payComponentId=componentId; r.name='Updated Base Pay'; r.countryRuleKey=' BD '; r.isActive=false;
+            System.assertEquals(componentId, SABEmployeeCompensationService.createOrUpdatePayComponent(r));
+            Test.stopTest();
+            Pay_Component__c row=[SELECT Name, Country_Rule_Key__c, Is_Active__c FROM Pay_Component__c WHERE Id=:componentId];
+            System.assertEquals('Updated Base Pay',row.Name);
+            System.assertEquals('BD',row.Country_Rule_Key__c);
+            System.assertEquals(false,row.Is_Active__c);
+            System.assertEquals(1,[SELECT COUNT() FROM Pay_Component__Share WHERE ParentId=:componentId
+                AND UserOrGroupId=:target.Id AND RowCause='Manual'], 'Component update must preserve company sharing.');
+        }
+    }
+
+    @IsTest
+    static void serviceEditsDraftAssignmentAndReturnsFormulaSnapshot() {
+        Accounting_Company__c company=makeCompany('C09');
+        User actor=coverageActor('g10adraftedit');
+        grantCompany(company.Id,actor.Id,'G10A-C09');
+        System.runAs(actor) {
+            Employee__c employee=employeeRecord('EMP-C09','Active'); insert employee;
+            Employment__c employment=new Employment__c(Employee__c=employee.Id,Company__c=company.Id,
+                Employment_Status__c='Active',Start_Date__c=Date.today().addDays(-30)); insert employment;
+            Pay_Component__c component=new Pay_Component__c(Name='Base',Company__c=company.Id,
+                Component_Key__c='G10A-C09',Category__c='Basic Salary',Is_Active__c=true); insert component;
+            Employee_Pay_Component__c assignment=new Employee_Pay_Component__c(Employment__c=employment.Id,
+                Pay_Component__c=component.Id,Amount__c=100,Currency__c='BDT',Effective_From__c=Date.today().addDays(-1),Status__c='Draft');
+            insert assignment;
+            SABEmployeeCompensationService.AssignmentRequest r=new SABEmployeeCompensationService.AssignmentRequest();
+            r.assignmentId=assignment.Id; r.employmentId=employment.Id; r.payComponentId=component.Id;
+            r.amount=200; r.currencyCode=' bdt '; r.effectiveFrom=assignment.Effective_From__c;
+            r.formulaParameterJson='{"rate":200}';
+            Test.startTest();
+            System.assertEquals(assignment.Id,SABEmployeeCompensationService.createOrUpdateAssignment(r));
+            SABEmployeeCompensationService.approveAssignment(assignment.Id);
+            List<SABEmployeeCompensationService.CompensationDTO> rows=SABEmployeeCompensationService.getCurrentCompensation(company.Id,null);
+            System.assertEquals(1,rows.size()); System.assertEquals(200,rows[0].amount);
+            System.assertEquals('BDT',rows[0].currencyCode); System.assertEquals(true,rows[0].formulaBased);
+            Boolean blocked=false;
+            try { SABEmployeeCompensationService.createOrUpdateAssignment(r); }
+            catch(SABEmployeeCompensationService.EmployeeCompensationException ex) {
+                blocked=true; System.assert(ex.getMessage().contains('Only Draft'));
+            }
+            System.assert(blocked,'Approved snapshots must reject edits.');
+            Test.stopTest();
+        }
+    }
+
+    @IsTest
+    static void validatesEmployeeRequests() {
+        User actor=coverageActor('g10avemployee');
+        System.runAs(actor) {
+            Test.startTest();
+            rejectsRequest('Employee', 'null', 'Employee Reference is required.');
+            rejectsRequest('Employee', '{}', 'Employee Reference is required.');
+            rejectsRequest('Employee', '{"employeeReference":"E","status":"Wrong"}', 'Employee Status must be Active or Inactive.');
+            Test.stopTest();
+        }
+    }
+
+    @IsTest
+    static void validatesEmploymentRequests() {
+        User actor=coverageActor('g10avemployment');
+        System.runAs(actor) {
+            Test.startTest();
+            rejectsRequest('Employment', 'null', 'Employment request is required.');
+            rejectsRequest('Employment', '{}', 'Employee is required.');
+            rejectsRequest('Employment', '{"employeeId":"005000000000001"}', 'Accounting Company is required.');
+            rejectsRequest('Employment', '{"employeeId":"005000000000001","companyId":"005000000000001"}', 'Employment Start Date is required.');
+            rejectsRequest('Employment', '{"employeeId":"005000000000001","companyId":"005000000000001","startDate":"2026-01-01","employmentStatus":"Wrong"}', 'Employment Status must be Active, Leave, or Ended.');
+            Test.stopTest();
+        }
+    }
+
+    @IsTest
+    static void validatesComponentRequests() {
+        User actor=coverageActor('g10avcomponent');
+        System.runAs(actor) {
+            Test.startTest();
+            rejectsRequest('Component', 'null', 'Pay Component request is required.');
+            rejectsRequest('Component', '{}', 'Pay Component Name is required.');
+            rejectsRequest('Component', '{"name":"P"}', 'Component Key is required.');
+            rejectsRequest('Component', '{"name":"P","componentKey":"K"}', 'Pay Component Category is required.');
+            rejectsRequest('Component', '{"name":"P","componentKey":"K","category":"Wrong"}', 'Unsupported Pay Component Category.');
+            Test.stopTest();
+        }
+    }
+
+    @IsTest
+    static void validatesAssignmentRequests() {
+        User actor=coverageActor('g10avassignment');
+        System.runAs(actor) {
+            Test.startTest();
+            rejectsRequest('Assignment', 'null', 'Compensation assignment request is required.');
+            rejectsRequest('Assignment', '{}', 'Employment is required.');
+            rejectsRequest('Assignment', '{"employmentId":"005000000000001"}', 'Pay Component is required.');
+            rejectsRequest('Assignment', '{"employmentId":"005000000000001","payComponentId":"005000000000001"}', 'Effective From is required.');
+            rejectsRequest('Assignment', '{"employmentId":"005000000000001","payComponentId":"005000000000001","effectiveFrom":"2026-01-01","effectiveTo":"2025-12-31"}', 'Effective To cannot be before Effective From.');
+            rejectsRequest('Assignment', '{"employmentId":"005000000000001","payComponentId":"005000000000001","effectiveFrom":"2026-01-01","amount":-1}', 'Compensation amount cannot be negative.');
+            rejectsRequest('Assignment', '{"employmentId":"005000000000001","payComponentId":"005000000000001","effectiveFrom":"2026-01-01"}', 'Provide an amount or supported formula parameters.');
+            rejectsRequest('Assignment', '{"employmentId":"005000000000001","payComponentId":"005000000000001","effectiveFrom":"2026-01-01","amount":1}', 'Currency is required.');
+            Test.stopTest();
+        }
+    }
+
+    @IsTest
+    static void validatesAwardRequests() {
+        User actor=coverageActor('g10avaward');
+        System.runAs(actor) {
+            Test.startTest();
+            rejectsRequest('Award', 'null', 'Benefit Award request is required.');
+            rejectsRequest('Award', '{}', 'Employment is required.');
+            rejectsRequest('Award', '{"employmentId":"005000000000001"}', 'Pay Component is required.');
+            rejectsRequest('Award', '{"employmentId":"005000000000001","payComponentId":"005000000000001"}', 'Award Key is required.');
+            rejectsRequest('Award', '{"employmentId":"005000000000001","payComponentId":"005000000000001","awardKey":"A"}', 'Benefit Award amount must be greater than zero.');
+            rejectsRequest('Award', '{"employmentId":"005000000000001","payComponentId":"005000000000001","awardKey":"A","amount":0}', 'Benefit Award amount must be greater than zero.');
+            rejectsRequest('Award', '{"employmentId":"005000000000001","payComponentId":"005000000000001","awardKey":"A","amount":1}', 'Currency is required.');
+            rejectsRequest('Award', '{"employmentId":"005000000000001","payComponentId":"005000000000001","awardKey":"A","amount":1,"currencyCode":"BDT"}', 'Service Period Start is required.');
+            rejectsRequest('Award', '{"employmentId":"005000000000001","payComponentId":"005000000000001","awardKey":"A","amount":1,"currencyCode":"BDT","servicePeriodStart":"2026-01-02","servicePeriodEnd":"2026-01-01"}', 'Service Period End cannot be before Service Period Start.');
+            Test.stopTest();
+        }
+    }
+
+
+    @IsTest
+    static void rejectsInactiveEmployeeAndReversedEmploymentDates() {
+        Accounting_Company__c company=makeCompany('C10');
+        User actor=coverageActor('g10aempguards');
+        grantCompany(company.Id,actor.Id,'G10A-C10');
+        System.runAs(actor) {
+            SABEmployeeCompensationService.EmployeeRequest er=new SABEmployeeCompensationService.EmployeeRequest();
+            er.employeeReference=' EMP-C10 '; er.status='Inactive';
+            Id employeeId=SABEmployeeCompensationService.createEmployee(er);
+            System.assertEquals('EMP-C10',[SELECT Employee_Reference__c FROM Employee__c WHERE Id=:employeeId].Employee_Reference__c);
+            SABEmployeeCompensationService.EmploymentRequest r=new SABEmployeeCompensationService.EmploymentRequest();
+            r.employeeId=employeeId; r.companyId=company.Id; r.startDate=Date.today();
+            Test.startTest();
+            rejectsRequest('Employment',JSON.serialize(r),'An Inactive Employee cannot receive a new Employment record.');
+            update new Employee__c(Id=employeeId,Status__c='Active');
+            r.endDate=Date.today().addDays(-1);
+            rejectsRequest('Employment',JSON.serialize(r),'Employment End Date cannot be before Start Date.');
+            Test.stopTest();
+        }
+    }
+
+    @IsTest
+    static void rejectsMissingCompanyAndMissingLifecycleRecords() {
+        User actor=coverageActor('g10amissing');
+        System.runAs(actor) {
+            Test.startTest();
+            Boolean blocked=false;
+            try { SABEmployeeCompensationService.getEmployments(null,true); }
+            catch(SABEmployeeCompensationService.EmployeeCompensationException ex) {
+                blocked=true; System.assertEquals('Accounting Company is required.',ex.getMessage());
+            }
+            System.assert(blocked,'Company context is mandatory.');
+            blocked=false;
+            try { SABEmployeeCompensationService.approveAssignment(null); }
+            catch(SABEmployeeCompensationService.EmployeeCompensationException ex) {
+                blocked=true; System.assertEquals('Employee Pay Component assignment not found.',ex.getMessage());
+            }
+            System.assert(blocked,'A missing assignment cannot be approved.');
+            blocked=false;
+            try { SABEmployeeCompensationService.approveBenefitAward(null); }
+            catch(SABEmployeeCompensationService.EmployeeCompensationException ex) {
+                blocked=true; System.assertEquals('Benefit Award not found.',ex.getMessage());
+            }
+            System.assert(blocked,'A missing award cannot be approved.');
+            Test.stopTest();
         }
     }
 
