@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Allows access to the Simple Accounting Books Accounts Receivable workspace. Financial mutations remain protected by the existing Invoice, Customer Receipt and Payment Allocation services and action permissions.</description>
+    <hasActivationRequired>false</hasActivationRequired>
+    <label>SAB Accounts Receivable Workspace User</label>
+    <classAccesses>
+        <apexClass>SABARAgingController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+</PermissionSet>

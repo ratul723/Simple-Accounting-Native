@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Allows access to the Simple Accounting Books Accounts Payable workspace. Financial mutations remain protected by the existing Supplier Bill, Supplier Payment and Payment Allocation services and action permissions.</description>
+    <hasActivationRequired>false</hasActivationRequired>
+    <label>SAB Accounts Payable Workspace User</label>
+    <classAccesses>
+        <apexClass>SABAccountsPayableWorkspaceController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <customPermissions>
+        <enabled>true</enabled>
+        <name>SAB_View_Accounts_Payable_Workspace</name>
+    </customPermissions>
+</PermissionSet>

@@ -1,0 +1,344 @@
+<template>
+    <lightning-card
+        title="Fixed Asset Workspace"
+        icon-name="standard:asset_object"
+    >
+        <div class="workspace">
+            <template if:false={hasCompany}>
+                <div class="company-selector">
+                    <lightning-combobox
+                        label="Accounting Company"
+                        placeholder="Select an Accounting Company"
+                        options={companyOptions}
+                        value={companyId}
+                        onchange={handleCompanyChange}
+                    ></lightning-combobox>
+
+                    <p class="helper">
+                        The workspace only exposes companies for which
+                        the current user has an active company-access grant.
+                    </p>
+                </div>
+            </template>
+
+            <template if:true={hasCompany}>
+                <div class="header-row">
+                    <div>
+                        <h2>{companyName}</h2>
+                        <p>
+                            Functional Currency:
+                            {functionalCurrency}
+                            · Book:
+                            {dashboard.bookKey}
+                        </p>
+                    </div>
+
+                    <div class="header-actions">
+                        <lightning-button
+                            label="Refresh"
+                            icon-name="utility:refresh"
+                            onclick={handleRefresh}
+                        ></lightning-button>
+
+                        <lightning-button
+                            label="Open Asset"
+                            icon-name="utility:open"
+                            onclick={openAssetRecord}
+                            disabled={disableOpenAsset}
+                        ></lightning-button>
+                    </div>
+                </div>
+
+                <template if:true={isLoading}>
+                    <lightning-spinner
+                        alternative-text="Loading Fixed Asset Workspace"
+                        size="medium"
+                    ></lightning-spinner>
+                </template>
+
+                <template if:true={errorMessage}>
+                    <div class="error-box">
+                        {errorMessage}
+                    </div>
+                </template>
+
+                <template if:true={hasDashboard}>
+                    <div class="summary-grid">
+                        <div class="metric-card">
+                            <span>Total Assets</span>
+                            <strong>{dashboard.totalAssets}</strong>
+                        </div>
+
+                        <div class="metric-card">
+                            <span>In Service</span>
+                            <strong>{dashboard.inServiceAssets}</strong>
+                        </div>
+
+                        <div class="metric-card">
+                            <span>Gross Cost</span>
+                            <strong>
+                                {dashboard.grossCost}
+                                {functionalCurrency}
+                            </strong>
+                        </div>
+
+                        <div class="metric-card">
+                            <span>Posted Depreciation</span>
+                            <strong>
+                                {dashboard.postedDepreciation}
+                                {functionalCurrency}
+                            </strong>
+                        </div>
+
+                        <div class="metric-card">
+                            <span>Posted Impairment</span>
+                            <strong>
+                                {dashboard.postedImpairment}
+                                {functionalCurrency}
+                            </strong>
+                        </div>
+
+                        <div class="metric-card emphasized">
+                            <span>Net Book Value</span>
+                            <strong>
+                                {dashboard.netBookValue}
+                                {functionalCurrency}
+                            </strong>
+                        </div>
+
+                        <div class="metric-card">
+                            <span>Future Planned Depreciation</span>
+                            <strong>
+                                {dashboard.futurePlannedDepreciation}
+                                {functionalCurrency}
+                            </strong>
+                        </div>
+
+                        <div class="metric-card">
+                            <span>Reconciliation Review</span>
+                            <strong>
+                                {dashboard.reconciliationReviewCount}
+                            </strong>
+                        </div>
+                    </div>
+
+                    <div class="control-strip">
+                        <lightning-input
+                            type="search"
+                            label="Search Assets"
+                            placeholder="Name, tag, key or category"
+                            value={searchText}
+                            onchange={handleSearch}
+                        ></lightning-input>
+
+                        <lightning-combobox
+                            label="Status"
+                            value={statusFilter}
+                            options={statusOptions}
+                            onchange={handleStatusFilter}
+                        ></lightning-combobox>
+                    </div>
+
+                    <div class="panel">
+                        <div class="panel-header">
+                            <div>
+                                <h3>Asset Register</h3>
+                                <p>
+                                    {filteredAssets.length} asset(s) shown
+                                </p>
+                            </div>
+                        </div>
+
+                        <lightning-datatable
+                            key-field="assetId"
+                            data={filteredAssets}
+                            columns={assetColumns}
+                            selected-rows={selectedRows}
+                            max-row-selection="1"
+                            onrowselection={handleAssetSelection}
+                            hide-checkbox-column="false"
+                        ></lightning-datatable>
+                    </div>
+
+                    <template if:true={hasSelectedAsset}>
+                        <div class="detail-header">
+                            <div>
+                                <h3>{selectedAsset.name}</h3>
+                                <p>
+                                    {selectedAsset.companyAssetKey}
+                                    · {selectedAsset.status}
+                                </p>
+                            </div>
+
+                            <div class={reconciliationStatusClass}>
+                                Reconciliation:
+                                {selectedAsset.reconciliation.status}
+                            </div>
+                        </div>
+
+                        <lightning-tabset>
+                            <lightning-tab label="Overview">
+                                <div class="detail-grid">
+                                    <div>
+                                        <span>Asset Tag</span>
+                                        <strong>{selectedAsset.assetTag}</strong>
+                                    </div>
+                                    <div>
+                                        <span>Category</span>
+                                        <strong>{selectedAsset.categoryName}</strong>
+                                    </div>
+                                    <div>
+                                        <span>Acquisition Date</span>
+                                        <strong>{selectedAsset.acquisitionDate}</strong>
+                                    </div>
+                                    <div>
+                                        <span>In Service Date</span>
+                                        <strong>{selectedAsset.inServiceDate}</strong>
+                                    </div>
+                                    <div>
+                                        <span>Cost</span>
+                                        <strong>
+                                            {selectedAsset.cost}
+                                            {functionalCurrency}
+                                        </strong>
+                                    </div>
+                                    <div>
+                                        <span>Residual Value</span>
+                                        <strong>
+                                            {selectedAsset.residualValue}
+                                            {functionalCurrency}
+                                        </strong>
+                                    </div>
+                                    <div>
+                                        <span>Useful Life</span>
+                                        <strong>
+                                            {selectedAsset.usefulLifeMonths} months
+                                        </strong>
+                                    </div>
+                                    <div>
+                                        <span>Depreciation Method</span>
+                                        <strong>{selectedAsset.depreciationMethod}</strong>
+                                    </div>
+                                    <div>
+                                        <span>Department</span>
+                                        <strong>{selectedAsset.departmentName}</strong>
+                                    </div>
+                                    <div>
+                                        <span>Cost Center</span>
+                                        <strong>{selectedAsset.costCenterName}</strong>
+                                    </div>
+                                    <div>
+                                        <span>Custodian</span>
+                                        <strong>{selectedAsset.custodianName}</strong>
+                                    </div>
+                                    <div>
+                                        <span>Location</span>
+                                        <strong>{selectedAsset.location}</strong>
+                                    </div>
+                                </div>
+                            </lightning-tab>
+
+                            <lightning-tab label="Depreciation Schedule">
+                                <div class="panel">
+                                    <lightning-datatable
+                                        key-field="lineId"
+                                        data={selectedScheduleLines}
+                                        columns={scheduleColumns}
+                                        hide-checkbox-column
+                                    ></lightning-datatable>
+                                </div>
+                            </lightning-tab>
+
+                            <lightning-tab label="Movements">
+                                <div class="panel">
+                                    <lightning-datatable
+                                        key-field="movementId"
+                                        data={selectedMovements}
+                                        columns={movementColumns}
+                                        hide-checkbox-column
+                                    ></lightning-datatable>
+                                </div>
+                            </lightning-tab>
+
+                            <lightning-tab label="Reconciliation">
+                                <div class="reconciliation-grid">
+                                    <div class="metric-card">
+                                        <span>Cost</span>
+                                        <strong>
+                                            {selectedAsset.reconciliation.cost}
+                                        </strong>
+                                    </div>
+                                    <div class="metric-card">
+                                        <span>Posted Depreciation</span>
+                                        <strong>
+                                            {selectedAsset.reconciliation.postedDepreciation}
+                                        </strong>
+                                    </div>
+                                    <div class="metric-card">
+                                        <span>Posted Impairment</span>
+                                        <strong>
+                                            {selectedAsset.reconciliation.postedImpairment}
+                                        </strong>
+                                    </div>
+                                    <div class="metric-card">
+                                        <span>Disposal Amount</span>
+                                        <strong>
+                                            {selectedAsset.reconciliation.disposalAmount}
+                                        </strong>
+                                    </div>
+                                    <div class="metric-card emphasized">
+                                        <span>Net Book Value</span>
+                                        <strong>
+                                            {selectedAsset.reconciliation.netBookValue}
+                                        </strong>
+                                    </div>
+                                    <div class="metric-card">
+                                        <span>Future Planned Depreciation</span>
+                                        <strong>
+                                            {selectedAsset.reconciliation.futurePlannedDepreciation}
+                                        </strong>
+                                    </div>
+                                    <div class="metric-card">
+                                        <span>Overdue Planned Lines</span>
+                                        <strong>
+                                            {selectedAsset.reconciliation.overduePlannedCount}
+                                        </strong>
+                                    </div>
+                                    <div class="metric-card">
+                                        <span>Duplicate Movement Keys</span>
+                                        <strong>
+                                            {selectedAsset.reconciliation.duplicateMovementKeyCount}
+                                        </strong>
+                                    </div>
+                                </div>
+
+                                <template if:true={hasReconciliationIssues}>
+                                    <div class="review-box">
+                                        <h4>Items Requiring Review</h4>
+                                        <ul>
+                                            <template
+                                                for:each={reconciliationIssues}
+                                                for:item="issue"
+                                            >
+                                                <li key={issue}>{issue}</li>
+                                            </template>
+                                        </ul>
+                                    </div>
+                                </template>
+
+                                <template if:false={hasReconciliationIssues}>
+                                    <div class="success-box">
+                                        The asset's cost, posted depreciation,
+                                        impairment, disposal and remaining
+                                        depreciation schedule reconcile within
+                                        the workspace tolerance.
+                                    </div>
+                                </template>
+                            </lightning-tab>
+                        </lightning-tabset>
+                    </template>
+                </template>
+            </template>
+        </div>
+    </lightning-card>
+</template>

@@ -269,7 +269,6 @@ private class SABFixedAssetMovementServiceTest {
 
         System.runAs(testUser) {
             Fixed_Asset__c asset = getAsset('F9E-ASSET-IMPAIR');
-            postSeptemberDepreciation(asset.Id, 'F9E-DEP-IMPAIR');
 
             SABFixedAssetMovementService.ImpairmentRequest request =
                 new SABFixedAssetMovementService.ImpairmentRequest();
@@ -283,6 +282,7 @@ private class SABFixedAssetMovementServiceTest {
             request.reason = 'Permanent impairment';
 
             Test.startTest();
+            postSeptemberDepreciation(asset.Id, 'F9E-DEP-IMPAIR');
             SABFixedAssetMovementService.MovementResult result =
                 SABFixedAssetMovementService.recordImpairment(request);
             Test.stopTest();
@@ -360,7 +360,6 @@ private class SABFixedAssetMovementServiceTest {
 
         System.runAs(testUser) {
             Fixed_Asset__c asset = getAsset('F9E-ASSET-DISPOSE');
-            postSeptemberDepreciation(asset.Id, 'F9E-DEP-DISPOSE');
 
             Bank_Account__c bank = [
                 SELECT Id FROM Bank_Account__c
@@ -381,6 +380,7 @@ private class SABFixedAssetMovementServiceTest {
             request.reason = 'Asset sale';
 
             Test.startTest();
+            postSeptemberDepreciation(asset.Id, 'F9E-DEP-DISPOSE');
             SABFixedAssetMovementService.MovementResult result =
                 SABFixedAssetMovementService.disposeAsset(request);
             Test.stopTest();
@@ -476,8 +476,11 @@ private class SABFixedAssetMovementServiceTest {
 
         System.runAs(testUser) {
             Fixed_Asset__c asset = getAsset('F9E-ASSET-IMPAIR');
+
+            Test.startTest();
             SABFixedAssetDepreciationPostingService.PostingResult result =
                 postSeptemberDepreciation(asset.Id, 'F9E-DEP-EVIDENCE');
+            Test.stopTest();
 
             Asset_Movement__c movement = [
                 SELECT Movement_Type__c,

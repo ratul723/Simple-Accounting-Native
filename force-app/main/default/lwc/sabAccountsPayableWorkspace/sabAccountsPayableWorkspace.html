@@ -1,0 +1,196 @@
+<template>
+    <lightning-card title="Accounts Payable Workspace" icon-name="standard:orders">
+        <div slot="actions" class="actions">
+            <lightning-button label="New Supplier Bill" onclick={newSupplierBill}></lightning-button>
+            <lightning-button label="New Supplier Payment" onclick={newSupplierPayment}></lightning-button>
+            <lightning-button-icon icon-name="utility:refresh" alternative-text="Refresh" title="Refresh" onclick={refresh}></lightning-button-icon>
+        </div>
+
+        <div class="workspace slds-p-horizontal_medium slds-p-bottom_medium">
+            <template if:false={hasCompany}>
+                <div class="info-box">
+                    Select an Accounting Company from the company context selector to use the Accounts Payable workspace.
+                </div>
+            </template>
+
+            <template if:true={hasCompany}>
+                <div class="filters">
+                    <lightning-input
+                        type="date"
+                        label="As Of Date"
+                        value={asOfDate}
+                        onchange={handleDateChange}
+                    ></lightning-input>
+                    <lightning-combobox
+                        label="Supplier"
+                        value={supplierProfileId}
+                        options={supplierOptions}
+                        onchange={handleSupplierChange}
+                    ></lightning-combobox>
+                    <lightning-combobox
+                        label="Bill Status"
+                        value={statusFilter}
+                        options={statusOptions}
+                        onchange={handleStatusChange}
+                    ></lightning-combobox>
+                    <lightning-input
+                        type="search"
+                        label="Search Bills"
+                        placeholder="Bill, supplier or vendor reference"
+                        value={searchText}
+                        onchange={handleSearch}
+                    ></lightning-input>
+                    <lightning-input
+                        type="checkbox"
+                        label="Include settled posted bills"
+                        checked={includeSettled}
+                        onchange={handleSettledChange}
+                    ></lightning-input>
+                </div>
+
+                <template if:true={isLoading}>
+                    <lightning-spinner alternative-text="Loading Accounts Payable Workspace" size="medium"></lightning-spinner>
+                </template>
+
+                <template if:true={errorMessage}>
+                    <div class="error-box" role="alert">{errorMessage}</div>
+                </template>
+
+                <template if:true={hasWorkspace}>
+                    <div class="workspace-meta">
+                        <span><strong>{workspace.companyName}</strong></span>
+                        <span>Functional Currency: <strong>{workspace.functionalCurrency}</strong></span>
+                        <span>As Of: <strong>{workspace.asOfDate}</strong></span>
+                    </div>
+
+                    <div class="summary-grid">
+                        <div class="metric-card emphasized">
+                            <span>AP Outstanding</span>
+                            <strong>{workspace.totalOutstanding} {functionalCurrency}</strong>
+                        </div>
+                        <div class="metric-card">
+                            <span>Open Bills</span>
+                            <strong>{workspace.openBills}</strong>
+                        </div>
+                        <div class="metric-card">
+                            <span>Overdue Bills</span>
+                            <strong>{workspace.overdueBills}</strong>
+                        </div>
+                        <div class="metric-card">
+                            <span>Pending Bills</span>
+                            <strong>{workspace.pendingBills}</strong>
+                        </div>
+                        <div class="metric-card">
+                            <span>Pending Payments</span>
+                            <strong>{workspace.pendingPayments}</strong>
+                        </div>
+                        <div class="metric-card">
+                            <span>Pending Payment Amount</span>
+                            <strong>{workspace.pendingPaymentAmount} {functionalCurrency}</strong>
+                        </div>
+                    </div>
+
+                    <div class="aging-grid">
+                        <div class="aging-card">
+                            <span>Current</span>
+                            <strong>{workspace.currentAmount}</strong>
+                        </div>
+                        <div class="aging-card">
+                            <span>1–30</span>
+                            <strong>{workspace.days1To30Amount}</strong>
+                        </div>
+                        <div class="aging-card">
+                            <span>31–60</span>
+                            <strong>{workspace.days31To60Amount}</strong>
+                        </div>
+                        <div class="aging-card">
+                            <span>61–90</span>
+                            <strong>{workspace.days61To90Amount}</strong>
+                        </div>
+                        <div class="aging-card">
+                            <span>91+</span>
+                            <strong>{workspace.days91PlusAmount}</strong>
+                        </div>
+                    </div>
+
+                    <lightning-tabset>
+                        <lightning-tab label="Supplier Bills">
+                            <div class="panel slds-m-top_medium">
+                                <div class="panel-header">
+                                    <div>
+                                        <h3>Supplier Bills</h3>
+                                        <p>{filteredBills.length} bill(s) shown</p>
+                                    </div>
+                                </div>
+
+                                <template if:true={hasBills}>
+                                    <lightning-datatable
+                                        key-field="billId"
+                                        data={filteredBills}
+                                        columns={billColumns}
+                                        hide-checkbox-column
+                                        onrowaction={handleBillAction}
+                                    ></lightning-datatable>
+                                </template>
+
+                                <template if:false={hasBills}>
+                                    <div class="empty-state">No supplier bills match the selected filters.</div>
+                                </template>
+                            </div>
+                        </lightning-tab>
+
+                        <lightning-tab label="Supplier Payments">
+                            <div class="panel slds-m-top_medium">
+                                <div class="panel-header">
+                                    <div>
+                                        <h3>Supplier Payments</h3>
+                                        <p>{workspace.totalPayments} payment(s) in the selected period</p>
+                                    </div>
+                                </div>
+
+                                <template if:true={hasPayments}>
+                                    <lightning-datatable
+                                        key-field="paymentId"
+                                        data={workspace.payments}
+                                        columns={paymentColumns}
+                                        hide-checkbox-column
+                                        onrowaction={handlePaymentAction}
+                                    ></lightning-datatable>
+                                </template>
+
+                                <template if:false={hasPayments}>
+                                    <div class="empty-state">No supplier payments match the selected company and date.</div>
+                                </template>
+                            </div>
+                        </lightning-tab>
+
+                        <lightning-tab label="Workflow">
+                            <div class="workflow-grid slds-m-top_medium">
+                                <div class="workflow-card">
+                                    <span>Draft</span>
+                                    <strong>{workspace.pendingBills}</strong>
+                                    <p>Bills requiring lifecycle action.</p>
+                                </div>
+                                <div class="workflow-card">
+                                    <span>Posted</span>
+                                    <strong>{workspace.postedBills}</strong>
+                                    <p>Bills represented in Accounts Payable.</p>
+                                </div>
+                                <div class="workflow-card">
+                                    <span>Pending Disbursement</span>
+                                    <strong>{workspace.pendingPayments}</strong>
+                                    <p>Payments not yet successfully settled.</p>
+                                </div>
+                                <div class="workflow-card">
+                                    <span>Succeeded Disbursement</span>
+                                    <strong>{workspace.succeededPayments}</strong>
+                                    <p>Payments that completed the settlement lifecycle.</p>
+                                </div>
+                            </div>
+                        </lightning-tab>
+                    </lightning-tabset>
+                </template>
+            </template>
+        </div>
+    </lightning-card>
+</template>

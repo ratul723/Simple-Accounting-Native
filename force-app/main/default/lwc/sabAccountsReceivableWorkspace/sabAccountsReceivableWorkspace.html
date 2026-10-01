@@ -1,0 +1,219 @@
+<template>
+    <lightning-card title="Accounts Receivable Workspace" icon-name="standard:orders">
+        <div slot="actions" class="actions">
+            <lightning-button label="New Customer Invoice" onclick={newInvoice}></lightning-button>
+            <lightning-button label="New Customer Receipt" onclick={newReceipt}></lightning-button>
+            <lightning-button-icon
+                icon-name="utility:refresh"
+                alternative-text="Refresh"
+                title="Refresh"
+                onclick={refresh}
+            ></lightning-button-icon>
+        </div>
+
+        <div class="workspace slds-p-horizontal_medium slds-p-bottom_medium">
+            <template if:false={hasCompany}>
+                <div class="info-box">
+                    Select an Accounting Company from the company context selector to use the Accounts Receivable workspace.
+                </div>
+            </template>
+
+            <template if:true={hasCompany}>
+                <div class="filters">
+                    <lightning-input
+                        type="date"
+                        label="As Of Date"
+                        value={asOfDate}
+                        onchange={handleDateChange}
+                    ></lightning-input>
+
+                    <lightning-combobox
+                        label="Customer"
+                        value={partyProfileId}
+                        options={customerOptions}
+                        onchange={handleCustomerChange}
+                    ></lightning-combobox>
+
+                    <lightning-input
+                        type="search"
+                        label="Search Invoices"
+                        placeholder="Invoice number or customer"
+                        value={searchText}
+                        onchange={handleSearch}
+                    ></lightning-input>
+
+                    <lightning-input
+                        type="checkbox"
+                        label="Include fully settled invoices"
+                        checked={includeSettled}
+                        onchange={handleSettledChange}
+                    ></lightning-input>
+                </div>
+
+                <template if:true={isLoading}>
+                    <lightning-spinner
+                        alternative-text="Loading Accounts Receivable Workspace"
+                        size="medium"
+                    ></lightning-spinner>
+                </template>
+
+                <template if:true={errorMessage}>
+                    <div class="error-box" role="alert">{errorMessage}</div>
+                </template>
+
+                <template if:true={hasWorkspace}>
+                    <div class="workspace-meta">
+                        <span><strong>{workspace.companyName}</strong></span>
+                        <span>Functional Currency: <strong>{functionalCurrency}</strong></span>
+                        <span>As Of: <strong>{workspace.asOfDate}</strong></span>
+                        <span>Generated: <strong>{workspace.generatedAt}</strong></span>
+                    </div>
+
+                    <div class="summary-grid">
+                        <div class="metric-card emphasized">
+                            <span>AR Outstanding</span>
+                            <strong>{workspace.totalOutstanding} {reportCurrency}</strong>
+                        </div>
+                        <div class="metric-card">
+                            <span>Open Invoices</span>
+                            <strong>{workspace.openInvoiceCount}</strong>
+                        </div>
+                        <div class="metric-card">
+                            <span>Overdue Amount</span>
+                            <strong>{overdueAmount} {reportCurrency}</strong>
+                        </div>
+                        <div class="metric-card">
+                            <span>Current</span>
+                            <strong>{workspace.currentAmount} {reportCurrency}</strong>
+                        </div>
+                        <div class="metric-card">
+                            <span>1–30 Days</span>
+                            <strong>{workspace.days1To30Amount} {reportCurrency}</strong>
+                        </div>
+                        <div class="metric-card">
+                            <span>31+ Days</span>
+                            <strong>
+                                {over31Amount}
+                                {reportCurrency}
+                            </strong>
+                        </div>
+                    </div>
+
+                    <div class="aging-grid">
+                        <div class="aging-card">
+                            <span>Current</span>
+                            <strong>{workspace.currentAmount}</strong>
+                        </div>
+                        <div class="aging-card">
+                            <span>1–30</span>
+                            <strong>{workspace.days1To30Amount}</strong>
+                        </div>
+                        <div class="aging-card">
+                            <span>31–60</span>
+                            <strong>{workspace.days31To60Amount}</strong>
+                        </div>
+                        <div class="aging-card">
+                            <span>61–90</span>
+                            <strong>{workspace.days61To90Amount}</strong>
+                        </div>
+                        <div class="aging-card">
+                            <span>91+</span>
+                            <strong>{workspace.days91PlusAmount}</strong>
+                        </div>
+                    </div>
+
+                    <lightning-tabset>
+                        <lightning-tab label="Invoices">
+                            <div class="panel slds-m-top_medium">
+                                <div class="panel-header">
+                                    <div>
+                                        <h3>Customer Invoices</h3>
+                                        <p>{invoiceDetailCountLabel}</p>
+                                    </div>
+                                </div>
+
+                                <template if:true={hasInvoices}>
+                                    <lightning-datatable
+                                        key-field="invoiceId"
+                                        data={filteredInvoices}
+                                        columns={invoiceColumns}
+                                        hide-checkbox-column
+                                        onrowaction={handleInvoiceAction}
+                                    ></lightning-datatable>
+                                </template>
+
+                                <template if:false={hasInvoices}>
+                                    <div class="empty-state">No posted customer invoices match the selected filters.</div>
+                                </template>
+                            </div>
+                        </lightning-tab>
+
+                        <lightning-tab label="Customers">
+                            <div class="panel slds-m-top_medium">
+                                <div class="panel-header">
+                                    <div>
+                                        <h3>Customer Balances</h3>
+                                        <p>{customerDetailCountLabel}</p>
+                                    </div>
+                                </div>
+
+                                <template if:true={hasCustomers}>
+                                    <lightning-datatable
+                                        key-field="partyProfileId"
+                                        data={workspace.customers}
+                                        columns={customerColumns}
+                                        hide-checkbox-column
+                                    ></lightning-datatable>
+                                </template>
+
+                                <template if:false={hasCustomers}>
+                                    <div class="empty-state">No outstanding customer balances were found.</div>
+                                </template>
+                            </div>
+                        </lightning-tab>
+
+                        <lightning-tab label="Aging">
+                            <div class="panel slds-m-top_medium">
+                                <div class="panel-header">
+                                    <div>
+                                        <h3>Accounts Receivable Aging</h3>
+                                        <p>Posted invoices, dated allocations and posted credit notes as of the selected date.</p>
+                                    </div>
+                                </div>
+
+                                <div class="aging-detail-grid">
+                                    <div class="detail-card">
+                                        <span>Current</span>
+                                        <strong>{workspace.currentAmount} {reportCurrency}</strong>
+                                    </div>
+                                    <div class="detail-card">
+                                        <span>1–30</span>
+                                        <strong>{workspace.days1To30Amount} {reportCurrency}</strong>
+                                    </div>
+                                    <div class="detail-card">
+                                        <span>31–60</span>
+                                        <strong>{workspace.days31To60Amount} {reportCurrency}</strong>
+                                    </div>
+                                    <div class="detail-card">
+                                        <span>61–90</span>
+                                        <strong>{workspace.days61To90Amount} {reportCurrency}</strong>
+                                    </div>
+                                    <div class="detail-card">
+                                        <span>91+</span>
+                                        <strong>{workspace.days91PlusAmount} {reportCurrency}</strong>
+                                    </div>
+                                </div>
+
+                                <template if:true={workspace.truncated}>
+                                    <div class="warning-box slds-m-top_medium" role="alert">
+                                        The underlying AR aging detail is limited to 2,000 posted invoices. Narrow the customer filter for a complete detail view.
+                                    </div>
+                                </template>
+                            </div>
+                        </lightning-tab>
+                    </lightning-tabset>
+                </template>
+            </template>
+        </div>
+    </lightning-card>
+</template>

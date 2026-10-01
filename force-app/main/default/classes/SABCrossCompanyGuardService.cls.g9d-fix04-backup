@@ -15,13 +15,6 @@
  */
 public without sharing class SABCrossCompanyGuardService {
 
-    // G9D_FIX04_CACHE: transaction-scoped relationship caches prevent repeated
-    // Journal Line trigger invocations from burning the 100-query governor limit.
-    private static final Map<Id, Id> JOURNAL_COMPANY_CACHE = new Map<Id, Id>();
-    private static final Map<Id, Id> ACCOUNT_COMPANY_CACHE = new Map<Id, Id>();
-    private static final Map<Id, Id> DEPARTMENT_COMPANY_CACHE = new Map<Id, Id>();
-    private static final Map<Id, Id> COST_CENTER_COMPANY_CACHE = new Map<Id, Id>();
-    private static final Map<Id, Id> PROJECT_COMPANY_CACHE = new Map<Id, Id>();
     private static final String ERROR_PREFIX =
         'Cross-company relationship is not allowed. ';
 
@@ -136,25 +129,66 @@ public without sharing class SABCrossCompanyGuardService {
             }
         }
 
-        cacheJournalCompanies(journalIds);
-        cacheAccountCompanies(accountIds);
-        cacheDepartmentCompanies(departmentIds);
-        cacheCostCenterCompanies(costCenterIds);
-        cacheProjectCompanies(projectIds);
+        Map<Id, Journal_Entry__c> journals =
+            journalIds.isEmpty()
+                ? new Map<Id, Journal_Entry__c>()
+                : new Map<Id, Journal_Entry__c>([
+                    SELECT Id, Company__c
+                    FROM Journal_Entry__c
+                    WHERE Id IN :journalIds
+                ]);
+
+        Map<Id, GL_Account__c> accounts =
+            accountIds.isEmpty()
+                ? new Map<Id, GL_Account__c>()
+                : new Map<Id, GL_Account__c>([
+                    SELECT Id, Company__c
+                    FROM GL_Account__c
+                    WHERE Id IN :accountIds
+                ]);
+
+        Map<Id, Department__c> departments =
+            departmentIds.isEmpty()
+                ? new Map<Id, Department__c>()
+                : new Map<Id, Department__c>([
+                    SELECT Id, Company__c
+                    FROM Department__c
+                    WHERE Id IN :departmentIds
+                ]);
+
+        Map<Id, Cost_Center__c> costCenters =
+            costCenterIds.isEmpty()
+                ? new Map<Id, Cost_Center__c>()
+                : new Map<Id, Cost_Center__c>([
+                    SELECT Id, Company__c
+                    FROM Cost_Center__c
+                    WHERE Id IN :costCenterIds
+                ]);
+
+        Map<Id, Project__c> projects =
+            projectIds.isEmpty()
+                ? new Map<Id, Project__c>()
+                : new Map<Id, Project__c>([
+                    SELECT Id, Company__c
+                    FROM Project__c
+                    WHERE Id IN :projectIds
+                ]);
 
         for (Journal_Entry_Line__c recordValue : records) {
-            Id companyId =
-                JOURNAL_COMPANY_CACHE.get(recordValue.Journal_Entry__c);
+            Journal_Entry__c journal =
+                journals.get(recordValue.Journal_Entry__c);
 
-            if (companyId == null) {
+            if (journal == null) {
                 continue;
             }
+
+            Id companyId = journal.Company__c;
 
             assertSameCompany(
                 recordValue,
                 companyId,
                 recordValue.GL_Account__c,
-                ACCOUNT_COMPANY_CACHE.get(recordValue.GL_Account__c),
+                relatedCompanyId(accounts, recordValue.GL_Account__c),
                 'GL Account'
             );
 
@@ -162,7 +196,7 @@ public without sharing class SABCrossCompanyGuardService {
                 recordValue,
                 companyId,
                 recordValue.Department__c,
-                DEPARTMENT_COMPANY_CACHE.get(recordValue.Department__c),
+                relatedCompanyId(departments, recordValue.Department__c),
                 'Department'
             );
 
@@ -170,7 +204,7 @@ public without sharing class SABCrossCompanyGuardService {
                 recordValue,
                 companyId,
                 recordValue.Cost_Center__c,
-                COST_CENTER_COMPANY_CACHE.get(recordValue.Cost_Center__c),
+                relatedCompanyId(costCenters, recordValue.Cost_Center__c),
                 'Cost Center'
             );
 
@@ -178,89 +212,9 @@ public without sharing class SABCrossCompanyGuardService {
                 recordValue,
                 companyId,
                 recordValue.Project__c,
-                PROJECT_COMPANY_CACHE.get(recordValue.Project__c),
+                relatedCompanyId(projects, recordValue.Project__c),
                 'Project'
             );
-        }
-    }
-
-    private static void cacheJournalCompanies(Set<Id> ids) {
-        Set<Id> missing = new Set<Id>(ids);
-        missing.removeAll(JOURNAL_COMPANY_CACHE.keySet());
-        if (missing.isEmpty()) {
-            return;
-        }
-
-        for (Journal_Entry__c row : [
-            SELECT Id, Company__c
-            FROM Journal_Entry__c
-            WHERE Id IN :missing
-        ]) {
-            JOURNAL_COMPANY_CACHE.put(row.Id, row.Company__c);
-        }
-    }
-
-    private static void cacheAccountCompanies(Set<Id> ids) {
-        Set<Id> missing = new Set<Id>(ids);
-        missing.removeAll(ACCOUNT_COMPANY_CACHE.keySet());
-        if (missing.isEmpty()) {
-            return;
-        }
-
-        for (GL_Account__c row : [
-            SELECT Id, Company__c
-            FROM GL_Account__c
-            WHERE Id IN :missing
-        ]) {
-            ACCOUNT_COMPANY_CACHE.put(row.Id, row.Company__c);
-        }
-    }
-
-    private static void cacheDepartmentCompanies(Set<Id> ids) {
-        Set<Id> missing = new Set<Id>(ids);
-        missing.removeAll(DEPARTMENT_COMPANY_CACHE.keySet());
-        if (missing.isEmpty()) {
-            return;
-        }
-
-        for (Department__c row : [
-            SELECT Id, Company__c
-            FROM Department__c
-            WHERE Id IN :missing
-        ]) {
-            DEPARTMENT_COMPANY_CACHE.put(row.Id, row.Company__c);
-        }
-    }
-
-    private static void cacheCostCenterCompanies(Set<Id> ids) {
-        Set<Id> missing = new Set<Id>(ids);
-        missing.removeAll(COST_CENTER_COMPANY_CACHE.keySet());
-        if (missing.isEmpty()) {
-            return;
-        }
-
-        for (Cost_Center__c row : [
-            SELECT Id, Company__c
-            FROM Cost_Center__c
-            WHERE Id IN :missing
-        ]) {
-            COST_CENTER_COMPANY_CACHE.put(row.Id, row.Company__c);
-        }
-    }
-
-    private static void cacheProjectCompanies(Set<Id> ids) {
-        Set<Id> missing = new Set<Id>(ids);
-        missing.removeAll(PROJECT_COMPANY_CACHE.keySet());
-        if (missing.isEmpty()) {
-            return;
-        }
-
-        for (Project__c row : [
-            SELECT Id, Company__c
-            FROM Project__c
-            WHERE Id IN :missing
-        ]) {
-            PROJECT_COMPANY_CACHE.put(row.Id, row.Company__c);
         }
     }
 

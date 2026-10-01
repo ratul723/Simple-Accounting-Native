@@ -1,0 +1,149 @@
+:host {
+    display: block;
+}
+
+.workspace {
+    position: relative;
+}
+
+.actions {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+}
+
+.workspace-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding: 0.75rem 0;
+}
+
+.filters {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.metric-card,
+.aging-card,
+.detail-card {
+    border: 1px solid #d8dde6;
+    border-radius: 0.5rem;
+    padding: 0.85rem;
+    background: #fff;
+}
+
+.metric-card span,
+.aging-card span,
+.detail-card span {
+    display: block;
+    color: #5c6470;
+    font-size: 0.75rem;
+    margin-bottom: 0.25rem;
+}
+
+.metric-card strong,
+.aging-card strong,
+.detail-card strong {
+    font-size: 1.15rem;
+}
+
+.metric-card.emphasized {
+    border-width: 2px;
+}
+
+.aging-grid,
+.aging-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.panel {
+    border: 1px solid #d8dde6;
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+}
+
+.panel-header {
+    margin-bottom: 0.75rem;
+}
+
+.panel-header h3 {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.panel-header p {
+    margin: 0.2rem 0 0;
+    color: #5c6470;
+}
+
+.info-box,
+.error-box,
+.warning-box,
+.empty-state {
+    padding: 1rem;
+    border-radius: 0.5rem;
+}
+
+.info-box {
+    background: #eef4ff;
+}
+
+.error-box {
+    margin-bottom: 1rem;
+    background: #fef1f1;
+    border: 1px solid #ea8a8a;
+}
+
+.warning-box {
+    background: #fff7e6;
+    border: 1px solid #e5b95c;
+}
+
+.empty-state {
+    text-align: center;
+    color: #5c6470;
+    background: #f8f9fb;
+}
+
+.detail-card {
+    min-height: 5rem;
+}
+
+@media (max-width: 1100px) {
+    .filters,
+    .summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .aging-grid,
+    .aging-detail-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 700px) {
+    .actions {
+        flex-wrap: wrap;
+    }
+
+    .filters,
+    .summary-grid,
+    .aging-grid,
+    .aging-detail-grid {
+        grid-template-columns: 1fr;
+    }
+}

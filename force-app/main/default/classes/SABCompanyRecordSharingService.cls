@@ -16,11 +16,6 @@
  * to the OLD company and do not have an effective grant to the NEW company.
  */
 public without sharing class SABCompanyRecordSharingService {
-    // Owner-share guard:
-    // Salesforce already gives the owner implicit record access. Attempting
-    // to insert a Manual __Share row for that same owner can fail with
-    // INSUFFICIENT_ACCESS_ON_CROSS_REFERENCE_ENTITY.
-
     private static final String ACCESS_LEVEL_READ = 'Read';
 
     public class RecordSharingException extends Exception {}
@@ -42,16 +37,6 @@ public without sharing class SABCompanyRecordSharingService {
             return;
         }
 
-        // Sharing depends only on the record's Accounting Company and owner.
-        // Financial lifecycle updates such as Draft -> Posted,
-        // Posted -> Reversed, posting timestamps and reversal links do not
-        // change which company users should see the record.
-        //
-        // Previously every update called reconcile(), which performs SOQL for
-        // company grants and existing __Share rows. Posting/reversal services
-        // legitimately update Journal_Entry__c several times in one
-        // transaction, so those unnecessary queries could push a reversal
-        // transaction over Salesforce's 100-query governor limit.
         Schema.DescribeSObjectResult objectDescribe =
             newRecords[0].getSObjectType().getDescribe();
 
@@ -138,7 +123,12 @@ public without sharing class SABCompanyRecordSharingService {
     }
 
     public static void afterUndelete(List<SObject> newRecords) {
-        reconcile(newRecords, null);
+        // An undeleted record may already have persisted Manual shares.
+        // Use a non-null oldMap so reconcile() loads existing shares.
+        reconcile(
+            newRecords,
+            new Map<Id, SObject>()
+        );
     }
 
     @TestVisible
@@ -174,7 +164,6 @@ public without sharing class SABCompanyRecordSharingService {
             String.isBlank(shareObjectApiName)
             || !globalDescribe.containsKey(shareObjectApiName)
         ) {
-            // Controlled-by-parent objects do not have their own share table.
             return;
         }
 
@@ -234,13 +223,20 @@ public without sharing class SABCompanyRecordSharingService {
             return;
         }
 
-        List<SObject> existingShares = Database.query(
-            'SELECT Id, ParentId, UserOrGroupId, AccessLevel, RowCause '
-            + 'FROM ' + shareObjectApiName + ' '
-            + 'WHERE ParentId IN :recordIds '
-            + 'AND UserOrGroupId IN :relevantUserIds '
-            + 'AND RowCause = \'Manual\''
-        );
+        List<SObject> existingShares =
+            new List<SObject>();
+
+        if (oldMap != null) {
+            // UPDATE/UNDELETE: existing Manual shares can exist and must
+            // be loaded for reconciliation.
+            existingShares = Database.query(
+                'SELECT Id, ParentId, UserOrGroupId, AccessLevel, RowCause '
+                + 'FROM ' + shareObjectApiName + ' '
+                + 'WHERE ParentId IN :recordIds '
+                + 'AND UserOrGroupId IN :relevantUserIds '
+                + 'AND RowCause = \'Manual\''
+            );
+        }
 
         Map<String, List<SObject>> sharesByRecordAndUser =
             new Map<String, List<SObject>>();
@@ -276,9 +272,6 @@ public without sharing class SABCompanyRecordSharingService {
                     : new Set<Id>();
 
             for (Id userId : expectedUsers) {
-                // The record owner already has implicit access. Salesforce
-                // rejects an explicit Manual share back to the owner with
-                // INSUFFICIENT_ACCESS_ON_CROSS_REFERENCE_ENTITY.
                 if (
                     ownerByRecord.containsKey(recordId)
                     && ownerByRecord.get(recordId) == userId
@@ -318,8 +311,6 @@ public without sharing class SABCompanyRecordSharingService {
                 }
             }
 
-            // If Company__c changed, remove the old-company access that SAB
-            // would otherwise leave behind.
             Id oldCompanyId = oldCompanyByRecord.get(recordId);
 
             if (

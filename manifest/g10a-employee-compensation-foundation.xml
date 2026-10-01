@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>SABEmployeeCompensationService</members>
+        <members>SABEmployeeCompensationServiceTest</members>
+        <members>SABEmployeeCompensationSharingService</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>SABEmploymentSharingTrigger</members>
+        <members>SABPayComponentSharingTrigger</members>
+        <members>SABEmployeePayComponentSharingTrigger</members>
+        <members>SABBenefitAwardSharingTrigger</members>
+        <name>ApexTrigger</name>
+    </types>
+    <types>
+        <members>SAB_Manage_Employee_Compensation</members>
+        <members>SAB_Approve_Employee_Compensation</members>
+        <name>CustomPermission</name>
+    </types>
+    <types>
+        <members>SAB_Employee_Compensation_User</members>
+        <members>SAB_Manage_Employee_Compensation_Action</members>
+        <members>SAB_Approve_Employee_Compensation_Action</members>
+        <name>PermissionSet</name>
+    </types>
+    <version>67.0</version>
+</Package>

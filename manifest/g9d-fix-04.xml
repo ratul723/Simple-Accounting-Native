@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>SABCrossCompanyGuardService</members>
+        <members>SABFixedAssetMovementServiceTest</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>SAB_Fixed_Asset_Movement_Manager</members>
+        <name>PermissionSet</name>
+    </types>
+    <version>67.0</version>
+</Package>

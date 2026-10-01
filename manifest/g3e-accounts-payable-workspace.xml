@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>SABAccountsPayableWorkspaceController</members>
+        <members>SABAccountsPayableWSTest</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>sabAccountsPayableWorkspace</members>
+        <name>LightningComponentBundle</name>
+    </types>
+    <types>
+        <members>SAB_View_Accounts_Payable_Workspace</members>
+        <name>CustomPermission</name>
+    </types>
+    <types>
+        <members>SAB_Accounts_Payable_Workspace_User</members>
+        <name>PermissionSet</name>
+    </types>
+    <version>65.0</version>
+</Package>
