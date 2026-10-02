@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+    <testsuite name="force.apex" timestamp="2026-10-02T09:41:49.000Z" hostname="https://innovation-inspiration-9749-dev-ed.scratch.my.salesforce.com" tests="31" failures="14"  errors="0"  time="4.40">
+        <properties>
+            <property name="outcome" value="Failed"/>
+            <property name="testsRan" value="31"/>
+            <property name="passing" value="17"/>
+            <property name="failing" value="14"/>
+            <property name="skipped" value="0"/>
+            <property name="passRate" value="55%"/>
+            <property name="failRate" value="45%"/>
+            <property name="testStartTime" value="Fri Oct 02 2026 3:41:49 PM"/>
+            <property name="testSetupTimeInMs" value="3426"/>
+            <property name="testExecutionTime" value="4.40 s"/>
+            <property name="testTotalTime" value="7.83 s"/>
+            <property name="commandTime" value="0.14 s"/>
+            <property name="hostname" value="https://innovation-inspiration-9749-dev-ed.scratch.my.salesforce.com"/>
+            <property name="orgId" value="00DC1000005L0RjMAK"/>
+            <property name="username" value="test-tw03ut9ozd0h@example.com"/>
+            <property name="testRunId" value="707C100000PFqnh"/>
+            <property name="userId" value="005C1000008MUkhIAG"/>
+            <property name="coveredLines" value="766"/>
+            <property name="testRunCoverage" value="56%"/>
+            <property name="orgWideCoverage" value="65%"/>
+        </properties>
+        <testcase name="cancellationAllowsReplacement" classname="SABPayrollReviewServiceTest" time="0.32">
+            <failure message="SABPermissionService.PermissionDeniedException: Cancel payroll permission is required."><![CDATA[Class.SABPermissionService.assertPermission: line 22, column 1
+Class.SABPayrollReviewService.transition: line 19, column 1
+Class.SABPayrollReviewService.cancel: line 15, column 1
+Class.SABPayrollReviewServiceTest.cancellationAllowsReplacement: line 100, column 1]]></failure>
+        </testcase>
+        <testcase name="cancelsDraft" classname="SABPayrollReviewServiceTest" time="0.09">
+            <failure message="SABPermissionService.PermissionDeniedException: Cancel payroll permission is required."><![CDATA[Class.SABPermissionService.assertPermission: line 22, column 1
+Class.SABPayrollReviewService.transition: line 19, column 1
+Class.SABPayrollReviewService.cancel: line 15, column 1
+Class.SABPayrollReviewServiceTest.cancelsDraft: line 95, column 1]]></failure>
+        </testcase>
+        <testcase name="cancelsSubmitted" classname="SABPayrollReviewServiceTest" time="0.20">
+            <failure message="SABPermissionService.PermissionDeniedException: Submit payroll permission is required."><![CDATA[Class.SABPermissionService.assertPermission: line 22, column 1
+Class.SABPayrollReviewService.transition: line 19, column 1
+Class.SABPayrollReviewService.submit: line 11, column 1
+Class.SABPayrollReviewServiceTest.cancelsSubmitted: line 107, column 1]]></failure>
+        </testcase>
+        <testcase name="creatorCannotApproveAnotherSubmittersRun" classname="SABPayrollReviewServiceTest" time="0.19">
+            <failure message="System.QueryException: No such column &apos;Submitted_By__c&apos; on entity &apos;Payroll_Run__c&apos;. If you are attempting to use a custom field, be sure to append the &apos;__c&apos; after the custom field name. Please reference your WSDL or the describe call for the appropriate names."><![CDATA[Class.SABPayrollReviewServiceTest.snapshot: line 59, column 1
+Class.SABPayrollReviewServiceTest.creatorCannotApproveAnotherSubmittersRun: line 155, column 1]]></failure>
+        </testcase>
+        <testcase name="deniesCompanyWithoutEffectiveGrant" classname="SABPayrollReviewServiceTest" time="0.43">
+            <failure message="System.LimitException: Too many SOQL queries: 101"><![CDATA[Class.SABCompanySharingService.reconcileCompanyScopedObjectShares: line 354, column 1
+Class.SABCompanySharingService.reconcile: line 132, column 1
+Class.SABCompanySharingService.afterUpdate: line 82, column 1
+Trigger.CompanyUserAccessTrigger: line 10, column 1]]></failure>
+        </testcase>
+        <testcase name="detectsCorruptSnapshotTotals" classname="SABPayrollReviewServiceTest" time="0.19">
+            <failure message="System.QueryException: No such column &apos;Submitted_By__c&apos; on entity &apos;Payroll_Run__c&apos;. If you are attempting to use a custom field, be sure to append the &apos;__c&apos; after the custom field name. Please reference your WSDL or the describe call for the appropriate names."><![CDATA[Class.SABPayrollReviewServiceTest.snapshot: line 59, column 1
+Class.SABPayrollReviewServiceTest.ReviewData.<init>: line 162, column 1
+Class.SABPayrollReviewServiceTest.detectsCorruptSnapshotTotals: line 175, column 1]]></failure>
+        </testcase>
+        <testcase name="detectsInvalidAmountsAndParents" classname="SABPayrollReviewServiceTest" time="0.19">
+            <failure message="System.QueryException: No such column &apos;Submitted_By__c&apos; on entity &apos;Payroll_Run__c&apos;. If you are attempting to use a custom field, be sure to append the &apos;__c&apos; after the custom field name. Please reference your WSDL or the describe call for the appropriate names."><![CDATA[Class.SABPayrollReviewServiceTest.snapshot: line 59, column 1
+Class.SABPayrollReviewServiceTest.ReviewData.<init>: line 162, column 1
+Class.SABPayrollReviewServiceTest.detectsInvalidAmountsAndParents: line 182, column 1]]></failure>
+        </testcase>
+        <testcase name="detectsMissingAndCrossCompanyLines" classname="SABPayrollReviewServiceTest" time="0.19">
+            <failure message="System.QueryException: No such column &apos;Submitted_By__c&apos; on entity &apos;Payroll_Run__c&apos;. If you are attempting to use a custom field, be sure to append the &apos;__c&apos; after the custom field name. Please reference your WSDL or the describe call for the appropriate names."><![CDATA[Class.SABPayrollReviewServiceTest.snapshot: line 59, column 1
+Class.SABPayrollReviewServiceTest.ReviewData.<init>: line 162, column 1
+Class.SABPayrollReviewServiceTest.detectsMissingAndCrossCompanyLines: line 187, column 1]]></failure>
+        </testcase>
+        <testcase name="detectsMissingComponentsAndNegativeNet" classname="SABPayrollReviewServiceTest" time="0.18">
+            <failure message="System.QueryException: No such column &apos;Submitted_By__c&apos; on entity &apos;Payroll_Run__c&apos;. If you are attempting to use a custom field, be sure to append the &apos;__c&apos; after the custom field name. Please reference your WSDL or the describe call for the appropriate names."><![CDATA[Class.SABPayrollReviewServiceTest.snapshot: line 59, column 1
+Class.SABPayrollReviewServiceTest.ReviewData.<init>: line 162, column 1
+Class.SABPayrollReviewServiceTest.detectsMissingComponentsAndNegativeNet: line 194, column 1]]></failure>
+        </testcase>
+        <testcase name="protectsPostedAndIncompleteAudit" classname="SABPayrollReviewServiceTest" time="0.01">
+        </testcase>
+        <testcase name="rejectsBadCancellationReasons" classname="SABPayrollReviewServiceTest" time="0.09">
+            <failure message="SABPermissionService.PermissionDeniedException: Cancel payroll permission is required."><![CDATA[Class.SABPermissionService.assertPermission: line 22, column 1
+Class.SABPayrollReviewService.transition: line 19, column 1
+Class.SABPayrollReviewService.cancel: line 15, column 1
+Class.SABPayrollReviewServiceTest.rejected: line 68, column 1
+Class.SABPayrollReviewServiceTest.rejectsBadCancellationReasons: line 122, column 1]]></failure>
+        </testcase>
+        <testcase name="rejectsDraftSubmissionAndApproval" classname="SABPayrollReviewServiceTest" time="0.10">
+            <failure message="SABPermissionService.PermissionDeniedException: Submit payroll permission is required."><![CDATA[Class.SABPermissionService.assertPermission: line 22, column 1
+Class.SABPayrollReviewService.transition: line 19, column 1
+Class.SABPayrollReviewService.submit: line 11, column 1
+Class.SABPayrollReviewServiceTest.rejected: line 66, column 1
+Class.SABPayrollReviewServiceTest.rejectsDraftSubmissionAndApproval: line 112, column 1]]></failure>
+        </testcase>
+        <testcase name="rejectsRepeatCancellation" classname="SABPayrollReviewServiceTest" time="0.09">
+            <failure message="SABPermissionService.PermissionDeniedException: Cancel payroll permission is required."><![CDATA[Class.SABPermissionService.assertPermission: line 22, column 1
+Class.SABPayrollReviewService.transition: line 19, column 1
+Class.SABPayrollReviewService.cancel: line 15, column 1
+Class.SABPayrollReviewServiceTest.rejectsRepeatCancellation: line 126, column 1]]></failure>
+        </testcase>
+        <testcase name="rejectsRepeatSubmissionAndSelfApproval" classname="SABPayrollReviewServiceTest" time="0.18">
+            <failure message="SABPermissionService.PermissionDeniedException: Submit payroll permission is required."><![CDATA[Class.SABPermissionService.assertPermission: line 22, column 1
+Class.SABPayrollReviewService.transition: line 19, column 1
+Class.SABPayrollReviewService.submit: line 11, column 1
+Class.SABPayrollReviewServiceTest.rejectsRepeatSubmissionAndSelfApproval: line 116, column 1]]></failure>
+        </testcase>
+        <testcase name="submitsApprovesAndCancelsWithAudit" classname="SABPayrollReviewServiceTest" time="0.20">
+            <failure message="SABPermissionService.PermissionDeniedException: Submit payroll permission is required."><![CDATA[Class.SABPermissionService.assertPermission: line 22, column 1
+Class.SABPayrollReviewService.transition: line 19, column 1
+Class.SABPayrollReviewService.submit: line 11, column 1
+Class.SABPayrollReviewServiceTest.submitsApprovesAndCancelsWithAudit: line 75, column 1]]></failure>
+        </testcase>
+        <testcase name="calculatesAndFreezesSnapshots" classname="SABPayrollCalculationServiceTest" time="0.44">
+        </testcase>
+        <testcase name="protectsDirectPayrollWrites" classname="SABPayrollCalculationServiceTest" time="0.14">
+        </testcase>
+        <testcase name="rejectsApprovedAwardOmission" classname="SABPayrollCalculationServiceTest" time="0.17">
+        </testcase>
+        <testcase name="rejectsCompanyWithoutGrant" classname="SABPayrollCalculationServiceTest" time="0.02">
+        </testcase>
+        <testcase name="rejectsCurrencyMismatch" classname="SABPayrollCalculationServiceTest" time="0.09">
+        </testcase>
+        <testcase name="rejectsDuplicatePayrollPeriod" classname="SABPayrollCalculationServiceTest" time="0.19">
+        </testcase>
+        <testcase name="rejectsFormula" classname="SABPayrollCalculationServiceTest" time="0.10">
+        </testcase>
+        <testcase name="rejectsInactiveComponent" classname="SABPayrollCalculationServiceTest" time="0.10">
+        </testcase>
+        <testcase name="rejectsMissingApprovedCompensation" classname="SABPayrollCalculationServiceTest" time="0.12">
+        </testcase>
+        <testcase name="rejectsNegativeNet" classname="SABPayrollCalculationServiceTest" time="0.10">
+        </testcase>
+        <testcase name="rejectsPartialAssignment" classname="SABPayrollCalculationServiceTest" time="0.10">
+        </testcase>
+        <testcase name="rejectsPartialEmployment" classname="SABPayrollCalculationServiceTest" time="0.09">
+        </testcase>
+        <testcase name="validatesDraft" classname="SABPayrollCalculationServiceTest" time="0.02">
+        </testcase>
+        <testcase name="validatesSelection" classname="SABPayrollCalculationServiceTest" time="0.07">
+        </testcase>
+    </testsuite>
+</testsuites>

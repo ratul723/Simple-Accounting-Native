@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+    <testsuite name="force.apex" timestamp="2026-10-02T13:07:33.000Z" hostname="https://innovation-inspiration-9749-dev-ed.scratch.my.salesforce.com" tests="31" failures="0"  errors="0"  time="6.97">
+        <properties>
+            <property name="outcome" value="Successful"/>
+            <property name="testsRan" value="31"/>
+            <property name="passing" value="31"/>
+            <property name="failing" value="0"/>
+            <property name="skipped" value="0"/>
+            <property name="passRate" value="100%"/>
+            <property name="failRate" value="0%"/>
+            <property name="testStartTime" value="Fri Oct 02 2026 7:07:33 PM"/>
+            <property name="testSetupTimeInMs" value="3263"/>
+            <property name="testExecutionTime" value="6.97 s"/>
+            <property name="testTotalTime" value="10.23 s"/>
+            <property name="commandTime" value="0.13 s"/>
+            <property name="hostname" value="https://innovation-inspiration-9749-dev-ed.scratch.my.salesforce.com"/>
+            <property name="orgId" value="00DC1000005L0RjMAK"/>
+            <property name="username" value="test-tw03ut9ozd0h@example.com"/>
+            <property name="testRunId" value="707C100000PG4Js"/>
+            <property name="userId" value="005C1000008MUkhIAG"/>
+            <property name="coveredLines" value="816"/>
+            <property name="testRunCoverage" value="60%"/>
+            <property name="orgWideCoverage" value="65%"/>
+        </properties>
+        <testcase name="cancellationAllowsReplacement" classname="SABPayrollReviewServiceTest" time="0.55">
+        </testcase>
+        <testcase name="cancelsDraft" classname="SABPayrollReviewServiceTest" time="0.19">
+        </testcase>
+        <testcase name="cancelsSubmitted" classname="SABPayrollReviewServiceTest" time="0.35">
+        </testcase>
+        <testcase name="creatorCannotApproveAnotherSubmittersRun" classname="SABPayrollReviewServiceTest" time="0.26">
+        </testcase>
+        <testcase name="deniesCompanyWithoutEffectiveGrant" classname="SABPayrollReviewServiceTest" time="0.31">
+        </testcase>
+        <testcase name="detectsCorruptSnapshotTotals" classname="SABPayrollReviewServiceTest" time="0.26">
+        </testcase>
+        <testcase name="detectsInvalidAmountsAndParents" classname="SABPayrollReviewServiceTest" time="0.27">
+        </testcase>
+        <testcase name="detectsMissingAndCrossCompanyLines" classname="SABPayrollReviewServiceTest" time="0.27">
+        </testcase>
+        <testcase name="detectsMissingComponentsAndNegativeNet" classname="SABPayrollReviewServiceTest" time="0.26">
+        </testcase>
+        <testcase name="protectsPostedAndIncompleteAudit" classname="SABPayrollReviewServiceTest" time="0.04">
+        </testcase>
+        <testcase name="rejectsBadCancellationReasons" classname="SABPayrollReviewServiceTest" time="0.18">
+        </testcase>
+        <testcase name="rejectsDraftSubmissionAndApproval" classname="SABPayrollReviewServiceTest" time="0.18">
+        </testcase>
+        <testcase name="rejectsRepeatCancellation" classname="SABPayrollReviewServiceTest" time="0.20">
+        </testcase>
+        <testcase name="rejectsRepeatSubmissionAndSelfApproval" classname="SABPayrollReviewServiceTest" time="0.35">
+        </testcase>
+        <testcase name="submitsApprovesAndCancelsWithAudit" classname="SABPayrollReviewServiceTest" time="0.55">
+        </testcase>
+        <testcase name="calculatesAndFreezesSnapshots" classname="SABPayrollCalculationServiceTest" time="0.47">
+        </testcase>
+        <testcase name="protectsDirectPayrollWrites" classname="SABPayrollCalculationServiceTest" time="0.26">
+        </testcase>
+        <testcase name="rejectsApprovedAwardOmission" classname="SABPayrollCalculationServiceTest" time="0.26">
+        </testcase>
+        <testcase name="rejectsCompanyWithoutGrant" classname="SABPayrollCalculationServiceTest" time="0.04">
+        </testcase>
+        <testcase name="rejectsCurrencyMismatch" classname="SABPayrollCalculationServiceTest" time="0.18">
+        </testcase>
+        <testcase name="rejectsDuplicatePayrollPeriod" classname="SABPayrollCalculationServiceTest" time="0.34">
+        </testcase>
+        <testcase name="rejectsFormula" classname="SABPayrollCalculationServiceTest" time="0.18">
+        </testcase>
+        <testcase name="rejectsInactiveComponent" classname="SABPayrollCalculationServiceTest" time="0.18">
+        </testcase>
+        <testcase name="rejectsMissingApprovedCompensation" classname="SABPayrollCalculationServiceTest" time="0.19">
+        </testcase>
+        <testcase name="rejectsNegativeNet" classname="SABPayrollCalculationServiceTest" time="0.19">
+        </testcase>
+        <testcase name="rejectsPartialAssignment" classname="SABPayrollCalculationServiceTest" time="0.17">
+        </testcase>
+        <testcase name="rejectsPartialEmployment" classname="SABPayrollCalculationServiceTest" time="0.15">
+        </testcase>
+        <testcase name="validatesDraft" classname="SABPayrollCalculationServiceTest" time="0.05">
+        </testcase>
+        <testcase name="validatesSelection" classname="SABPayrollCalculationServiceTest" time="0.10">
+        </testcase>
+    </testsuite>
+</testsuites>
