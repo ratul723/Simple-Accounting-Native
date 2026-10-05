@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Settled_Amount__c</fullName>
+    <description>Net pay currently settled by Effective payroll settlements. Maintained by the G10E service.</description>
+    <label>Settled Amount</label>
+    <precision>18</precision>
+    <required>false</required>
+    <scale>4</scale>
+    <type>Number</type>
+</CustomField>

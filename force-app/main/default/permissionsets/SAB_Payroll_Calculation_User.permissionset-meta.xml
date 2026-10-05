@@ -27,7 +27,7 @@
 <fieldPermissions><editable>false</editable><field>Pay_Component__c.Expense_Account__c</field><readable>true</readable></fieldPermissions>
 <fieldPermissions><editable>false</editable><field>Pay_Component__c.Is_Active__c</field><readable>true</readable></fieldPermissions>
 <fieldPermissions><editable>false</editable><field>Pay_Component__c.Liability_Account__c</field><readable>true</readable></fieldPermissions>
-<fieldPermissions><editable>false</editable><field>Payroll_Component_Line__c.Benefit_Award__c</field><readable>true</readable></fieldPermissions>
+<fieldPermissions><editable>true</editable><field>Payroll_Component_Line__c.Benefit_Award__c</field><readable>true</readable></fieldPermissions>
 <fieldPermissions><editable>true</editable><field>Payroll_Component_Line__c.Eligibility_Snapshot__c</field><readable>true</readable></fieldPermissions>
 <fieldPermissions><editable>true</editable><field>Payroll_Component_Line__c.Expense_Account__c</field><readable>true</readable></fieldPermissions>
 <fieldPermissions><editable>true</editable><field>Payroll_Component_Line__c.Liability_Account__c</field><readable>true</readable></fieldPermissions>

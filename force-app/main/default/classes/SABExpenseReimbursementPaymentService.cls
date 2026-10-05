@@ -423,7 +423,7 @@ public without sharing class SABExpenseReimbursementPaymentService {
             + 'Amount__c, Transaction_Currency__c, '
             + 'Functional_Currency__c, Exchange_Rate__c, '
             + 'Effective_Date__c, Processing_State__c, '
-            + 'Provider_Request_Key__c, Accounting_Event__c '
+            + 'Provider_Request_Key__c, Accounting_Event__c, Payroll_Run__c '
             + 'FROM Accounting_Payment__c '
             + 'WHERE Id = \'' 
             + String.escapeSingleQuotes(String.valueOf(paymentId))
@@ -448,6 +448,13 @@ public without sharing class SABExpenseReimbursementPaymentService {
     private static void validatePaymentConfiguration(
         Accounting_Payment__c payment
     ) {
+        // G10H: closes the G10E gap; reimbursement users cannot process payroll net-pay payments.
+        if (payment.Payroll_Run__c != null) {
+            throw new ExpenseReimbursementException(
+                'Payroll payments are processed only through payroll settlement.'
+            );
+        }
+
         if (
             payment.Company__c == null
             || payment.Company__r == null

@@ -34,7 +34,8 @@ public with sharing class SABPayrollPostingService {
         if(runs.isEmpty())throw new PayrollPostingException('Payroll Run not found or not accessible.');
         Payroll_Run__c run=runs[0];
         if(run.Company__c!=companyId)throw new PayrollPostingException('Payroll company changed; retry posting.');
-        if(run.Workflow_State__c=='Posted')return postedReplay(run,periodId,accountingDate,payableAccountId);
+        // G10E: a Settled run keeps its accrual identity, so a posting retry replays.
+        if(run.Workflow_State__c=='Posted' || run.Workflow_State__c=='Settled')return postedReplay(run,periodId,accountingDate,payableAccountId);
         if(run.Workflow_State__c!='Approved' || run.Accounting_Event__c!=null)
             throw new PayrollPostingException('Only an unposted Approved payroll run can be posted.');
         if(run.Approved_By__c==null || run.Approved_At__c==null)

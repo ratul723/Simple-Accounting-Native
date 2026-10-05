@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Payroll_Run__c</fullName>
+    <deleteConstraint>Restrict</deleteConstraint>
+    <description>G10H: set only by SABPayrollSettlementService on a payroll net-pay payment. A tagged payment changes only through payroll settlement and cannot be allocated, reimbursed or used to settle expense claims.</description>
+    <label>Payroll Run</label>
+    <referenceTo>Payroll_Run__c</referenceTo>
+    <relationshipLabel>Payroll Payments</relationshipLabel>
+    <relationshipName>SAB_Payroll_Payments</relationshipName>
+    <required>false</required>
+    <type>Lookup</type>
+</CustomField>

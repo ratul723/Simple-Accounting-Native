@@ -353,6 +353,7 @@ public without sharing class SABExpenseClaimSettlementService {
         return claims[0];
     }
 
+    @TestVisible
     private static Accounting_Payment__c lockPayment(
         Id paymentId
     ) {
@@ -370,7 +371,8 @@ public without sharing class SABExpenseClaimSettlementService {
                    Functional_Currency__c,
                    Effective_Date__c,
                    Processing_State__c,
-                   Accounting_Event__c
+                   Accounting_Event__c,
+                   Payroll_Run__c
             FROM Accounting_Payment__c
             WHERE Id = :paymentId
             LIMIT 1
@@ -380,6 +382,13 @@ public without sharing class SABExpenseClaimSettlementService {
         if (payments.isEmpty()) {
             throw new ExpenseClaimSettlementException(
                 'Reimbursement Payment was not found.'
+            );
+        }
+
+        // G10H: a payroll net-pay payment must never settle an employee expense claim.
+        if (payments[0].Payroll_Run__c != null) {
+            throw new ExpenseClaimSettlementException(
+                'Payroll payments are processed only through payroll settlement.'
             );
         }
 

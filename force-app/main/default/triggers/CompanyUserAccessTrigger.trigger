@@ -4,6 +4,9 @@ trigger CompanyUserAccessTrigger on Company_User_Access__c (
     after delete,
     after undelete
 ) {
+    // Revoke cached authorization before running the existing sharing handlers.
+    SABCompanyAccessService.invalidateGrants(Trigger.old, Trigger.new);
+
     if (Trigger.isInsert) {
         SABCompanySharingService.afterInsert(Trigger.new);
     } else if (Trigger.isUpdate) {

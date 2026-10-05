@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <customPermissions>
+        <enabled>true</enabled>
+        <name>SAB_Authorize_Payroll_Payment</name>
+    </customPermissions>
+    <description>Requires SAB Payroll Settlement User. Assign to a different user from the payment preparer.</description>
+    <hasActivationRequired>false</hasActivationRequired>
+    <label>SAB Authorize Payroll Payment Action</label>
+</PermissionSet>

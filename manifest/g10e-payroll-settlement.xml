@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>SABPayrollCalculationService</members>
+        <members>SABPayrollPostingService</members>
+        <members>SABPayrollSettlementService</members>
+        <members>SABPayrollSettlementServiceTest</members>
+        <members>SABTestGovernor</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>SABPayrollSettlementGuardTrigger</members>
+        <name>ApexTrigger</name>
+    </types>
+    <types>
+        <members>Payroll_Run__c.Settled_Amount__c</members>
+        <members>Payroll_Run__c.Settled_At__c</members>
+        <members>Payroll_Run__c.Settled_By__c</members>
+        <members>Payroll_Run__c.Settlement_Payment__c</members>
+        <name>CustomField</name>
+    </types>
+    <types>
+        <members>SAB_Authorize_Payroll_Payment</members>
+        <members>SAB_Process_Payroll_Payment</members>
+        <name>CustomPermission</name>
+    </types>
+    <types>
+        <members>SAB_Authorize_Payroll_Payment_Action</members>
+        <members>SAB_Payroll_Settlement_User</members>
+        <members>SAB_Process_Payroll_Payment_Action</members>
+        <name>PermissionSet</name>
+    </types>
+    <version>67.0</version>
+</Package>

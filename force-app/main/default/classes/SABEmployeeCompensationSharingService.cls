@@ -92,6 +92,8 @@ public without sharing class SABEmployeeCompensationSharingService {
         reconcileAwards(awardIds);
     }
 
+    // G10H: trigger-only share maintenance must read and write every row in system mode; no user data is returned.
+    @SuppressWarnings('PMD.ApexCRUDViolation')
     @TestVisible
     private static void reconcileFromEmployments(Set<Id> employmentIds) {
         if (employmentIds == null || employmentIds.isEmpty()) return;
@@ -109,6 +111,8 @@ public without sharing class SABEmployeeCompensationSharingService {
         reconcileEmployees(employeeIds);
     }
 
+    // G10H: trigger-only share maintenance must read and write every row in system mode; no user data is returned.
+    @SuppressWarnings('PMD.ApexCRUDViolation')
     @TestVisible
     private static void reconcileEmployees(Set<Id> employeeIds) {
         if (employeeIds == null || employeeIds.isEmpty()) return;
@@ -151,6 +155,8 @@ public without sharing class SABEmployeeCompensationSharingService {
     }
 
     @TestVisible
+    // G10H: trigger-only share maintenance must read and write every row in system mode; no user data is returned.
+    @SuppressWarnings('PMD.ApexCRUDViolation')
     private static void reconcileAssignments(Set<Id> assignmentIds) {
         if (assignmentIds == null || assignmentIds.isEmpty()) return;
 
@@ -190,6 +196,8 @@ public without sharing class SABEmployeeCompensationSharingService {
     }
 
     @TestVisible
+    // G10H: trigger-only share maintenance must read and write every row in system mode; no user data is returned.
+    @SuppressWarnings('PMD.ApexCRUDViolation')
     private static void reconcileAwards(Set<Id> awardIds) {
         if (awardIds == null || awardIds.isEmpty()) return;
 
@@ -259,6 +267,9 @@ public without sharing class SABEmployeeCompensationSharingService {
         return result;
     }
 
+    // G10H: system-mode share maintenance; the share table name comes from fixed literals and is validated
+    // against the global describe before use, so the dynamic FROM clause cannot carry user input.
+    @SuppressWarnings('PMD.ApexCRUDViolation, PMD.ApexSOQLInjection')
     private static void reconcileShareTable(
         String objectApiName,
         Set<Id> recordIds,
@@ -274,12 +285,15 @@ public without sharing class SABEmployeeCompensationSharingService {
         for (Set<Id> ids : expectedUsersByRecord.values()) allUsers.addAll(ids);
         if (allUsers.isEmpty()) return;
 
-        List<SObject> currentShares = Database.query(
+        // G10H: explicit system mode; share maintenance must not depend on the API version's default mode.
+        List<SObject> currentShares = Database.queryWithBinds(
             'SELECT Id, ParentId, UserOrGroupId, AccessLevel, RowCause '
             + 'FROM ' + shareObject
             + ' WHERE ParentId IN :recordIds'
             + ' AND UserOrGroupId IN :allUsers'
-            + ' AND RowCause = \'Manual\''
+            + ' AND RowCause = \'Manual\'',
+            new Map<String, Object>{'recordIds' => recordIds, 'allUsers' => allUsers},
+            AccessLevel.SYSTEM_MODE
         );
 
         Map<String, SObject> existing = new Map<String, SObject>();

@@ -1,14 +1,16 @@
-/** G10B: fixed-period compensation snapshots. No statutory rules or GL posting. */
+/** G10B: fixed-period compensation snapshots. G10F: Approved benefit awards are consumed into the run. No statutory rules or GL posting. */
 public with sharing class SABPayrollCalculationService {
     public class PayrollException extends Exception {}
-    private static Boolean writing = false;
+    // @TestVisible so tests can seed payroll snapshots without replaying G10B-G10C (keeps @TestSetup SOQL low).
+    @TestVisible private static Boolean writing = false;
     private static final String ACTION = 'SAB_Calculate_Payroll';
 
     // Trigger entry point: callers cannot enable the private write scope.
     public static void guard(List<SObject> rows) {
         if (!writing) {
             for (SObject row : rows) {
-                if (!SABPayrollReviewService.permitsWorkflowWrite(row) && !SABPayrollPostingService.permitsWorkflowWrite(row))
+                if (!SABPayrollReviewService.permitsWorkflowWrite(row) && !SABPayrollPostingService.permitsWorkflowWrite(row)
+                    && !SABPayrollSettlementService.permitsWorkflowWrite(row))
                     row.addError('Use the authorized payroll service to change payroll records.');
             }
         }
@@ -56,9 +58,10 @@ public with sharing class SABPayrollCalculationService {
         SABAccessControlService.assertRecordEditAccess(runId);
         // Serialize calculations for a company, including distinct runs for overlapping periods.
         Id companyId=visible[0].Company__c;
-        List<Accounting_Company__c> companyLock=[SELECT Id FROM Accounting_Company__c WHERE Id=:companyId FOR UPDATE];
+        List<Accounting_Company__c> companyLock=[SELECT Id FROM Accounting_Company__c WHERE Id=:companyId WITH USER_MODE FOR UPDATE];
+        if (companyLock.isEmpty()) throw new PayrollException('Payroll company not found or not accessible.');
         Payroll_Run__c run=[SELECT Id, Company__c, Pay_Period_Start__c, Pay_Period_End__c, Currency__c,
-            Workflow_State__c, Version__c FROM Payroll_Run__c WHERE Id=:runId FOR UPDATE];
+            Workflow_State__c, Version__c FROM Payroll_Run__c WHERE Id=:runId WITH USER_MODE FOR UPDATE];
         if (run.Workflow_State__c!='Draft') throw new PayrollException('Only Draft payroll runs can be calculated.');
         Date starts=run.Pay_Period_Start__c, ends=run.Pay_Period_End__c;
         List<Employment__c> employments=[SELECT Id, Company__c, Start_Date__c, End_Date__c,
@@ -79,12 +82,6 @@ public with sharing class SABPayrollCalculationService {
             +' AND Payroll_Run__r.Pay_Period_Start__c <= :ends AND Payroll_Run__r.Pay_Period_End__c >= :starts LIMIT 1',
             new Map<String,Object>{'ids'=>selected,'companyId'=>companyId,'ends'=>ends,'starts'=>starts},AccessLevel.SYSTEM_MODE);
         if (!duplicates.isEmpty()) throw new PayrollException('An overlapping non-cancelled payroll already contains a selected employment.');
-        // Only check existence here: a hidden award must not silently disappear from payroll.
-        List<SObject> awards=Database.queryWithBinds(
-            'SELECT Id FROM Benefit_Award__c WHERE Employment__c IN :ids AND Status__c = \'Approved\''
-            +' AND Service_Period_Start__c <= :ends AND (Service_Period_End__c = null OR Service_Period_End__c >= :starts) LIMIT 1',
-            new Map<String,Object>{'ids'=>selected,'starts'=>starts,'ends'=>ends},AccessLevel.SYSTEM_MODE);
-        if (!awards.isEmpty()) throw new PayrollException('Approved benefits require the later award-consumption stage; this run cannot omit them.');
         List<Employee_Pay_Component__c> assignments=[SELECT Id, Employment__c, Pay_Component__c,
             Pay_Component__r.Company__c, Pay_Component__r.Category__c, Pay_Component__r.Is_Active__c,
             Pay_Component__r.Expense_Account__c, Pay_Component__r.Liability_Account__c,
@@ -134,6 +131,21 @@ public with sharing class SABPayrollCalculationService {
             detailEmployments.add(a.Employment__c);
         }
         if (covered.size()!=selected.size()) throw new PayrollException('Each selected employment needs approved compensation for this period.');
+        // G10F: consume Approved awards (service started by period end, arrears included); fails closed on hidden awards.
+        List<SABPayrollBenefitAwardService.EligibleAward> awards;
+        try {
+            awards=SABPayrollBenefitAwardService.eligibleAwards(run,selected,minorUnits,assignments.size());
+        } catch (SABPayrollBenefitAwardService.BenefitAwardException ex) { throw new PayrollException(ex.getMessage()); }
+        for (SABPayrollBenefitAwardService.EligibleAward a:awards) {
+            Payroll_Line__c line=lines.get(a.employmentId);
+            if (a.category=='Deduction') line.Deduction_Amount__c+=a.amount;
+            else if (a.category=='Employer Contribution') line.Employer_Contribution__c+=a.amount;
+            else line.Gross_Amount__c+=a.amount;
+            details.add(new Payroll_Component_Line__c(Pay_Component__c=a.payComponentId,Benefit_Award__c=a.awardId,Amount__c=a.amount,
+                Component_Category__c=a.category,Expense_Account__c=a.expenseAccountId,Liability_Account__c=a.liabilityAccountId,
+                Rule_Version__c=SABPayrollBenefitAwardService.RULE_VERSION,Eligibility_Snapshot__c=a.eligibilitySnapshot));
+            detailEmployments.add(a.employmentId);
+        }
         Payroll_Run__c totals=new Payroll_Run__c(Id=runId,Workflow_State__c='Calculated',
             Gross_Total__c=0,Deduction_Total__c=0,Employer_Total__c=0,Net_Total__c=0);
         for (Payroll_Line__c line:lines.values()) {
@@ -148,6 +160,7 @@ public with sharing class SABPayrollCalculationService {
             for (Integer i=0;i<details.size();i++) details[i].Payroll_Line__c=lines.get(detailEmployments[i]).Id;
             insert as user details;
             update as user totals;
+            SABPayrollBenefitAwardService.consume(run,awards);
         } catch (Exception ex) { Database.rollback(checkpoint); throw ex; }
         finally { writing=false; }
         return runId;

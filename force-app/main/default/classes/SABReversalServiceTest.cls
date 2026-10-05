@@ -73,6 +73,27 @@ private class SABReversalServiceTest {
                     )
             )
         };
+        // Run the real posting fixture in a separate transaction. The test below reserves
+        // its fresh synchronous budget for revocation and denial, not journal setup.
+        Test.startTest();
+        System.enqueueJob(new RevokedAccessFixture());
+        Test.stopTest();
+    }
+
+    private class RevokedAccessFixture implements Queueable {
+        public void execute(QueueableContext context) {
+            User u = reversalUser();
+            Accounting_Company__c company = makeCompany('RV5', 'Unauthorized Reversal Company');
+            Accounting_Period__c period = makePeriod(company.Id, 'RV5', 'Open');
+            GL_Account__c debitAccount = makeGLAccount(company.Id, '7500');
+            GL_Account__c creditAccount = makeGLAccount(company.Id, '2500');
+            Journal_Entry__c journal = makeDraftJournal(company.Id, period.Id, 'Unauthorized reversal source');
+            addBalancedLines(journal.Id, debitAccount.Id, creditAccount.Id, 25);
+            grantCompanyAccess(company.Id, u.Id, 'REV-GRANT-5');
+            System.runAs(u) {
+                SABPostingService.postDraftJournal(originalPostingRequest(journal, 'RV5'));
+            }
+        }
     }
 
     private static User reversalUser() {
@@ -674,98 +695,37 @@ private class SABReversalServiceTest {
     @IsTest
     static void userWithoutCompanyAccessCannotReverse() {
         User u = reversalUser();
-
-        Accounting_Company__c company =
-            makeCompany('RV5', 'Unauthorized Reversal Company');
-
-        Accounting_Period__c period =
-            makePeriod(company.Id, 'RV5', 'Open');
-
-        GL_Account__c debitAccount =
-            makeGLAccount(company.Id, '7500');
-
-        GL_Account__c creditAccount =
-            makeGLAccount(company.Id, '2500');
-
-        Journal_Entry__c originalJournal =
-            makeDraftJournal(
-                company.Id,
-                period.Id,
-                'Unauthorized reversal source'
-            );
-
-        addBalancedLines(
-            originalJournal.Id,
-            debitAccount.Id,
-            creditAccount.Id,
-            25
-        );
-
-        // Give the user temporary company access only so the source journal
-        // can be posted through the real trusted posting service.
-        grantCompanyAccess(
-            company.Id,
-            u.Id,
-            'REV-GRANT-5'
-        );
-
-        System.runAs(u) {
-            SABPostingService.postDraftJournal(
-                originalPostingRequest(
-                    originalJournal,
-                    'RV5'
-                )
-            );
-        }
-
-        // Remove the company grant before attempting the reversal.
-        // The user still has the reversal permission set, but no longer has
-        // Company_User_Access__c for this company.
+        Accounting_Company__c company = [SELECT Id FROM Accounting_Company__c WHERE Company_Key__c = 'RV5' LIMIT 1];
+        Journal_Entry__c originalJournal = [
+            SELECT Id, Accounting_Period__c, Status__c FROM Journal_Entry__c
+            WHERE Company__c = :company.Id AND Reversal_Of__c = null LIMIT 1
+        ];
         Company_User_Access__c accessGrant = [
-            SELECT Id
-            FROM Company_User_Access__c
-            WHERE Company__c = :company.Id
-              AND User__c = :u.Id
-            LIMIT 1
+            SELECT Id FROM Company_User_Access__c
+            WHERE Company__c = :company.Id AND User__c = :u.Id LIMIT 1
         ];
-        delete accessGrant;
-
+        System.assertEquals('Posted', originalJournal.Status__c, 'Fixture must use the real posting service.');
         System.runAs(u) {
-            Boolean thrown = false;
-
-            try {
-                SABReversalService.reversePostedJournal(
-                    reversalRequest(
-                        originalJournal.Id,
-                        period.Id,
-                        'RV5'
-                    )
-                );
-            } catch (Exception ex) {
-                thrown = true;
-            }
-
-            System.assertEquals(
-                true,
-                thrown,
-                'Reversal must fail after company access is removed.'
-            );
+            System.assertEquals(true, SABCompanyAccessService.hasCompanyAccess(company.Id), 'Warm the positive authorization cache.');
         }
 
-        Journal_Entry__c storedOriginal = [
-            SELECT Status__c,
-                   Reversal_Journal__c
-            FROM Journal_Entry__c
-            WHERE Id = :originalJournal.Id
-        ];
+        Test.startTest();
+        delete accessGrant;
+        System.runAs(u) {
+            System.assertEquals(false, SABCompanyAccessService.hasCompanyAccess(company.Id), 'Revocation must invalidate cached access immediately.');
+            Boolean denied = false;
+            try {
+                SABReversalService.reversePostedJournal(reversalRequest(originalJournal.Id, originalJournal.Accounting_Period__c, 'RV5'));
+            } catch (SABCompanyAccessService.CompanyAccessDeniedException ex) {
+                denied = true;
+            }
+            System.assertEquals(true, denied, 'Reversal must fail specifically because company access was removed.');
+        }
+        Test.stopTest();
 
-        System.assertEquals(
-            'Posted',
-            storedOriginal.Status__c
-        );
-        System.assertEquals(
-            null,
-            storedOriginal.Reversal_Journal__c
-        );
+        Journal_Entry__c stored = [SELECT Status__c, Reversal_Journal__c FROM Journal_Entry__c WHERE Id = :originalJournal.Id];
+        System.assertEquals('Posted', stored.Status__c, 'Denied reversal leaves original posted.');
+        System.assertEquals(null, stored.Reversal_Journal__c, 'Denied reversal must not link a reversal.');
+        System.assertEquals(0, [SELECT COUNT() FROM Journal_Entry__c WHERE Reversal_Of__c = :originalJournal.Id], 'Denied reversal creates no journal.');
     }
 }

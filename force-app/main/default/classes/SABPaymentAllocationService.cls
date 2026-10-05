@@ -33,7 +33,7 @@ public with sharing class SABPaymentAllocationService {
         Accounting_Payment__c payment = [
             SELECT Id, Company__c, Amount__c, Transaction_Currency__c,
                    Functional_Currency__c, Exchange_Rate__c, Effective_Date__c,
-                   Processing_State__c
+                   Processing_State__c, Payroll_Run__c
             FROM Accounting_Payment__c
             WHERE Id = :paymentId
             FOR UPDATE
@@ -41,6 +41,10 @@ public with sharing class SABPaymentAllocationService {
 
         if (payment.Processing_State__c != 'Succeeded') {
             throw new PaymentAllocationException('Only a succeeded payment can be allocated.');
+        }
+        // G10H: payroll net pay is settled per employee, never allocated to supplier bills or customer invoices.
+        if (payment.Payroll_Run__c != null) {
+            throw new PaymentAllocationException('Payroll payments are processed only through payroll settlement.');
         }
 
         Set<Id> billIds = new Set<Id>();

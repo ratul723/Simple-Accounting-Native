@@ -224,10 +224,20 @@ public without sharing class SABReversalService {
                     request
                 );
 
-            SABPostingService.PostingResult postingResult =
-                SABPostingService.postDraftJournal(
-                    postingRequest
-                );
+            // G10H fix: the reversal mirrors the original line-for-line, so a Subledger
+            // original's control-account lines may be reversed.
+            SABPostingService.PostingResult postingResult;
+            SABPostingService.beginTrustedReversal(
+                reversalJournal.Id
+            );
+            try {
+                postingResult =
+                    SABPostingService.postDraftJournal(
+                        postingRequest
+                    );
+            } finally {
+                SABPostingService.endTrustedReversal();
+            }
 
             originalJournal.Status__c =
                 STATUS_REVERSED;

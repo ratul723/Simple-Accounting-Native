@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Settled_By__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <description>Stamped by the G10E payroll settlement service when net pay is fully settled.</description>
+    <label>Settled By</label>
+    <referenceTo>User</referenceTo>
+    <relationshipLabel>Payroll Runs Settled By</relationshipLabel>
+    <relationshipName>SAB_Payroll_Settled_By</relationshipName>
+    <required>false</required>
+    <type>Lookup</type>
+</CustomField>

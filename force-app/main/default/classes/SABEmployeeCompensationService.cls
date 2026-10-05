@@ -145,6 +145,7 @@ public with sharing class SABEmployeeCompensationService {
                        End_Date__c
                 FROM Employment__c
                 WHERE Company__c = :companyId
+                WITH USER_MODE
                 ORDER BY Start_Date__c DESC, Id DESC
                 LIMIT 2000
             ];
@@ -165,6 +166,7 @@ public with sharing class SABEmployeeCompensationService {
                 FROM Employment__c
                 WHERE Company__c = :companyId
                   AND Employment_Status__c != :EMPLOYMENT_ENDED
+                WITH USER_MODE
                 ORDER BY Start_Date__c DESC, Id DESC
                 LIMIT 2000
             ];
@@ -226,6 +228,7 @@ public with sharing class SABEmployeeCompensationService {
                   Effective_To__c = null
                   OR Effective_To__c >= :effectiveDate
               )
+            WITH USER_MODE
             ORDER BY Employment__r.Employee__r.Employee_Reference__c,
                      Pay_Component__r.Category__c,
                      Effective_From__c DESC
@@ -250,7 +253,7 @@ public with sharing class SABEmployeeCompensationService {
             User__c = request.userId
         );
 
-        insert employee;
+        WRITER.insertRow(employee);
         return employee.Id;
     }
 
@@ -285,7 +288,7 @@ public with sharing class SABEmployeeCompensationService {
                 Start_Date__c = request.startDate,
                 End_Date__c = request.endDate
             );
-            insert employment;
+            WRITER.insertRow(employment);
             return employment.Id;
         }
 
@@ -313,7 +316,7 @@ public with sharing class SABEmployeeCompensationService {
             : request.employmentStatus;
         existing.Start_Date__c = request.startDate;
         existing.End_Date__c = request.endDate;
-        update existing;
+        WRITER.updateRow(existing);
         return existing.Id;
     }
 
@@ -344,7 +347,7 @@ public with sharing class SABEmployeeCompensationService {
                 Liability_Account__c = request.liabilityAccountId,
                 Is_Active__c = request.isActive == null ? true : request.isActive
             );
-            insert component;
+            WRITER.insertRow(component);
             return component.Id;
         }
 
@@ -355,6 +358,7 @@ public with sharing class SABEmployeeCompensationService {
                    Liability_Account__c, Is_Active__c
             FROM Pay_Component__c
             WHERE Id = :request.payComponentId
+            WITH USER_MODE
             LIMIT 1
             FOR UPDATE
         ];
@@ -374,7 +378,7 @@ public with sharing class SABEmployeeCompensationService {
         if (request.isActive != null) {
             existing.Is_Active__c = request.isActive;
         }
-        update existing;
+        WRITER.updateRow(existing);
         return existing.Id;
     }
 
@@ -414,7 +418,7 @@ public with sharing class SABEmployeeCompensationService {
                 Formula_Parameter_JSON__c = blankToNull(request.formulaParameterJson),
                 Status__c = COMP_DRAFT
             );
-            insert existing;
+            WRITER.insertRow(existing);
             return existing.Id;
         }
 
@@ -426,6 +430,7 @@ public with sharing class SABEmployeeCompensationService {
                    Employment__r.Company__c
             FROM Employee_Pay_Component__c
             WHERE Id = :request.assignmentId
+            WITH USER_MODE
             LIMIT 1
             FOR UPDATE
         ];
@@ -449,13 +454,16 @@ public with sharing class SABEmployeeCompensationService {
         existing.Effective_From__c = request.effectiveFrom;
         existing.Effective_To__c = request.effectiveTo;
         existing.Formula_Parameter_JSON__c = blankToNull(request.formulaParameterJson);
-        update existing;
+        WRITER.updateRow(existing);
         return existing.Id;
     }
 
     @AuraEnabled
     public static Id approveAssignment(Id assignmentId) {
         assertApprovePermission();
+        // G10H: field-level update check for exactly the fields this action sets.
+        SABAccessControlService.assertUpdateable(Employee_Pay_Component__c.SObjectType,
+            new List<Schema.SObjectField>{Employee_Pay_Component__c.Status__c});
         Employee_Pay_Component__c assignment = loadAssignment(assignmentId, true);
         SABCompanyAccessService.assertCompanyAccess(assignment.Employment__r.Company__c);
 
@@ -480,13 +488,15 @@ public with sharing class SABEmployeeCompensationService {
         }
 
         assignment.Status__c = COMP_APPROVED;
-        update assignment;
+        WRITER.updateRow(assignment);
         return assignment.Id;
     }
 
     @AuraEnabled
     public static Id expireAssignment(Id assignmentId, Date effectiveTo) {
         assertManagePermission();
+        SABAccessControlService.assertUpdateable(Employee_Pay_Component__c.SObjectType,
+            new List<Schema.SObjectField>{Employee_Pay_Component__c.Status__c, Employee_Pay_Component__c.Effective_To__c});
         Employee_Pay_Component__c assignment = loadAssignment(assignmentId, true);
         SABCompanyAccessService.assertCompanyAccess(assignment.Employment__r.Company__c);
 
@@ -504,7 +514,7 @@ public with sharing class SABEmployeeCompensationService {
 
         assignment.Effective_To__c = effectiveTo;
         assignment.Status__c = COMP_EXPIRED;
-        update assignment;
+        WRITER.updateRow(assignment);
         return assignment.Id;
     }
 
@@ -525,11 +535,7 @@ public with sharing class SABEmployeeCompensationService {
 
         assertBenefitAwardCreateable();
 
-        if ([
-            SELECT COUNT()
-            FROM Benefit_Award__c
-            WHERE Award_Key__c = :request.awardKey.trim()
-        ] > 0) {
+        if (new Store().awardKeyExists(request.awardKey.trim())) {
             throw new EmployeeCompensationException(
                 'Benefit Award Key already exists. Use a unique award key.'
             );
@@ -547,13 +553,15 @@ public with sharing class SABEmployeeCompensationService {
             Reason__c = blankToNull(request.reason),
             Status__c = AWARD_PROPOSED
         );
-        insert award;
+        WRITER.insertRow(award);
         return award.Id;
     }
 
     @AuraEnabled
     public static Id approveBenefitAward(Id awardId) {
         assertApprovePermission();
+        SABAccessControlService.assertUpdateable(Benefit_Award__c.SObjectType, new List<Schema.SObjectField>{
+            Benefit_Award__c.Status__c, Benefit_Award__c.Approved_At__c, Benefit_Award__c.Approved_By__c});
         Benefit_Award__c award = loadBenefitAward(awardId, true);
         SABCompanyAccessService.assertCompanyAccess(award.Employment__r.Company__c);
 
@@ -572,13 +580,15 @@ public with sharing class SABEmployeeCompensationService {
         award.Status__c = AWARD_APPROVED;
         award.Approved_At__c = System.now();
         award.Approved_By__c = UserInfo.getUserId();
-        update award;
+        WRITER.updateRow(award);
         return award.Id;
     }
 
     @AuraEnabled
     public static Id cancelBenefitAward(Id awardId) {
         assertManagePermission();
+        SABAccessControlService.assertUpdateable(Benefit_Award__c.SObjectType,
+            new List<Schema.SObjectField>{Benefit_Award__c.Status__c});
         Benefit_Award__c award = loadBenefitAward(awardId, true);
         SABCompanyAccessService.assertCompanyAccess(award.Employment__r.Company__c);
 
@@ -592,7 +602,7 @@ public with sharing class SABEmployeeCompensationService {
         }
 
         award.Status__c = AWARD_CANCELLED;
-        update award;
+        WRITER.updateRow(award);
         return award.Id;
     }
 
@@ -914,12 +924,7 @@ public with sharing class SABEmployeeCompensationService {
         Date endDate,
         Id excludeId
     ) {
-        List<Employment__c> existing = [
-            SELECT Id, Start_Date__c, End_Date__c, Employment_Status__c
-            FROM Employment__c
-            WHERE Employee__c = :employeeId
-              AND Company__c = :companyId
-        ];
+        List<Employment__c> existing = new Store().employmentsFor(employeeId, companyId);
 
         for (Employment__c row : existing) {
             if (excludeId != null && row.Id == excludeId) {
@@ -945,13 +950,7 @@ public with sharing class SABEmployeeCompensationService {
         Date endDate,
         Id excludeId
     ) {
-        List<Employee_Pay_Component__c> existing = [
-            SELECT Id, Effective_From__c, Effective_To__c, Status__c
-            FROM Employee_Pay_Component__c
-            WHERE Employment__c = :employmentId
-              AND Pay_Component__c = :payComponentId
-              AND Status__c != :COMP_EXPIRED
-        ];
+        List<Employee_Pay_Component__c> existing = new Store().openAssignmentsFor(employmentId, payComponentId);
 
         for (Employee_Pay_Component__c row : existing) {
             if (excludeId != null && row.Id == excludeId) {
@@ -992,11 +991,7 @@ public with sharing class SABEmployeeCompensationService {
         if (liabilityAccountId != null) accountIds.add(liabilityAccountId);
         if (accountIds.isEmpty()) return;
 
-        List<GL_Account__c> accounts = [
-            SELECT Id, Company__c, Is_Active__c
-            FROM GL_Account__c
-            WHERE Id IN :accountIds
-        ];
+        List<GL_Account__c> accounts = new Store().accounts(accountIds);
 
         if (accounts.size() != accountIds.size()) {
             throw new EmployeeCompensationException('One or more mapped GL Accounts could not be found.');
@@ -1017,6 +1012,7 @@ public with sharing class SABEmployeeCompensationService {
             SELECT Id, Employee_Reference__c, Status__c, User__c
             FROM Employee__c
             WHERE Id = :employeeId
+            WITH USER_MODE
             LIMIT 1
         ];
         if (rows.isEmpty()) {
@@ -1031,7 +1027,8 @@ public with sharing class SABEmployeeCompensationService {
             + 'Employment_Status__c, Start_Date__c, End_Date__c '
             + 'FROM Employment__c WHERE Id = :employmentId LIMIT 1';
         if (forUpdate) query += ' FOR UPDATE';
-        List<Employment__c> rows = Database.query(query);
+        List<Employment__c> rows = Database.queryWithBinds(query,
+            new Map<String, Object>{'employmentId' => employmentId}, AccessLevel.USER_MODE);
         if (rows.isEmpty()) {
             throw new EmployeeCompensationException('Employment not found.');
         }
@@ -1043,6 +1040,7 @@ public with sharing class SABEmployeeCompensationService {
             SELECT Id, Name, Company__c, Category__c, Is_Active__c
             FROM Pay_Component__c
             WHERE Id = :payComponentId
+            WITH USER_MODE
             LIMIT 1
         ];
         if (rows.isEmpty()) {
@@ -1061,7 +1059,8 @@ public with sharing class SABEmployeeCompensationService {
             + 'Employment__r.Company__c '
             + 'FROM Employee_Pay_Component__c WHERE Id = :assignmentId LIMIT 1';
         if (forUpdate) query += ' FOR UPDATE';
-        List<Employee_Pay_Component__c> rows = Database.query(query);
+        List<Employee_Pay_Component__c> rows = Database.queryWithBinds(query,
+            new Map<String, Object>{'assignmentId' => assignmentId}, AccessLevel.USER_MODE);
         if (rows.isEmpty()) {
             throw new EmployeeCompensationException('Employee Pay Component assignment not found.');
         }
@@ -1076,7 +1075,8 @@ public with sharing class SABEmployeeCompensationService {
             + 'Employment__r.Company__c '
             + 'FROM Benefit_Award__c WHERE Id = :awardId LIMIT 1';
         if (forUpdate) query += ' FOR UPDATE';
-        List<Benefit_Award__c> rows = Database.query(query);
+        List<Benefit_Award__c> rows = Database.queryWithBinds(query,
+            new Map<String, Object>{'awardId' => awardId}, AccessLevel.USER_MODE);
         if (rows.isEmpty()) {
             throw new EmployeeCompensationException('Benefit Award not found.');
         }
@@ -1111,5 +1111,44 @@ public with sharing class SABEmployeeCompensationService {
 
     private static String blankToNull(String value) {
         return String.isBlank(value) ? null : value.trim();
+    }
+
+    // G10H: every DML statement runs through this writer. Callers have already run the permission check,
+    // the company grant check and SABAccessControlService create/update checks for the fields they set.
+    // It stays 'with sharing' so record access is exactly what it was before the refactor.
+    private static final Writer WRITER = new Writer();
+
+    @SuppressWarnings('PMD.ApexCRUDViolation')
+    private with sharing class Writer {
+        void insertRow(SObject row) {
+            insert row;
+        }
+        void updateRow(SObject row) {
+            update row;
+        }
+    }
+
+    /**
+     * G10H: integrity reads that must see every row. A duplicate award key or an overlapping employment or
+     * assignment hidden by sharing must still block the change, so these run in system mode after the
+     * caller's permission and company checks. They return only Ids, dates and statuses.
+     */
+    @SuppressWarnings('PMD.ApexCRUDViolation')
+    private without sharing class Store {
+        Boolean awardKeyExists(String awardKey) {
+            return [SELECT COUNT() FROM Benefit_Award__c WHERE Award_Key__c = :awardKey WITH SYSTEM_MODE] > 0;
+        }
+        List<Employment__c> employmentsFor(Id employeeId, Id companyId) {
+            return [SELECT Id, Start_Date__c, End_Date__c, Employment_Status__c FROM Employment__c
+                WHERE Employee__c = :employeeId AND Company__c = :companyId WITH SYSTEM_MODE];
+        }
+        List<Employee_Pay_Component__c> openAssignmentsFor(Id employmentId, Id payComponentId) {
+            return [SELECT Id, Effective_From__c, Effective_To__c, Status__c FROM Employee_Pay_Component__c
+                WHERE Employment__c = :employmentId AND Pay_Component__c = :payComponentId AND Status__c != :COMP_EXPIRED
+                WITH SYSTEM_MODE];
+        }
+        List<GL_Account__c> accounts(Set<Id> accountIds) {
+            return [SELECT Id, Company__c, Is_Active__c FROM GL_Account__c WHERE Id IN :accountIds WITH SYSTEM_MODE];
+        }
     }
 }

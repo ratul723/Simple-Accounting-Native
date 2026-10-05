@@ -1,4 +1,4 @@
-/** G10C: reconcile snapshots and control review/approval/cancellation. No GL posting. */
+/** G10C: reconcile snapshots and control review/approval/cancellation. G10F: cancellation releases consumed benefit awards. No GL posting. */
 public with sharing class SABPayrollReviewService {
     public class ReviewException extends Exception {}
     private static Id permittedRunId;
@@ -25,6 +25,7 @@ public with sharing class SABPayrollReviewService {
         SABAccessControlService.assertRecordReadAccess(companyId);
         SABAccessControlService.assertRecordEditAccess(runId);
         List<Accounting_Company__c> locks=[SELECT Id FROM Accounting_Company__c WHERE Id=:companyId WITH USER_MODE FOR UPDATE];
+        if(locks.isEmpty()) throw new ReviewException('Payroll company not found or not accessible.');
         List<Payroll_Run__c> locked=Database.queryWithBinds(
             'SELECT Id, Company__c, CreatedById, Workflow_State__c, Accounting_Event__c,'
             +' Gross_Total__c, Deduction_Total__c, Employer_Total__c, Net_Total__c,'
@@ -44,8 +45,14 @@ public with sharing class SABPayrollReviewService {
             change.Workflow_State__c='Cancelled';change.Cancelled_By__c=UserInfo.getUserId();
             change.Cancelled_At__c=System.now();change.Cancellation_Reason__c=reason.trim();
         }
-        permittedRunId=runId;
-        try {update as user change;} finally {permittedRunId=null;}
+        Savepoint checkpoint=Database.setSavepoint();
+        try {
+            permittedRunId=runId;
+            try {update as user change;} finally {permittedRunId=null;}
+            // G10F: awards consumed by a cancelled run return to Approved for the next payroll.
+            // A Draft run was never calculated, so it cannot hold awards: skip the lookup.
+            if(action=='Cancel' && run.Workflow_State__c!='Draft') SABPayrollBenefitAwardService.releaseForRun(runId);
+        } catch(Exception ex) {Database.rollback(checkpoint);throw ex;}
         return runId;
     }
     @TestVisible

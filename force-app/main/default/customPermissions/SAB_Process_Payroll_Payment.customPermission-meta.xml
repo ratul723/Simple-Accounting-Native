@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomPermission xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Prepare, submit and record the outcome of payroll net-pay payments, including employee bank returns.</description>
+    <isLicensed>false</isLicensed>
+    <label>SAB Process Payroll Payment</label>
+</CustomPermission>

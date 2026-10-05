@@ -1,0 +1,270 @@
+<template>
+    <lightning-card title="Payroll &amp; HR Workspace" icon-name="standard:people">
+        <div class="workspace">
+            <template lwc:if={hasCompany}>
+                <div class="header-row">
+                    <div>
+                        <h2 class="company-name">{companyName}</h2>
+                        <p>Functional Currency: {functionalCurrency}</p>
+                    </div>
+                    <lightning-button label="Refresh" icon-name="utility:refresh" onclick={handleRefresh}
+                        disabled={isLoading}></lightning-button>
+                </div>
+
+                <template lwc:if={isLoading}>
+                    <lightning-spinner alternative-text="Loading payroll" size="medium"></lightning-spinner>
+                </template>
+
+                <template lwc:if={errorMessage}>
+                    <div class="error-banner" role="alert">{errorMessage}</div>
+                </template>
+
+                <template lwc:if={hasWorkspace}>
+                    <div class="summary-grid">
+                        <template for:each={stateCounts} for:item="item">
+                            <div key={item.state} class="metric-card">
+                                <span>{item.state}</span>
+                                <strong>{item.count}</strong>
+                            </div>
+                        </template>
+                        <div class="metric-card emphasized">
+                            <span>Outstanding Net Pay</span>
+                            <strong><lightning-formatted-number value={outstandingNetPay}
+                                minimum-fraction-digits="2"></lightning-formatted-number></strong>
+                        </div>
+                    </div>
+
+                    <lightning-tabset>
+                        <lightning-tab label="Payroll Runs">
+                            <div class="panel">
+                                <h3>New payroll run</h3>
+                                <div class="form-row">
+                                    <lightning-input type="date" label="Period start" value={newRunStart}
+                                        onchange={handleNewRunStart}></lightning-input>
+                                    <lightning-input type="date" label="Period end" value={newRunEnd}
+                                        data-field="newRunEnd" onchange={handleFieldChange}></lightning-input>
+                                    <lightning-input label="Run key" value={newRunKey} max-length="180"
+                                        data-field="newRunKey" onchange={handleFieldChange}></lightning-input>
+                                    <lightning-button class="create-draft" label="Create Draft" variant="brand"
+                                        onclick={handleCreateDraft} disabled={createDisabled}></lightning-button>
+                                </div>
+                            </div>
+                            <div class="panel">
+                                <h3>Payroll runs</h3>
+                                <template lwc:if={hasRuns}>
+                                    <lightning-datatable key-field="runId" data={runs} columns={runColumns}
+                                        max-row-selection="1" selected-rows={selectedRunRows}
+                                        onrowselection={handleRunSelection}></lightning-datatable>
+                                </template>
+                                <template lwc:else>
+                                    <p class="empty-state">No payroll runs for this company yet.</p>
+                                </template>
+                            </div>
+                        </lightning-tab>
+
+                        <lightning-tab label="Run Detail">
+                            <template lwc:if={hasSelectedRun}>
+                                <div class="panel">
+                                    <h3>{selectedRun.name}: {selectedRun.state}</h3>
+                                    <p>{selectedRun.runKey} · {selectedRun.periodStart} to {selectedRun.periodEnd}
+                                        · Net {selectedRun.netTotal} {selectedRun.currencyCode}</p>
+                                </div>
+
+                                <template lwc:if={isDraft}>
+                                    <div class="panel action-panel">
+                                        <h3>Calculate</h3>
+                                        <lightning-dual-listbox label="Employments" source-label="Available"
+                                            selected-label="In this run" options={employmentOptions}
+                                            value={selectedEmploymentIds} data-field="selectedEmploymentIds"
+                                            onchange={handleFieldChange}></lightning-dual-listbox>
+                                        <lightning-input type="number" label="Currency minor units" min="0" max="3"
+                                            value={minorUnits} data-field="minorUnits"
+                                            onchange={handleFieldChange}></lightning-input>
+                                        <lightning-button class="calculate" label="Calculate" variant="brand"
+                                            onclick={handleCalculate} disabled={calculateDisabled}></lightning-button>
+                                    </div>
+                                </template>
+
+                                <template lwc:if={isCalculated}>
+                                    <div class="panel action-panel">
+                                        <lightning-button class="submit" label="Submit for Approval" variant="brand"
+                                            onclick={handleSubmit} disabled={submitDisabled}></lightning-button>
+                                    </div>
+                                </template>
+
+                                <template lwc:if={isSubmitted}>
+                                    <div class="panel action-panel">
+                                        <p>A different user from the preparer and submitter must approve.</p>
+                                        <lightning-button class="approve" label="Approve" variant="brand"
+                                            onclick={handleApprove} disabled={approveDisabled}></lightning-button>
+                                    </div>
+                                </template>
+
+                                <template lwc:if={isApproved}>
+                                    <div class="panel action-panel">
+                                        <h3>Post accrual</h3>
+                                        <div class="form-row">
+                                            <lightning-combobox label="Accounting period" options={openPeriods}
+                                                value={postPeriodId} data-field="postPeriodId"
+                                                onchange={handleFieldChange}></lightning-combobox>
+                                            <lightning-input type="date" label="Accounting date" value={postDate}
+                                                data-field="postDate" onchange={handleFieldChange}></lightning-input>
+                                            <lightning-combobox label="Net payable account" options={payableAccounts}
+                                                value={payableAccountId} data-field="payableAccountId"
+                                                onchange={handleFieldChange}></lightning-combobox>
+                                            <lightning-button class="post" label="Post" variant="brand"
+                                                onclick={handlePost} disabled={postDisabled}></lightning-button>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <template lwc:if={isCancellable}>
+                                    <div class="panel action-panel">
+                                        <div class="form-row">
+                                            <lightning-input label="Cancellation reason" value={cancelReason}
+                                                max-length="255" data-field="cancelReason"
+                                                onchange={handleFieldChange}></lightning-input>
+                                            <lightning-button class="cancel" label="Cancel Run" variant="destructive"
+                                                onclick={handleCancel} disabled={cancelDisabled}></lightning-button>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <template lwc:if={hasPayment}>
+                                    <div class="panel">
+                                        <h3>Payment {payment.name}: {payment.state}</h3>
+                                        <p>{payment.amount} · {payment.bankAccountName} · {payment.effectiveDate}
+                                            · {payment.method}</p>
+                                    </div>
+                                </template>
+
+                                <template lwc:if={canPrepareFlow}>
+                                    <div class="panel action-panel">
+                                        <h3>Prepare net-pay payment</h3>
+                                        <div class="form-row">
+                                            <lightning-combobox label="Bank account" options={bankAccounts}
+                                                value={paymentBankId} data-field="paymentBankId"
+                                                onchange={handleFieldChange}></lightning-combobox>
+                                            <lightning-input type="date" label="Payment date" value={paymentDate}
+                                                data-field="paymentDate" onchange={handleFieldChange}></lightning-input>
+                                            <lightning-combobox label="Method" options={paymentMethods}
+                                                value={paymentMethod} data-field="paymentMethod"
+                                                onchange={handleFieldChange}></lightning-combobox>
+                                            <lightning-input label="Reference" value={paymentReference} max-length="120"
+                                                data-field="paymentReference" onchange={handleFieldChange}></lightning-input>
+                                            <lightning-button class="prepare" label="Prepare Payment" variant="brand"
+                                                onclick={handlePrepare} disabled={prepareDisabled}></lightning-button>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <template lwc:if={paymentIsDraft}>
+                                    <div class="panel action-panel">
+                                        <p>The preparer cannot authorize their own payment.</p>
+                                        <lightning-button class="authorize" label="Authorize Payment" variant="brand"
+                                            onclick={handleAuthorize} disabled={authorizeDisabled}></lightning-button>
+                                    </div>
+                                </template>
+
+                                <template lwc:if={paymentIsAuthorized}>
+                                    <div class="panel action-panel">
+                                        <div class="form-row">
+                                            <lightning-input label="Bank / provider request key" value={providerKey}
+                                                max-length="160" data-field="providerKey"
+                                                onchange={handleFieldChange}></lightning-input>
+                                            <lightning-button class="submit-payment" label="Submit Payment" variant="brand"
+                                                onclick={handleSubmitPayment} disabled={submitPaymentDisabled}></lightning-button>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <template lwc:if={paymentIsSubmitted}>
+                                    <div class="panel action-panel">
+                                        <p>Record success only after the bank confirms the disbursement.</p>
+                                        <lightning-button class="succeeded" label="Record Success" variant="success"
+                                            onclick={handleSucceeded} disabled={succeededDisabled}></lightning-button>
+                                    </div>
+                                </template>
+
+                                <template lwc:if={paymentInFlight}>
+                                    <div class="panel action-panel">
+                                        <div class="form-row">
+                                            <lightning-input label="Failure reason" value={failReason} max-length="255"
+                                                data-field="failReason" onchange={handleFieldChange}></lightning-input>
+                                            <lightning-button class="failed" label="Record Failure" variant="destructive"
+                                                onclick={handleFailed} disabled={failDisabled}></lightning-button>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <template lwc:if={hasReturnOptions}>
+                                    <div class="panel action-panel">
+                                        <h3>Bank return (one employee)</h3>
+                                        <div class="form-row">
+                                            <lightning-combobox label="Settled employee" options={returnOptions}
+                                                value={returnSettlementId} data-field="returnSettlementId"
+                                                onchange={handleFieldChange}></lightning-combobox>
+                                            <lightning-input type="date" label="Return date" value={returnDate}
+                                                data-field="returnDate" onchange={handleFieldChange}></lightning-input>
+                                            <lightning-input label="Reason" value={returnReason} max-length="255"
+                                                data-field="returnReason" onchange={handleFieldChange}></lightning-input>
+                                            <lightning-button class="return" label="Record Return" variant="destructive"
+                                                onclick={handleReturn} disabled={returnDisabled}></lightning-button>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <div class="panel">
+                                    <h3>Employee lines</h3>
+                                    <lightning-datatable key-field="lineId" data={runLines} columns={lineColumns}
+                                        hide-checkbox-column></lightning-datatable>
+                                </div>
+                                <template lwc:if={hasRunAwards}>
+                                    <div class="panel">
+                                        <h3>Consumed benefit awards</h3>
+                                        <lightning-datatable key-field="componentLineId" data={runAwards}
+                                            columns={awardLineColumns} hide-checkbox-column></lightning-datatable>
+                                    </div>
+                                </template>
+                            </template>
+                            <template lwc:else>
+                                <p class="empty-state">Select a payroll run on the Payroll Runs tab.</p>
+                            </template>
+                        </lightning-tab>
+
+                        <lightning-tab label="HR Approvals">
+                            <template lwc:if={hasHrQueue}>
+                                <div class="panel">
+                                    <h3>Draft compensation</h3>
+                                    <lightning-datatable key-field="assignmentId" data={pendingAssignments}
+                                        columns={assignmentColumns} max-row-selection="1"
+                                        onrowselection={handleAssignmentSelection}></lightning-datatable>
+                                    <lightning-button class="approve-assignment" label="Approve Compensation"
+                                        variant="brand" onclick={handleApproveAssignment}
+                                        disabled={approveAssignmentDisabled}></lightning-button>
+                                </div>
+                                <div class="panel">
+                                    <h3>Benefit awards</h3>
+                                    <lightning-datatable key-field="awardId" data={awards} columns={awardColumns}
+                                        max-row-selection="1" onrowselection={handleAwardSelection}></lightning-datatable>
+                                    <div class="button-row">
+                                        <lightning-button class="approve-award" label="Approve Award" variant="brand"
+                                            onclick={handleApproveAward} disabled={approveAwardDisabled}></lightning-button>
+                                        <lightning-button class="cancel-award" label="Cancel Award" variant="destructive"
+                                            onclick={handleCancelAward} disabled={cancelAwardDisabled}></lightning-button>
+                                    </div>
+                                </div>
+                            </template>
+                            <template lwc:else>
+                                <p class="empty-state">You do not have access to compensation approvals for this company.</p>
+                            </template>
+                        </lightning-tab>
+                    </lightning-tabset>
+                </template>
+            </template>
+            <template lwc:else>
+                <div class="empty-state">Select an Accounting Company from the SAB Company Context Selector.</div>
+            </template>
+        </div>
+    </lightning-card>
+</template>

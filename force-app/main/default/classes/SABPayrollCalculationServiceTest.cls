@@ -124,11 +124,15 @@ private class SABPayrollCalculationServiceTest {
         Employee_Pay_Component__c a=[SELECT Id,Amount__c FROM Employee_Pay_Component__c WHERE Pay_Component__r.Category__c='Deduction'];a.Amount__c=99999;update a;
         Id r=draft('NEGATIVE');Test.startTest();rejectsCalculation(r,new List<Id>{employmentId()},2,'Deductions');Test.stopTest();
     }
-    @IsTest static void rejectsApprovedAwardOmission(){
+    // G10F replaced the G10B rejection: an Approved award is now consumed into the run instead of blocking it.
+    @IsTest static void consumesApprovedAward(){
         Id emp=employmentId();Id component=[SELECT Id FROM Pay_Component__c WHERE Category__c='Food Allowance'].Id;
-        insert new Benefit_Award__c(Employment__c=emp,Pay_Component__c=component,Award_Key__c='G10B-AWARD',
-            Amount__c=50,Currency__c='BDT',Status__c='Approved',Service_Period_Start__c=Date.newInstance(2026,10,1));
-        Id r=draft('AWARD');Test.startTest();rejectsCalculation(r,new List<Id>{emp},2,'Approved benefits');Test.stopTest();
+        Benefit_Award__c award=new Benefit_Award__c(Employment__c=emp,Pay_Component__c=component,Award_Key__c='G10B-AWARD',
+            Amount__c=50,Currency__c='BDT',Status__c='Approved',Service_Period_Start__c=Date.newInstance(2026,10,1));insert award;
+        Id r=draft('AWARD');Test.startTest();SABPayrollCalculationService.calculate(r,new List<Id>{emp},2);Test.stopTest();
+        System.assertEquals(10550,[SELECT Gross_Total__c FROM Payroll_Run__c WHERE Id=:r].Gross_Total__c,'Award adds to gross pay.');
+        Benefit_Award__c stored=[SELECT Status__c,Consumed_By_Payroll_Run__c FROM Benefit_Award__c WHERE Id=:award.Id];
+        System.assertEquals('Consumed',stored.Status__c,'Award is consumed.');System.assertEquals(r,stored.Consumed_By_Payroll_Run__c,'Award links the run.');
     }
     @IsTest static void rejectsCompanyWithoutGrant(){
         Accounting_Company__c other=new Accounting_Company__c(Name__c='Other',Company_Key__c='B02',Country_Code__c='BD',

@@ -34,6 +34,19 @@ public without sharing class SABPostingService {
     private static final String EVENT_STATE_RESERVED = 'Reserved';
     private static final String EVENT_STATE_POSTED = 'Posted';
 
+    // G10H fix: set only by SABReversalService around the posting of the reversal journal it built
+    // line-for-line from a posted original. Reversing a Subledger posting must be able to hit the same
+    // control accounts the original did; a hand-made "Reversal" journal never gets this scope.
+    private static Id trustedReversalJournalId;
+
+    public static void beginTrustedReversal(Id reversalJournalId) {
+        trustedReversalJournalId = reversalJournalId;
+    }
+
+    public static void endTrustedReversal() {
+        trustedReversalJournalId = null;
+    }
+
     public class PostingRequest {
         public Id journalEntryId { get; set; }
         public String postingKey { get; set; }
@@ -151,7 +164,9 @@ public without sharing class SABPostingService {
                        Accounting_Event__c,
                        Posted_By__c,
                        Posted_At__c,
-                       Version__c
+                       Version__c,
+                       Reversal_Of__c,
+                       Reversal_Of__r.Entry_Type__c
                 FROM Journal_Entry__c
                 WHERE Id = :request.journalEntryId
                 LIMIT 1
@@ -361,6 +376,16 @@ public without sharing class SABPostingService {
         Journal_Entry__c journal
     ) {
         if (journal.Entry_Type__c == 'Subledger') {
+            return;
+        }
+
+        if (
+            journal.Entry_Type__c == 'Reversal'
+            && journal.Id == trustedReversalJournalId
+            && journal.Reversal_Of__c != null
+            && journal.Reversal_Of__r != null
+            && journal.Reversal_Of__r.Entry_Type__c == 'Subledger'
+        ) {
             return;
         }
 

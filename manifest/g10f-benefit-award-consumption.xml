@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>SABPayrollBenefitAwardService</members>
+        <members>SABPayrollBenefitAwardServiceTest</members>
+        <members>SABPayrollCalculationService</members>
+        <members>SABPayrollCalculationServiceTest</members>
+        <members>SABPayrollPostingServiceTest</members>
+        <members>SABPayrollReviewService</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>SABBenefitAwardPayrollGuardTrigger</members>
+        <name>ApexTrigger</name>
+    </types>
+    <types>
+        <members>SAB_Payroll_Calculation_User</members>
+        <name>PermissionSet</name>
+    </types>
+    <version>67.0</version>
+</Package>

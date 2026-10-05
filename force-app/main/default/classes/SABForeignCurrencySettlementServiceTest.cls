@@ -508,53 +508,6 @@ private class SABForeignCurrencySettlementServiceTest {
                 )
             };
 
-            Accounting_Payment__c reversalReceipt = [
-                SELECT Id
-                FROM Accounting_Payment__c
-                WHERE Reference__c =
-                        'G7D-REVERSAL-RECEIPT'
-                LIMIT 1
-            ];
-
-            SABForeignCurrencySettlementService.authorizeForeignPayment(
-                reversalReceipt.Id,
-                'G7D-SETUP-REV-AUTH'
-            );
-
-            SABForeignCurrencySettlementService.submitForeignPayment(
-                reversalReceipt.Id,
-                'G7D-SETUP-REV-PROVIDER',
-                'G7D-SETUP-REV-SUBMIT'
-            );
-
-            SABForeignCurrencySettlementService.postForeignPayment(
-                reversalReceipt.Id,
-                'G7D-SETUP-REV-POST'
-            );
-
-            SABForeignCurrencySettlementService.ForeignAllocationRequest
-                reversalRequest =
-                    new SABForeignCurrencySettlementService.ForeignAllocationRequest();
-
-            reversalRequest.invoiceId =
-                reversalInvoice.Id;
-            reversalRequest.amount =
-                10;
-            reversalRequest.effectiveDate =
-                Date.newInstance(
-                    2026,
-                    9,
-                    22
-                );
-
-            SABForeignCurrencySettlementService.allocateForeignPayment(
-                reversalReceipt.Id,
-                new List<SABForeignCurrencySettlementService.ForeignAllocationRequest>{
-                    reversalRequest
-                },
-                'G7D-SETUP-REV-ALLOC',
-                'Create realized-FX allocation fixture for reversal test.'
-            );
         }
     }
 
@@ -890,6 +843,10 @@ private class SABForeignCurrencySettlementServiceTest {
             getUser();
 
         System.runAs(testUser) {
+            Test.startTest();
+            postReversalFixture();
+            Test.stopTest();
+
             Accounting_Payment__c reversalReceipt =
                 getPayment(
                     'G7D-REVERSAL-RECEIPT'
@@ -911,7 +868,10 @@ private class SABForeignCurrencySettlementServiceTest {
                 allocation.Realized_FX_State__c
             );
 
-            Test.startTest();
+            SABTestGovernor.requireHeadroom(
+                40,
+                'reverse foreign allocation'
+            );
 
             SABForeignCurrencySettlementService.ForeignAllocationReversalResult result =
                 SABForeignCurrencySettlementService.reverseForeignAllocation(
@@ -924,8 +884,6 @@ private class SABForeignCurrencySettlementServiceTest {
                     'G7D-REV-REQ',
                     'Reverse allocation and its realized FX result.'
                 );
-
-            Test.stopTest();
 
             System.assertEquals(
                 'Reversed',
@@ -1121,6 +1079,59 @@ private class SABForeignCurrencySettlementServiceTest {
                 blocked
             );
         }
+    }
+
+    // G10H: the reversal fixture runs two full posting chains (receipt post, then realized-FX allocation).
+    // It used to run in @TestSetup, whose query usage every test inherits; now only the reversal test runs it,
+    // inside its own Test.startTest() window.
+    private static void postReversalFixture() {
+        Accounting_Payment__c reversalReceipt = [
+            SELECT Id
+            FROM Accounting_Payment__c
+            WHERE Reference__c =
+                    'G7D-REVERSAL-RECEIPT'
+            LIMIT 1
+        ];
+
+        SABForeignCurrencySettlementService.authorizeForeignPayment(
+            reversalReceipt.Id,
+            'G7D-SETUP-REV-AUTH'
+        );
+
+        SABForeignCurrencySettlementService.submitForeignPayment(
+            reversalReceipt.Id,
+            'G7D-SETUP-REV-PROVIDER',
+            'G7D-SETUP-REV-SUBMIT'
+        );
+
+        SABForeignCurrencySettlementService.postForeignPayment(
+            reversalReceipt.Id,
+            'G7D-SETUP-REV-POST'
+        );
+
+        SABForeignCurrencySettlementService.ForeignAllocationRequest
+            reversalRequest =
+                new SABForeignCurrencySettlementService.ForeignAllocationRequest();
+
+        reversalRequest.invoiceId =
+            [SELECT Id FROM Invoice__c WHERE Legal_Number__c = 'G7D-INV-REV' LIMIT 1].Id;
+        reversalRequest.amount =
+            10;
+        reversalRequest.effectiveDate =
+            Date.newInstance(
+                2026,
+                9,
+                22
+            );
+
+        SABForeignCurrencySettlementService.allocateForeignPayment(
+            reversalReceipt.Id,
+            new List<SABForeignCurrencySettlementService.ForeignAllocationRequest>{
+                reversalRequest
+            },
+            'G7D-SETUP-REV-ALLOC',
+            'Create realized-FX allocation fixture for reversal test.'
+        );
     }
 
     private static void prepareAndPost(

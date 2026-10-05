@@ -117,7 +117,13 @@ private class SABPayrollPostingServiceTest {
     @IsTest static void postsBalancedPayrollAndReplays(){
         System.runAs(maker()){
             assertReviewPermissions();Id runId=approved();Test.startTest();
-            SABPayrollPostingService.PostingResult r=post(runId);SABPayrollPostingService.PostingResult replay=post(runId);Test.stopTest();
+            SABPayrollPostingService.PostingResult r=post(runId);SABPayrollPostingService.PostingResult replay=post(runId);
+            // Budget: the cancel attempt runs inside this window; the outer window already holds setup plus calculate/submit/approve.
+            Database.SaveResult direct=Database.update(new Payroll_Run__c(Id=runId,Workflow_State__c='Approved'),false);
+            Boolean cancelled=false;String cancelMessage;
+            try{SABPayrollReviewService.cancel(runId,'Cannot cancel posted');}
+            catch(SABPayrollReviewService.ReviewException ex){cancelled=true;cancelMessage=ex.getMessage();}
+            Test.stopTest();
             System.assertEquals(false,r.replay);System.assertEquals(true,replay.replay);
             System.assertEquals(r.journalEntryId,replay.journalEntryId);System.assertEquals(r.accountingEventId,replay.accountingEventId);
             Payroll_Run__c run=[SELECT Workflow_State__c,Accounting_Event__c,Accounting_Date__c,Posted_By__c,Posted_At__c,Net_Payable_Account__c,Posting_Request_Key__c
@@ -134,11 +140,8 @@ private class SABPayrollPostingServiceTest {
             System.assertEquals(10750,debit);System.assertEquals(debit,credit);System.assertEquals(9500,credits.get('2300'));
             System.assertEquals(1000,credits.get('2100'));System.assertEquals(250,credits.get('2200'));
             System.assertEquals(1,[SELECT COUNT() FROM Accounting_Event__c WHERE Source_Record_Id__c=:runId WITH USER_MODE]);
-            Database.SaveResult direct=Database.update(new Payroll_Run__c(Id=runId,Workflow_State__c='Approved'),false);
             System.assertEquals(false,direct.isSuccess());System.assert(direct.getErrors()[0].getMessage().contains('authorized payroll service'));
-            Boolean cancelled=false;try{SABPayrollReviewService.cancel(runId,'Cannot cancel posted');}
-            catch(SABPayrollReviewService.ReviewException ex){cancelled=true;System.assert(ex.getMessage().contains('controlled reversal'));}
-            System.assert(cancelled);
+            System.assert(cancelled,'Posted payroll cannot be cancelled.');System.assert(cancelMessage.contains('controlled reversal'),cancelMessage);
         }
     }
     @IsTest static void rejectsReplayWithChangedIdentity(){

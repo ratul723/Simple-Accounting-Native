@@ -27,6 +27,29 @@ public without sharing class SABCompanyAccessService {
     private static Set<Id> loadedUsers =
         new Set<Id>();
 
+    /** Trigger entry point: cover both sides of reassignment and all grant lifecycle events. */
+    public static void invalidateGrants(List<Company_User_Access__c> oldRows, List<Company_User_Access__c> newRows) {
+        Set<Id> users = new Set<Id>();
+        if (oldRows != null) {
+            for (Company_User_Access__c grant : oldRows) { users.add(grant.User__c); }
+        }
+        if (newRows != null) {
+            for (Company_User_Access__c grant : newRows) { users.add(grant.User__c); }
+        }
+        invalidateUsers(users);
+    }
+
+    /** Invalidate only affected users after grant DML. This never grants access or accepts cached values. */
+    public static void invalidateUsers(Set<Id> userIds) {
+        if (userIds == null) {
+            return;
+        }
+        for (Id userId : userIds) {
+            loadedUsers.remove(userId);
+            accessibleCompaniesByUser.remove(userId);
+        }
+    }
+
     public static Boolean hasCompanyAccess(Id companyId) {
         if (companyId == null) {
             return false;
@@ -61,20 +84,22 @@ public without sharing class SABCompanyAccessService {
         Date today = Date.today();
         Id currentUserId = UserInfo.getUserId();
 
-        List<Company_User_Access__c> grants = [
-            SELECT Role__c
-            FROM Company_User_Access__c
-            WHERE User__c = :currentUserId
-              AND Company__c = :companyId
-              AND Is_Active__c = true
-              AND Effective_From__c <= :today
-              AND (
-                  Effective_To__c = null
-                  OR Effective_To__c >= :today
-              )
-            ORDER BY Effective_From__c DESC
-            LIMIT 1
-        ];
+        // Authorization reads intentionally ignore grant CRUD/FLS: callers may hold
+        // a grant without permission to inspect the authorization records themselves.
+        // Explicit map binding avoids generated inline bind-variable scope issues.
+        List<Company_User_Access__c> grants = Database.queryWithBinds(
+            'SELECT Role__c FROM Company_User_Access__c'
+            + ' WHERE User__c = :actorId AND Company__c = :requestedCompanyId'
+            + ' AND Is_Active__c = true AND Effective_From__c <= :asOfDate'
+            + ' AND (Effective_To__c = null OR Effective_To__c >= :asOfDate)'
+            + ' ORDER BY Effective_From__c DESC LIMIT 1',
+            new Map<String, Object>{
+                'actorId' => currentUserId,
+                'requestedCompanyId' => companyId,
+                'asOfDate' => today
+            },
+            AccessLevel.SYSTEM_MODE
+        );
 
         return grants.isEmpty()
             ? null
@@ -100,17 +125,16 @@ public without sharing class SABCompanyAccessService {
         Date today = Date.today();
         Set<Id> companyIds = new Set<Id>();
 
-        for (Company_User_Access__c grant : [
-            SELECT Company__c
-            FROM Company_User_Access__c
-            WHERE User__c = :currentUserId
-              AND Is_Active__c = true
-              AND Effective_From__c <= :today
-              AND (
-                  Effective_To__c = null
-                  OR Effective_To__c >= :today
-              )
-        ]) {
+        // API 67 defaults must not change the grant service's existing system-read contract.
+        List<Company_User_Access__c> grants = Database.queryWithBinds(
+            'SELECT Company__c FROM Company_User_Access__c'
+            + ' WHERE User__c = :actorId AND Is_Active__c = true'
+            + ' AND Effective_From__c <= :asOfDate'
+            + ' AND (Effective_To__c = null OR Effective_To__c >= :asOfDate)',
+            new Map<String, Object>{'actorId' => currentUserId, 'asOfDate' => today},
+            AccessLevel.SYSTEM_MODE
+        );
+        for (Company_User_Access__c grant : grants) {
             if (grant.Company__c != null) {
                 companyIds.add(grant.Company__c);
             }
