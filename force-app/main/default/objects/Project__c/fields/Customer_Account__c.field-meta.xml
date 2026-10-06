@@ -7,5 +7,6 @@
     <referenceTo>Account</referenceTo>
     <relationshipLabel>Project Customer Account</relationshipLabel>
     <relationshipName>Project_Customer_Account</relationshipName>
+    <trackHistory>true</trackHistory>
     <type>Lookup</type>
 </CustomField>

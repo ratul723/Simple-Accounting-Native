@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <customPermissions>
+        <enabled>true</enabled>
+        <name>SAB_Approve_Purchase_Order</name>
+    </customPermissions>
+    <description>G12: approve or return purchase orders; never orders the user created or submitted. Requires SAB Purchasing User.</description>
+    <hasActivationRequired>false</hasActivationRequired>
+    <label>SAB Approve Purchase Order Action</label>
+</PermissionSet>

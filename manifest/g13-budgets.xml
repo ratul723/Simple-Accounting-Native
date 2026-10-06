@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>SABBudgetGuard</members>
+        <members>SABBudgetService</members>
+        <members>SABBudgetServiceTest</members>
+        <members>SABBudgetTestFixture</members>
+        <members>SABBudgetVarianceService</members>
+        <members>SABBudgetVarianceServiceTest</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>SABBudgetGuardTrigger</members>
+        <members>SABBudgetLineGuardTrigger</members>
+        <name>ApexTrigger</name>
+    </types>
+    <types>
+        <members>Budget__c.Submitted_At__c</members>
+        <members>Budget__c.Submitted_By__c</members>
+        <name>CustomField</name>
+    </types>
+    <types>
+        <members>SAB_Approve_Budget</members>
+        <members>SAB_Manage_Budget</members>
+        <name>CustomPermission</name>
+    </types>
+    <types>
+        <members>SAB_Approve_Budget_Action</members>
+        <members>SAB_Budget_User</members>
+        <members>SAB_Manage_Budget_Action</members>
+        <name>PermissionSet</name>
+    </types>
+    <version>67.0</version>
+</Package>

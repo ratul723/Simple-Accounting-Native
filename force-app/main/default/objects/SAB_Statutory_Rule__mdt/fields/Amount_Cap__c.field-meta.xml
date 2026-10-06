@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Amount_Cap__c</fullName>
+    <description>Optional maximum deduction or contribution per employee per run.</description>
+    <externalId>false</externalId>
+    <fieldManageability>SubscriberControlled</fieldManageability>
+    <label>Amount Cap</label>
+    <precision>18</precision>
+    <scale>4</scale>
+    <required>false</required>
+    <type>Number</type>
+    <unique>false</unique>
+</CustomField>

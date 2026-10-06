@@ -49,6 +49,8 @@ public without sharing class SABCompanySharingService {
             'Bank_Statement__c',
             'Bank_Reconciliation__c',
             'Goods_Receipt__c',
+            'Purchase_Order__c',
+            'Company_Feature__c',
             'Expense_Claim__c',
             'Payroll_Run__c',
             'Fixed_Asset__c',

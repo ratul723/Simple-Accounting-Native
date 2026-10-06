@@ -3,5 +3,6 @@
     <fullName>Start_Date__c</fullName>
     <description>Simple Accounting Books blueprint field. Source specification: Date</description>
     <label>Start Date</label>
+    <trackHistory>true</trackHistory>
     <type>Date</type>
 </CustomField>

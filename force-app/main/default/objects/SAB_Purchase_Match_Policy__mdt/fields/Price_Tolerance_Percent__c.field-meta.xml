@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Price_Tolerance_Percent__c</fullName>
+    <description>Allowed unit price difference from the purchase order price, 0 to 100 percent.</description>
+    <externalId>false</externalId>
+    <fieldManageability>SubscriberControlled</fieldManageability>
+    <label>Price Tolerance Percent</label>
+    <precision>7</precision>
+    <scale>4</scale>
+    <required>false</required>
+    <type>Number</type>
+    <unique>false</unique>
+</CustomField>

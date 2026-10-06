@@ -1,0 +1,33 @@
+<template>
+    <lightning-card title="Project Financials" icon-name="standard:report">
+        <div class="slds-p-horizontal_medium slds-p-bottom_medium">
+            <div class="filters">
+                <lightning-input type="date" name="fromDate" label="From accounting date" value={fromDate} onchange={handleDateChange} required></lightning-input>
+                <lightning-input type="date" name="toDate" label="To accounting date" value={toDate} min={fromDate} onchange={handleDateChange} required></lightning-input>
+                <lightning-button label="Refresh financials" variant="brand" onclick={refresh} disabled={disabled}></lightning-button>
+            </div>
+            <p class="slds-text-color_weak slds-m-top_small">Accrual basis. Totals include posted revenue and expense lines you can access. Reversals apply on their accounting dates. Draft activity and balance sheet accounts are excluded.</p>
+            <template lwc:if={loading}><div class="loading"><lightning-spinner alternative-text="Loading project financials" size="small"></lightning-spinner></div></template>
+            <template lwc:if={error}><div class="slds-text-color_error slds-m-top_medium" role="alert">{error}</div></template>
+            <template lwc:if={report}>
+                <p class="slds-m-top_medium"><strong>{report.projectName}</strong> · {report.projectCode} · {report.projectStatus}</p>
+                <p class="slds-text-color_weak">All amounts in {report.currencyCode}, the company functional currency.</p>
+                <div class="metrics slds-m-vertical_medium">
+                    <div class="metric"><span>Revenue</span><lightning-formatted-number value={report.revenue} minimum-fraction-digits="2" maximum-fraction-digits="4"></lightning-formatted-number></div>
+                    <div class="metric"><span>Expenses</span><lightning-formatted-number value={report.expense} minimum-fraction-digits="2" maximum-fraction-digits="4"></lightning-formatted-number></div>
+                    <div class="metric"><span>Profit / loss</span><lightning-formatted-number value={report.profit} minimum-fraction-digits="2" maximum-fraction-digits="4"></lightning-formatted-number></div>
+                    <div class="metric"><span>Profit margin</span><div><template lwc:if={hasMargin}><lightning-formatted-number value={report.marginPercent} minimum-fraction-digits="2" maximum-fraction-digits="2"></lightning-formatted-number>%</template><template lwc:else>—</template></div></div>
+                </div>
+                <template lwc:if={hasLines}>
+                    <h2 class="slds-text-heading_small slds-m-bottom_small">Account totals</h2>
+                    <lightning-datatable key-field="accountId" data={report.accounts} columns={accountColumns} hide-checkbox-column></lightning-datatable>
+                    <h2 class="slds-text-heading_small slds-m-top_large slds-m-bottom_small">Ledger detail</h2>
+                    <p class="slds-m-bottom_small">Showing {displayedCount} lines. Report contained {report.lineCount} lines when refreshed.</p>
+                    <lightning-datatable key-field="lineId" data={lines} columns={ledgerColumns} onrowaction={handleRowAction} hide-checkbox-column></lightning-datatable>
+                    <template lwc:if={hasMore}><lightning-button class="slds-m-top_medium" label="Load more lines" onclick={loadMore} disabled={disabled}></lightning-button></template>
+                </template>
+                <template lwc:else><p class="slds-m-top_medium" role="status">No accessible posted revenue or expense activity for this date range.</p></template>
+            </template>
+        </div>
+    </lightning-card>
+</template>

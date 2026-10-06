@@ -858,6 +858,14 @@ public with sharing class SABEmployeeCompensationService {
         if (request.amount == null && String.isBlank(request.formulaParameterJson)) {
             throw new EmployeeCompensationException('Provide an amount or supported formula parameters.');
         }
+        // G10I: formula parameters are validated with the payroll rule engine when saved, not only at calculation.
+        if (!String.isBlank(request.formulaParameterJson)) {
+            try {
+                SABPayrollRuleEngine.parseFormula(request.formulaParameterJson.trim());
+            } catch (SABPayrollRuleEngine.RuleException ex) {
+                throw new EmployeeCompensationException(ex.getMessage());
+            }
+        }
         if (String.isBlank(request.currencyCode)) {
             throw new EmployeeCompensationException('Currency is required.');
         }

@@ -7,5 +7,6 @@
     <referenceTo>User</referenceTo>
     <relationshipLabel>Project Manager</relationshipLabel>
     <relationshipName>Project_Manager</relationshipName>
+    <trackHistory>true</trackHistory>
     <type>Lookup</type>
 </CustomField>

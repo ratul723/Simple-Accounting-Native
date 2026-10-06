@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <customPermissions>
+        <enabled>true</enabled>
+        <name>SAB_Manage_Budget</name>
+    </customPermissions>
+    <description>G13: create, edit, submit and revise budgets. Requires SAB Budget User.</description>
+    <hasActivationRequired>false</hasActivationRequired>
+    <label>SAB Manage Budget Action</label>
+</PermissionSet>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>G10I: statutory payroll deduction and employer contribution rules, keyed by Pay_Component__c.Country_Rule_Key__c. Country packs ship records; subscribers may maintain their own.</description>
+    <label>SAB Statutory Rule</label>
+    <pluralLabel>SAB Statutory Rules</pluralLabel>
+    <visibility>Public</visibility>
+</CustomObject>

@@ -8,5 +8,6 @@
     <relationshipLabel>Project Company</relationshipLabel>
     <relationshipName>Project_Company</relationshipName>
     <required>true</required>
+    <trackHistory>true</trackHistory>
     <type>Lookup</type>
 </CustomField>

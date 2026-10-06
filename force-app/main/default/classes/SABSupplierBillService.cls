@@ -853,6 +853,16 @@ public with sharing class SABSupplierBillService {
             result
         );
 
+        // G12: two- and three-way match of purchase order / goods receipt linked lines.
+        for (String matchError : SABPurchaseMatchingService.validateBillLines(
+            bill,
+            context.lines
+        )) {
+            result.addError(
+                matchError
+            );
+        }
+
         return result;
     }
 

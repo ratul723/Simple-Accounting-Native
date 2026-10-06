@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Submitted_By__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <description>G13: stamped by SABBudgetService on submission; changes only through the budget service.</description>
+    <label>Submitted By</label>
+    <referenceTo>User</referenceTo>
+    <relationshipLabel>Budgets Submitted</relationshipLabel>
+    <relationshipName>SAB_Budget_Submitted_By</relationshipName>
+    <required>false</required>
+    <type>Lookup</type>
+</CustomField>

@@ -3,6 +3,7 @@
     <fullName>Status__c</fullName>
     <description>Simple Accounting Books blueprint field. Source specification: Picklist (`Planned`, `Active`, `Complete`, `Cancelled`)</description>
     <label>Status</label>
+    <trackHistory>true</trackHistory>
     <type>Picklist</type>
     <valueSet>
         <restricted>true</restricted>
@@ -10,7 +11,7 @@
             <sorted>false</sorted>
             <value>
                 <fullName>Planned</fullName>
-                <default>false</default>
+                <default>true</default>
                 <label>Planned</label>
             </value>
             <value>

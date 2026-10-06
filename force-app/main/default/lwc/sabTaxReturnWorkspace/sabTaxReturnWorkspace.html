@@ -1,0 +1,183 @@
+<template>
+    <lightning-card title="Tax Return Workspace" icon-name="standard:contract">
+        <div class="workspace">
+            <template lwc:if={hasCompany}>
+                <div class="header-row">
+                    <div>
+                        <h2 class="company-name">{companyName}</h2>
+                        <p>Functional Currency: {functionalCurrency}</p>
+                    </div>
+                    <lightning-button label="Refresh" icon-name="utility:refresh" onclick={handleRefresh}
+                        disabled={isLoading}></lightning-button>
+                </div>
+
+                <template lwc:if={isLoading}>
+                    <lightning-spinner alternative-text="Loading tax returns" size="medium"></lightning-spinner>
+                </template>
+
+                <template lwc:if={errorMessage}>
+                    <div class="error-banner" role="alert">{errorMessage}</div>
+                </template>
+
+                <template lwc:if={hasWorkspace}>
+                    <div class="summary-grid">
+                        <template for:each={stateCounts} for:item="item">
+                            <div key={item.state} class="metric-card">
+                                <span>{item.state}</span>
+                                <strong>{item.count}</strong>
+                            </div>
+                        </template>
+                        <div class="metric-card emphasized">
+                            <span>Net Tax Due (reviewed and submitted)</span>
+                            <strong><lightning-formatted-number value={openNetTaxDue}
+                                minimum-fraction-digits="2"></lightning-formatted-number></strong>
+                        </div>
+                    </div>
+
+                    <lightning-tabset>
+                        <lightning-tab label="Tax Returns">
+                            <div class="panel">
+                                <h3>Prepare a return</h3>
+                                <template lwc:if={hasRegistrations}>
+                                    <div class="form-row">
+                                        <lightning-combobox label="Tax registration" options={registrations}
+                                            value={registrationId} data-field="registrationId"
+                                            onchange={handleFieldChange}></lightning-combobox>
+                                        <lightning-input type="date" label="Period start" value={periodStart}
+                                            data-field="periodStart" onchange={handleFieldChange}></lightning-input>
+                                        <lightning-input type="date" label="Period end" value={periodEnd}
+                                            data-field="periodEnd" onchange={handleFieldChange}></lightning-input>
+                                        <lightning-button class="prepare" label="Prepare" variant="brand"
+                                            onclick={handlePrepare} disabled={prepareDisabled}></lightning-button>
+                                    </div>
+                                    <p class="hint">Preparing again rebuilds a Draft or Prepared return from posted tax
+                                        lines and keeps manual adjustments.</p>
+                                </template>
+                                <template lwc:else>
+                                    <p class="empty-state">No active tax registrations for this company.</p>
+                                </template>
+                            </div>
+                            <div class="panel">
+                                <h3>Returns</h3>
+                                <template lwc:if={hasReturns}>
+                                    <lightning-datatable key-field="taxReturnId" data={returns} columns={returnColumns}
+                                        max-row-selection="1" selected-rows={selectedRows}
+                                        onrowselection={handleReturnSelection}></lightning-datatable>
+                                </template>
+                                <template lwc:else>
+                                    <p class="empty-state">No tax returns for this company yet.</p>
+                                </template>
+                            </div>
+                        </lightning-tab>
+
+                        <lightning-tab label="Return Detail">
+                            <template lwc:if={hasSelectedReturn}>
+                                <div class="panel">
+                                    <h3>{taxReturn.name}: {taxReturn.status} (version {taxReturn.returnVersion})</h3>
+                                    <p>{taxReturn.registrationName} · {taxReturn.periodStart} to {taxReturn.periodEnd}
+                                        · Country pack {taxReturn.countryPackVersion}</p>
+                                    <p class="hint">{lockedLabel}</p>
+                                    <template lwc:if={taxReturn.filingReference}>
+                                        <p>Filing reference: {taxReturn.filingReference}</p>
+                                    </template>
+                                    <template lwc:if={taxReturn.acknowledgementReference}>
+                                        <p>Acknowledgement: {taxReturn.acknowledgementReference}</p>
+                                    </template>
+                                    <template lwc:if={taxReturn.amendsTaxReturnName}>
+                                        <p>Amends: {taxReturn.amendsTaxReturnName}</p>
+                                    </template>
+                                </div>
+
+                                <div class="panel">
+                                    <h3>Return boxes</h3>
+                                    <lightning-datatable key-field="boxKey" data={lines} columns={lineColumns}
+                                        hide-checkbox-column></lightning-datatable>
+                                </div>
+
+                                <template lwc:if={isAdjustable}>
+                                    <div class="panel action-panel">
+                                        <h3>Manual adjustment</h3>
+                                        <div class="form-row">
+                                            <lightning-combobox label="Box" options={boxOptions} value={adjustmentBox}
+                                                data-field="adjustmentBox" onchange={handleFieldChange}></lightning-combobox>
+                                            <lightning-input type="number" label="Adjustment amount" step="0.01"
+                                                value={adjustmentAmount} data-field="adjustmentAmount"
+                                                onchange={handleFieldChange}></lightning-input>
+                                            <lightning-button class="adjust" label="Save Adjustment" onclick={handleAdjust}
+                                                disabled={adjustDisabled}></lightning-button>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <div class="panel action-panel">
+                                    <lightning-input label="Reason (recorded in the audit history)" value={reason}
+                                        max-length="255" data-field="reason" onchange={handleFieldChange}></lightning-input>
+
+                                    <template lwc:if={isPrepared}>
+                                        <p class="hint">Review locks the return to its source tax lines.</p>
+                                        <lightning-button class="review" label="Review and Lock" variant="brand"
+                                            onclick={handleReview} disabled={reviewDisabled}></lightning-button>
+                                    </template>
+
+                                    <template lwc:if={isReviewed}>
+                                        <div class="form-row">
+                                            <lightning-input label="Filing reference" value={filingReference}
+                                                max-length={filingMaxLength} data-field="filingReference"
+                                                onchange={handleFieldChange}></lightning-input>
+                                            <lightning-button class="submit" label="Submit" variant="brand"
+                                                onclick={handleSubmit} disabled={submitDisabled}></lightning-button>
+                                        </div>
+                                    </template>
+
+                                    <template lwc:if={isSubmitted}>
+                                        <div class="form-row">
+                                            <lightning-combobox label="Authority outcome" options={outcomeOptions}
+                                                value={outcome} data-field="outcome"
+                                                onchange={handleFieldChange}></lightning-combobox>
+                                            <lightning-input label="Acknowledgement reference"
+                                                value={acknowledgementReference} max-length={acknowledgementMaxLength}
+                                                data-field="acknowledgementReference"
+                                                onchange={handleFieldChange}></lightning-input>
+                                            <lightning-button class="outcome" label="Record Outcome" variant="brand"
+                                                onclick={handleOutcome} disabled={outcomeDisabled}></lightning-button>
+                                        </div>
+                                    </template>
+
+                                    <template lwc:if={isAmendable}>
+                                        <p class="hint">An amendment creates a new version and needs a reason; the original
+                                            becomes Amended.</p>
+                                        <lightning-button class="amend" label="Create Amendment" variant="destructive"
+                                            onclick={handleAmend} disabled={amendDisabled}></lightning-button>
+                                    </template>
+                                </div>
+
+                                <template lwc:if={hasOtherVersions}>
+                                    <div class="panel">
+                                        <h3>Versions for this period</h3>
+                                        <lightning-datatable key-field="taxReturnId" data={versions} columns={versionColumns}
+                                            max-row-selection="1" selected-rows={selectedRows}
+                                            onrowselection={handleVersionSelection}></lightning-datatable>
+                                    </div>
+                                </template>
+
+                                <template lwc:if={hasHistory}>
+                                    <div class="panel">
+                                        <h3>Audit history</h3>
+                                        <lightning-datatable key-field="rowKey" data={history} columns={historyColumns}
+                                            hide-checkbox-column></lightning-datatable>
+                                    </div>
+                                </template>
+                            </template>
+                            <template lwc:else>
+                                <p class="empty-state">Select a tax return on the Tax Returns tab.</p>
+                            </template>
+                        </lightning-tab>
+                    </lightning-tabset>
+                </template>
+            </template>
+            <template lwc:else>
+                <div class="empty-state">Select an Accounting Company from the SAB Company Context Selector.</div>
+            </template>
+        </div>
+    </lightning-card>
+</template>

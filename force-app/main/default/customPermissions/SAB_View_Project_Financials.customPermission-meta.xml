@@ -1,0 +1,2 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomPermission xmlns="http://soap.sforce.com/2006/04/metadata"><description>View accessible project financials within actively authorized accounting companies.</description><isLicensed>false</isLicensed><label>View Project Financials</label></CustomPermission>

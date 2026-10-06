@@ -1,0 +1,6 @@
+.filters { display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end; }
+.filters lightning-input { min-width: 12rem; }
+.metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: 1rem; }
+.metric { padding: 1rem; border: 1px solid #c9c9c9; border-radius: 0.25rem; font-size: 1.25rem; }
+.metric > span { display: block; margin-bottom: 0.5rem; font-size: 0.875rem; }
+.loading { position: relative; height: 3rem; }

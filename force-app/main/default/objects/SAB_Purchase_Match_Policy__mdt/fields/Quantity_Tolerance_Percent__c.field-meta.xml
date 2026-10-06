@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Quantity_Tolerance_Percent__c</fullName>
+    <description>Allowed over-receipt and over-billing above ordered or received quantity, 0 to 100 percent.</description>
+    <externalId>false</externalId>
+    <fieldManageability>SubscriberControlled</fieldManageability>
+    <label>Quantity Tolerance Percent</label>
+    <precision>7</precision>
+    <scale>4</scale>
+    <required>false</required>
+    <type>Number</type>
+    <unique>false</unique>
+</CustomField>

@@ -95,9 +95,19 @@ private class SABPayrollCalculationServiceTest {
         catch(SABPayrollCalculationService.PayrollException ex){rejected++;System.assert(ex.getMessage().contains('key'));}
         Test.stopTest();System.assertEquals(2,rejected);
     }
-    @IsTest static void rejectsPartialEmployment(){
+    // G10I replaced the G10B rejection: a mid-period start is prorated by calendar days (22 of 31).
+    @IsTest static void proratesPartialEmployment(){
         Employment__c e=[SELECT Id,Start_Date__c FROM Employment__c LIMIT 1];e.Start_Date__c=Date.newInstance(2026,10,10);update e;
-        Id runId=draft('PARTEMP');Test.startTest();rejectsCalculation(runId,new List<Id>{e.Id},2,'complete pay period');Test.stopTest();
+        Id runId=draft('PARTEMP');Test.startTest();SABPayrollCalculationService.calculate(runId,new List<Id>{e.Id},2);Test.stopTest();
+        Payroll_Line__c line=[SELECT Gross_Amount__c,Deduction_Amount__c,Net_Amount__c FROM Payroll_Line__c WHERE Payroll_Run__c=:runId];
+        System.assertEquals(7451.61,line.Gross_Amount__c,'Basic 7,096.77 plus food 354.84 for 22 of 31 days.');
+        System.assertEquals(709.68,line.Deduction_Amount__c,'Fixed deduction is prorated too.');
+        System.assertEquals(2,[SELECT COUNT() FROM Payroll_Component_Line__c WHERE Payroll_Line__r.Payroll_Run__c=:runId
+            AND Rule_Version__c='G10I_PRORATED_V1' AND Component_Category__c IN ('Basic Salary','Food Allowance')],'Prorated rule version is recorded.');
+    }
+    @IsTest static void rejectsEmploymentOutsidePeriod(){
+        Employment__c e=[SELECT Id,Start_Date__c FROM Employment__c LIMIT 1];e.Start_Date__c=Date.newInstance(2026,11,1);update e;
+        Id runId=draft('OUTSIDE');Test.startTest();rejectsCalculation(runId,new List<Id>{e.Id},2,'does not overlap');Test.stopTest();
     }
     @IsTest static void rejectsInactiveComponent(){
         Pay_Component__c p=[SELECT Id,Is_Active__c FROM Pay_Component__c LIMIT 1];p.Is_Active__c=false;update p;
@@ -105,15 +115,19 @@ private class SABPayrollCalculationServiceTest {
     }
     @IsTest static void rejectsFormula(){
         Employee_Pay_Component__c a=[SELECT Id,Formula_Parameter_JSON__c FROM Employee_Pay_Component__c LIMIT 1];a.Formula_Parameter_JSON__c='{"rate":1}';update a;
-        Id r=draft('FORMULA');Test.startTest();rejectsCalculation(r,new List<Id>{employmentId()},2,'fixed amounts');Test.stopTest();
+        Id r=draft('FORMULA');Test.startTest();rejectsCalculation(r,new List<Id>{employmentId()},2,'formula type');Test.stopTest();
     }
     @IsTest static void rejectsCurrencyMismatch(){
         Employee_Pay_Component__c a=[SELECT Id,Currency__c FROM Employee_Pay_Component__c LIMIT 1];a.Currency__c='USD';update a;
         Id r=draft('CURRENCY');Test.startTest();rejectsCalculation(r,new List<Id>{employmentId()},2,'currency');Test.stopTest();
     }
-    @IsTest static void rejectsPartialAssignment(){
-        Employee_Pay_Component__c a=[SELECT Id,Effective_From__c FROM Employee_Pay_Component__c LIMIT 1];a.Effective_From__c=Date.newInstance(2026,10,10);update a;
-        Id r=draft('PARTASSIGN');Test.startTest();rejectsCalculation(r,new List<Id>{employmentId()},2,'proration');Test.stopTest();
+    // G10I replaced the G10B rejection: compensation starting mid-period is prorated over its own days.
+    @IsTest static void proratesPartialAssignment(){
+        Employee_Pay_Component__c a=[SELECT Id,Effective_From__c FROM Employee_Pay_Component__c WHERE Pay_Component__r.Category__c='Basic Salary' LIMIT 1];
+        a.Effective_From__c=Date.newInstance(2026,10,10);update a;
+        Id r=draft('PARTASSIGN');Test.startTest();SABPayrollCalculationService.calculate(r,new List<Id>{employmentId()},2);Test.stopTest();
+        System.assertEquals(7596.77,[SELECT Gross_Amount__c FROM Payroll_Line__c WHERE Payroll_Run__c=:r].Gross_Amount__c,
+            'Basic 7,096.77 for 22 days plus the full 500 food allowance.');
     }
     @IsTest static void rejectsMissingApprovedCompensation(){
         List<Employee_Pay_Component__c> rows=[SELECT Id,Status__c FROM Employee_Pay_Component__c];

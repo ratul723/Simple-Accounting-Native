@@ -1,0 +1,86 @@
+.workspace {
+    padding: 0 1rem 1rem;
+    position: relative;
+}
+
+.header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.company-name {
+    font-size: 1.125rem;
+    font-weight: 600;
+}
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.metric-card {
+    display: flex;
+    flex-direction: column;
+    padding: 0.75rem;
+    border: 1px solid var(--slds-g-color-border-base-1, #d8dde6);
+    border-radius: 0.25rem;
+}
+
+.metric-card strong {
+    font-size: 1.25rem;
+}
+
+.metric-card.emphasized {
+    border-color: var(--slds-g-color-brand-base-50, #0176d3);
+}
+
+.panel {
+    margin-top: 1rem;
+    padding: 0.75rem;
+    border: 1px solid var(--slds-g-color-border-base-1, #d8dde6);
+    border-radius: 0.25rem;
+}
+
+.panel h3 {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.form-row,
+.button-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 0.75rem;
+}
+
+.button-row {
+    margin-top: 0.75rem;
+}
+
+.error-banner {
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+    border-radius: 0.25rem;
+    color: var(--slds-g-color-error-base-40, #ba0517);
+    background: var(--slds-g-color-error-base-95, #fef1ee);
+}
+
+.empty-state {
+    padding: 1rem 0;
+    color: var(--slds-g-color-neutral-base-50, #747474);
+}
+
+.hint {
+    margin-top: 0.5rem;
+    color: var(--slds-g-color-neutral-base-50, #747474);
+    font-size: 0.75rem;
+}
+
+.action-panel lightning-button {
+    margin-top: 0.5rem;
+}

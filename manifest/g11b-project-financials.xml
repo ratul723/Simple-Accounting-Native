@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types><members>SABProjectFinancialService</members><members>SABProjectFinancialServiceTest</members><name>ApexClass</name></types>
+    <types><members>SAB_View_Project_Financials</members><name>CustomPermission</name></types>
+    <types><members>SAB_Project_Financials_User</members><name>PermissionSet</name></types>
+    <types><members>sabProjectFinancials</members><name>LightningComponentBundle</name></types>
+    <version>67.0</version>
+</Package>

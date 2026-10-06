@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>SABEmployeeCompensationService</members>
+        <members>SABEmployeeCompensationServiceTest</members>
+        <members>SABPayrollCalculationService</members>
+        <members>SABPayrollCalculationServiceTest</members>
+        <members>SABPayrollRuleEngine</members>
+        <members>SABPayrollRuleEngineTest</members>
+        <members>SABPayrollRulesCalculationTest</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>Accounting_Company__c.Country_Code__c</members>
+        <members>SAB_Statutory_Rule__mdt.Amount_Cap__c</members>
+        <members>SAB_Statutory_Rule__mdt.Bands__c</members>
+        <members>SAB_Statutory_Rule__mdt.Basis_Categories__c</members>
+        <members>SAB_Statutory_Rule__mdt.Basis_Ceiling__c</members>
+        <members>SAB_Statutory_Rule__mdt.Country_Code__c</members>
+        <members>SAB_Statutory_Rule__mdt.Effective_From__c</members>
+        <members>SAB_Statutory_Rule__mdt.Effective_To__c</members>
+        <members>SAB_Statutory_Rule__mdt.Is_Active__c</members>
+        <members>SAB_Statutory_Rule__mdt.Method__c</members>
+        <members>SAB_Statutory_Rule__mdt.Rate_Percent__c</members>
+        <members>SAB_Statutory_Rule__mdt.Rule_Key__c</members>
+        <members>SAB_Statutory_Rule__mdt.Rule_Version__c</members>
+        <name>CustomField</name>
+    </types>
+    <types>
+        <members>SAB_Statutory_Rule__mdt</members>
+        <name>CustomObject</name>
+    </types>
+    <version>67.0</version>
+</Package>

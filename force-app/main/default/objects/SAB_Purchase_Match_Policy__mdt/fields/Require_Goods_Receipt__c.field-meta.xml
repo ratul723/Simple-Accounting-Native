@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Require_Goods_Receipt__c</fullName>
+    <defaultValue>true</defaultValue>
+    <description>Three-way match: billed quantity cannot exceed received quantity.</description>
+    <externalId>false</externalId>
+    <fieldManageability>SubscriberControlled</fieldManageability>
+    <label>Require Goods Receipt</label>
+    <type>Checkbox</type>
+</CustomField>

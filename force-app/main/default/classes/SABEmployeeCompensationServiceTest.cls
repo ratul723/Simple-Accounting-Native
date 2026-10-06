@@ -594,7 +594,8 @@ private class SABEmployeeCompensationServiceTest {
             SABEmployeeCompensationService.AssignmentRequest r=new SABEmployeeCompensationService.AssignmentRequest();
             r.assignmentId=assignment.Id; r.employmentId=employment.Id; r.payComponentId=component.Id;
             r.amount=200; r.currencyCode=' bdt '; r.effectiveFrom=assignment.Effective_From__c;
-            r.formulaParameterJson='{"rate":200}';
+            // G10I: formula parameters are validated when saved; this is the smallest valid formula.
+            r.formulaParameterJson='{"type":"DAILY_RATE","rate":200}';
             Test.startTest();
             System.assertEquals(assignment.Id,SABEmployeeCompensationService.createOrUpdateAssignment(r));
             SABEmployeeCompensationService.approveAssignment(assignment.Id);
