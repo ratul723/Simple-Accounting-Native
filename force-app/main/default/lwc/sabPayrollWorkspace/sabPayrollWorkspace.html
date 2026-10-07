@@ -37,27 +37,30 @@
                     <lightning-tabset>
                         <lightning-tab label="Payroll Runs">
                             <div class="panel">
-                                <h3>New payroll run</h3>
-                                <div class="form-row">
-                                    <lightning-input type="date" label="Period start" value={newRunStart}
-                                        onchange={handleNewRunStart}></lightning-input>
-                                    <lightning-input type="date" label="Period end" value={newRunEnd}
-                                        data-field="newRunEnd" onchange={handleFieldChange}></lightning-input>
-                                    <lightning-input label="Run key" value={newRunKey} max-length="180"
-                                        data-field="newRunKey" onchange={handleFieldChange}></lightning-input>
-                                    <lightning-button class="create-draft" label="Create Draft" variant="brand"
-                                        onclick={handleCreateDraft} disabled={createDisabled}></lightning-button>
+                                <div class="section-header">
+                                    <div>
+                                        <h3>Payroll runs</h3>
+                                        <p class="section-subtitle">Create and manage payroll runs for the selected Accounting Company.</p>
+                                    </div>
+                                    <lightning-button class="new-run" label="New Payroll Run" icon-name="utility:add"
+                                        variant="brand" onclick={handleOpenNewRun}
+                                        disabled={newRunButtonDisabled}></lightning-button>
                                 </div>
-                            </div>
-                            <div class="panel">
-                                <h3>Payroll runs</h3>
+
                                 <template lwc:if={hasRuns}>
                                     <lightning-datatable key-field="runId" data={runs} columns={runColumns}
                                         max-row-selection="1" selected-rows={selectedRunRows}
                                         onrowselection={handleRunSelection}></lightning-datatable>
                                 </template>
                                 <template lwc:else>
-                                    <p class="empty-state">No payroll runs for this company yet.</p>
+                                    <div class="empty-state payroll-empty-state">
+                                        <lightning-icon icon-name="standard:work_order" size="small"
+                                            alternative-text="Payroll runs"></lightning-icon>
+                                        <div>
+                                            <strong>No payroll runs for this company yet.</strong>
+                                            <p>Create a Draft payroll run to start the payroll lifecycle.</p>
+                                        </div>
+                                    </div>
                                 </template>
                             </div>
                         </lightning-tab>
@@ -239,9 +242,11 @@
                                     <lightning-datatable key-field="assignmentId" data={pendingAssignments}
                                         columns={assignmentColumns} max-row-selection="1"
                                         onrowselection={handleAssignmentSelection}></lightning-datatable>
-                                    <lightning-button class="approve-assignment" label="Approve Compensation"
-                                        variant="brand" onclick={handleApproveAssignment}
-                                        disabled={approveAssignmentDisabled}></lightning-button>
+                                    <div class="button-row">
+                                        <lightning-button class="approve-assignment" label="Approve Compensation"
+                                            variant="brand" onclick={handleApproveAssignment}
+                                            disabled={approveAssignmentDisabled}></lightning-button>
+                                    </div>
                                 </div>
                                 <div class="panel">
                                     <h3>Benefit awards</h3>
@@ -260,6 +265,90 @@
                             </template>
                         </lightning-tab>
                     </lightning-tabset>
+
+                    <template lwc:if={showNewRunModal}>
+                        <section role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="new-payroll-run-heading"
+                            class="slds-modal slds-fade-in-open">
+                            <div class="slds-modal__container new-run-modal">
+                                <header class="slds-modal__header">
+                                    <lightning-button-icon icon-name="utility:close" alternative-text="Close"
+                                        title="Close" variant="bare-inverse" class="slds-modal__close"
+                                        onclick={handleCloseNewRun}></lightning-button-icon>
+                                    <h2 id="new-payroll-run-heading" class="slds-text-heading_medium">New Payroll Run</h2>
+                                    <p class="modal-subtitle">Create a Draft payroll run. Employees are selected and calculated after the Draft is created.</p>
+                                </header>
+
+                                <div class="slds-modal__content slds-p-around_medium">
+                                    <div class="context-grid">
+                                        <div class="context-item">
+                                            <span class="context-label">Accounting Company</span>
+                                            <strong>{companyName}</strong>
+                                        </div>
+                                        <div class="context-item">
+                                            <span class="context-label">Functional Currency</span>
+                                            <strong>{functionalCurrency}</strong>
+                                        </div>
+                                        <div class="context-item">
+                                            <span class="context-label">Active Employments</span>
+                                            <strong>{eligibleEmploymentCount}</strong>
+                                        </div>
+                                        <div class="context-item">
+                                            <span class="context-label">Payroll Run Name</span>
+                                            <strong>Assigned automatically</strong>
+                                        </div>
+                                        <div class="context-item">
+                                            <span class="context-label">Workflow State</span>
+                                            <strong>Draft</strong>
+                                        </div>
+                                        <div class="context-item">
+                                            <span class="context-label">Version</span>
+                                            <strong>1</strong>
+                                        </div>
+                                    </div>
+
+                                    <div class="modal-section">
+                                        <h3>Payroll period</h3>
+                                        <p class="section-subtitle">Define the period covered by this payroll run.</p>
+                                        <div class="modal-form-grid">
+                                            <lightning-input type="date" label="Period start" value={newRunStart}
+                                                onchange={handleNewRunStart} required></lightning-input>
+                                            <lightning-input type="date" label="Period end" value={newRunEnd}
+                                                data-field="newRunEnd" onchange={handleFieldChange} required></lightning-input>
+                                        </div>
+
+                                        <template lwc:if={newRunDateInvalid}>
+                                            <div class="inline-error" role="alert">
+                                                Period end must be on or after Period start.
+                                            </div>
+                                        </template>
+                                    </div>
+
+                                    <div class="modal-section readiness-section">
+                                        <h3>Before you create the Draft</h3>
+                                        <div class="readiness-row">
+                                            <lightning-icon icon-name="utility:success" size="x-small"
+                                                alternative-text="Ready"></lightning-icon>
+                                            <span>{eligibleEmploymentCount} active employments are available for selection during calculation.</span>
+                                        </div>
+                                        <div class="readiness-row">
+                                            <lightning-icon icon-name="utility:info" size="x-small"
+                                                alternative-text="Information"></lightning-icon>
+                                            <span>Compensation, award, overlap and security checks remain enforced by the existing payroll services when you calculate the run.</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <footer class="slds-modal__footer">
+                                    <lightning-button label="Cancel" onclick={handleCloseNewRun}
+                                        disabled={isLoading}></lightning-button>
+                                    <lightning-button class="create-draft" label="Create Draft Payroll"
+                                        variant="brand" onclick={handleCreateDraft}
+                                        disabled={createDisabled}></lightning-button>
+                                </footer>
+                            </div>
+                        </section>
+                        <div class="slds-backdrop slds-backdrop_open"></div>
+                    </template>
                 </template>
             </template>
             <template lwc:else>

@@ -1,0 +1,7 @@
+Invoice__c,Line_Number__c,Description__c,Revenue_Account__c,Quantity__c,Unit_Price__c,Net_Amount__c,Discount_Amount__c
+HH-INV-0001,1,Product sales - batch A,HH-4000,20,150,3000,0
+HH-INV-0002,1,Consulting services,HH-4100,40,95,3800,0
+HH-INV-0003,1,Product sales - batch B,HH-4000,50,60,3000,0
+HH-INV-0003,2,Delivery and handling,HH-4100,1,250,250,0
+HH-INV-0004,1,Electronics order,HH-4000,8,450,3600,0
+HH-INV-0005,1,Annual support plan,HH-4100,1,2400,2400,0

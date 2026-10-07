@@ -1,0 +1,7 @@
+Supplier_Bill__c,Line_Number__c,Description__c,Expense_or_Asset_Account__c,Quantity__c,Unit_Price__c,Net_Amount__c
+HH-BILL-001,1,Printer paper and stationery,HH-6300,10,45,450
+HH-BILL-001,2,Toner cartridges,HH-6300,4,85,340
+HH-BILL-002,1,Cloud hosting - October,HH-6200,1,1200,1200
+HH-BILL-003,1,Office rent - October,HH-6100,1,1500,1500
+HH-BILL-004,1,Electricity - September,HH-6200,1,640,640
+HH-BILL-005,1,Office desks,HH-1520,6,320,1920

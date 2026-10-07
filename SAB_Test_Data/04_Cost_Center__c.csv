@@ -1,0 +1,6 @@
+Name,Code__c,Company_Cost_Center_Key__c,Company__c,Is_Active__c,Active_From__c
+Head Office,CC-100,HH-CC-100,com2,true,2026-01-01
+Finance Cost Center,CC-200,HH-CC-200,com2,true,2026-01-01
+Sales Cost Center,CC-300,HH-CC-300,com2,true,2026-01-01
+Operations Cost Center,CC-400,HH-CC-400,com2,true,2026-01-01
+IT Cost Center,CC-500,HH-CC-500,com2,true,2026-01-01

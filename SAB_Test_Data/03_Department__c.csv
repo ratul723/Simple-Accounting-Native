@@ -1,0 +1,6 @@
+Name,Code__c,Company_Department_Key__c,Company__c,Is_Active__c,Active_From__c
+Finance,FIN,HH-FIN,com2,true,2026-01-01
+Human Resources,HR,HH-HR,com2,true,2026-01-01
+Sales,SALES,HH-SALES,com2,true,2026-01-01
+Operations,OPS,HH-OPS,com2,true,2026-01-01
+Information Technology,IT,HH-IT,com2,true,2026-01-01

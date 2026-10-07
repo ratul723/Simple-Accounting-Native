@@ -65,15 +65,29 @@
                     </div>
                 </div>
 
-                <div class="posted-picker slds-m-bottom_medium">
-                    <lightning-combobox
-                        name="postedJournal"
-                        label="Posted Journal to Review / Reverse"
-                        value={selectedPostedId}
-                        options={postedOptions}
-                        placeholder="Select a Posted Journal"
-                        onchange={handlePostedChange}
-                    ></lightning-combobox>
+                <div class="journal-picker-grid slds-m-bottom_medium">
+                    <div class="posted-picker">
+                        <lightning-combobox
+                            name="postedJournal"
+                            label="Posted Journal to Review / Reverse"
+                            value={selectedPostedId}
+                            options={postedOptions}
+                            placeholder="Select a Posted Journal"
+                            onchange={handlePostedChange}
+                        ></lightning-combobox>
+                    </div>
+                    <template if:true={canReverseJournal}>
+                        <div class="posted-picker">
+                            <lightning-combobox
+                                name="reversedJournal"
+                                label="Reversed Journal to Review / Correct"
+                                value={selectedReversedId}
+                                options={reversedOptions}
+                                placeholder="Select a Reversed Journal"
+                                onchange={handleReversedChange}
+                            ></lightning-combobox>
+                        </div>
+                    </template>
                 </div>
 
                 <div class="summary-bar slds-m-bottom_medium">
@@ -335,7 +349,7 @@
                         <div class="section-heading">
                             <div>
                                 <h2 id="reversal-panel-heading" class="slds-text-heading_small">
-                                    Reverse Posted Journal
+                                    Journal Reversal &amp; Correction
                                 </h2>
                                 <p class="slds-text-body_small slds-text-color_weak">
                                     A reversal creates and posts a new Journal with opposite financial lines. The original Journal is never edited.
@@ -343,7 +357,7 @@
                             </div>
                         </div>
 
-                        <template if:true={isPosted}>
+                        <template if:true={canShowReverseForm}>
                             <div class="slds-grid slds-wrap slds-gutters">
                                 <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-3">
                                     <lightning-combobox
@@ -387,6 +401,37 @@
                                     onclick={handleReverse}
                                     disabled={reverseDisabled}
                                 ></lightning-button>
+                            </div>
+                        </template>
+
+                        <template if:true={showCorrectionActions}>
+                            <div class="correction-actions slds-m-top_medium">
+                                <div>
+                                    <h3 class="slds-text-heading_small">Correction actions</h3>
+                                    <p class="slds-text-body_small slds-text-color_weak">
+                                        The original and reversal remain immutable. A corrected Manual Journal is a new Draft.
+                                    </p>
+                                </div>
+                                <div class="correction-buttons slds-m-top_small">
+                                    <lightning-button
+                                        label="View Reversal"
+                                        icon-name="utility:preview"
+                                        onclick={handleViewReversal}
+                                        disabled={viewReversalDisabled}
+                                    ></lightning-button>
+                                    <lightning-button
+                                        variant="brand"
+                                        label="Create Corrected Journal"
+                                        icon-name="utility:copy"
+                                        onclick={handleCreateCorrectedJournal}
+                                        disabled={createCorrectionDisabled}
+                                    ></lightning-button>
+                                </div>
+                                <template if:false={isManualJournal}>
+                                    <p class="correction-note slds-m-top_small">
+                                        This is not a Manual Journal. Correct the source transaction in its owning module instead of creating a manual correction.
+                                    </p>
+                                </template>
                             </div>
                         </template>
 

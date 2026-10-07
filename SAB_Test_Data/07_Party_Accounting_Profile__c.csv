@@ -1,0 +1,11 @@
+Name,Account__c,Company__c,Profile_Key__c,Is_Customer__c,Is_Supplier__c,Is_Active__c,AR_Control_Account__c,AP_Control_Account__c,Payment_Term__c,Credit_Limit__c,Preferred_Payment_Method__c,Tax_Registration_Number__c
+Northwind Traders (Customer),Northwind Traders,com2,HH-CUST-001,true,false,true,HH-1100,,HH-NET30,50000,Bank Transfer,TRN-C100001
+Bluewave Retail (Customer),Bluewave Retail,com2,HH-CUST-002,true,false,true,HH-1100,,HH-NET15,25000,Bank Transfer,TRN-C100002
+Greenfield Foods (Customer),Greenfield Foods,com2,HH-CUST-003,true,false,true,HH-1100,,HH-NET45,30000,Bank Transfer,TRN-C100003
+Sunrise Electronics (Customer),Sunrise Electronics,com2,HH-CUST-004,true,false,true,HH-1100,,HH-NET30,40000,Bank Transfer,TRN-C100004
+Harbor Logistics (Customer),Harbor Logistics,com2,HH-CUST-005,true,false,true,HH-1100,,HH-EOM,20000,Bank Transfer,TRN-C100005
+Apex Office Supplies (Supplier),Apex Office Supplies,com2,HH-SUPP-001,false,true,true,,HH-2000,HH-NET30,,Bank Transfer,TRN-S200001
+CloudNet Hosting (Supplier),CloudNet Hosting,com2,HH-SUPP-002,false,true,true,,HH-2000,HH-NET30,,Bank Transfer,TRN-S200002
+Metro Property Management (Supplier),Metro Property Management,com2,HH-SUPP-003,false,true,true,,HH-2000,HH-EOM,,Check,TRN-S200003
+PowerGrid Utilities (Supplier),PowerGrid Utilities,com2,HH-SUPP-004,false,true,true,,HH-2000,HH-NET15,,Bank Transfer,TRN-S200004
+Prime Hardware Wholesale (Supplier),Prime Hardware Wholesale,com2,HH-SUPP-005,false,true,true,,HH-2000,HH-NET45,,Card,TRN-S200005

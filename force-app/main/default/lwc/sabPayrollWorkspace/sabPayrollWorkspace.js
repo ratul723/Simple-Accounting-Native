@@ -7,7 +7,7 @@ import getWorkspace from '@salesforce/apex/SABPayrollWorkspaceController.getWork
 import getRunDetail from '@salesforce/apex/SABPayrollWorkspaceController.getRunDetail';
 import getHrQueue from '@salesforce/apex/SABPayrollWorkspaceController.getHrQueue';
 
-import createDraft from '@salesforce/apex/SABPayrollCalculationService.createDraft';
+import createDraftForWorkspace from '@salesforce/apex/SABPayrollCalculationService.createDraftForWorkspace';
 import calculateRun from '@salesforce/apex/SABPayrollCalculationService.calculate';
 import submitRun from '@salesforce/apex/SABPayrollReviewService.submit';
 import approveRun from '@salesforce/apex/SABPayrollReviewService.approve';
@@ -98,9 +98,9 @@ export default class SabPayrollWorkspace extends LightningElement {
     selectedAwardId;
 
     // Form state
+    showNewRunModal = false;
     newRunStart;
     newRunEnd;
-    newRunKey = '';
     selectedEmploymentIds = [];
     minorUnits = 2;
     cancelReason = '';
@@ -152,11 +152,15 @@ export default class SabPayrollWorkspace extends LightningElement {
             this.companyId = undefined;
             this.workspace = undefined;
             this.hrQueue = undefined;
+            this.showNewRunModal = false;
+            this.resetNewRunForm();
             this.resetSelection();
             return;
         }
         if (message.companyId && message.companyId !== this.companyId) {
             this.companyId = message.companyId;
+            this.showNewRunModal = false;
+            this.resetNewRunForm();
             this.resetSelection();
             this.requestKeys = {};
             this.refresh();
@@ -275,6 +279,10 @@ export default class SabPayrollWorkspace extends LightningElement {
 
     get employments() {
         return (this.workspace && this.workspace.employments) || [];
+    }
+
+    get eligibleEmploymentCount() {
+        return this.employments.length;
     }
 
     get employmentOptions() {
@@ -410,9 +418,18 @@ export default class SabPayrollWorkspace extends LightningElement {
         return this.awards.find((row) => row.awardId === this.selectedAwardId);
     }
 
+    get newRunDateInvalid() {
+        return Boolean(this.newRunStart && this.newRunEnd && this.newRunEnd < this.newRunStart);
+    }
+
+    get newRunButtonDisabled() {
+        return this.isLoading || !this.can.calculate;
+    }
+
     // Disabled flags: capability AND state AND not busy. The services re-check everything.
     get createDisabled() {
-        return this.isLoading || !this.can.calculate || !this.newRunStart || !this.newRunEnd;
+        return this.isLoading || !this.can.calculate || !this.newRunStart || !this.newRunEnd
+            || this.newRunDateInvalid;
     }
 
     get calculateDisabled() {
@@ -484,11 +501,26 @@ export default class SabPayrollWorkspace extends LightningElement {
         this[field] = event.detail.value;
     }
 
+    handleOpenNewRun() {
+        this.resetNewRunForm();
+        this.showNewRunModal = true;
+    }
+
+    handleCloseNewRun() {
+        if (this.isLoading) {
+            return;
+        }
+        this.showNewRunModal = false;
+        this.resetNewRunForm();
+    }
+
+    resetNewRunForm() {
+        this.newRunStart = undefined;
+        this.newRunEnd = undefined;
+    }
+
     handleNewRunStart(event) {
         this.newRunStart = event.detail.value;
-        if (!this.newRunKey && this.newRunStart && this.companyId) {
-            this.newRunKey = `PAY-${String(this.companyId).slice(-6)}-${this.newRunStart}`;
-        }
     }
 
     async handleRunSelection(event) {
@@ -534,10 +566,11 @@ export default class SabPayrollWorkspace extends LightningElement {
 
     handleCreateDraft() {
         return this.runAction('DRAFT', this.companyId, async () => {
-            const runId = await createDraft({ companyId: this.companyId, periodStart: this.newRunStart,
-                periodEnd: this.newRunEnd, currencyCode: this.workspace.functionalCurrency, runKey: this.newRunKey });
+            const runId = await createDraftForWorkspace({ companyId: this.companyId, periodStart: this.newRunStart,
+                periodEnd: this.newRunEnd, currencyCode: this.workspace.functionalCurrency });
             this.selectedRunId = runId;
-            this.newRunKey = '';
+            this.showNewRunModal = false;
+            this.resetNewRunForm();
         }, 'Draft payroll run created.');
     }
 

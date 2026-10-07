@@ -1,0 +1,6 @@
+Name,Term_Key__c,Company__c,Rule_Type__c,Due_Days__c,Is_Active__c
+Net 15,HH-NET15,com2,Net Days,15,true
+Net 30,HH-NET30,com2,Net Days,30,true
+Net 45,HH-NET45,com2,Net Days,45,true
+Net 60,HH-NET60,com2,Net Days,60,true
+End of Month,HH-EOM,com2,End of Month,0,true

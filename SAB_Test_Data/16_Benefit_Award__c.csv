@@ -1,0 +1,6 @@
+Award_Key__c,Employment__c,Pay_Component__c,Amount__c,Currency__c,Service_Period_Start__c,Service_Period_End__c,Status__c,Reason__c
+HH-AWD-001,HH-EMPLOYMENT-001,HH-INCENTIVE,1000,USD,2026-10-01,2026-10-31,Proposed,Q3 performance bonus
+HH-AWD-002,HH-EMPLOYMENT-002,HH-INCENTIVE,750,USD,2026-10-01,2026-10-31,Proposed,Sales target bonus
+HH-AWD-003,HH-EMPLOYMENT-003,HH-INCENTIVE,500,USD,2026-10-01,2026-10-31,Proposed,Project delivery award
+HH-AWD-004,HH-EMPLOYMENT-004,HH-INCENTIVE,1200,USD,2026-10-01,2026-10-31,Proposed,Year-end retention award
+HH-AWD-005,HH-EMPLOYMENT-005,HH-INCENTIVE,400,USD,2026-10-01,2026-10-31,Proposed,Referral award

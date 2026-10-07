@@ -1,62 +1,319 @@
-<?xml version="1.0" encoding="UTF-8"?><PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
-<classAccesses><apexClass>SABPayrollCalculationService</apexClass><enabled>true</enabled></classAccesses>
-<customPermissions><enabled>true</enabled><name>SAB_Calculate_Payroll</name></customPermissions>
-<customPermissions><enabled>true</enabled><name>SAB_View_Payroll_Detail</name></customPermissions>
-<description>Payroll calculation operator; requires separate effective company authorization. No posting, payment or delete permission.</description>
-<fieldPermissions><editable>false</editable><field>Benefit_Award__c.Approved_At__c</field><readable>true</readable></fieldPermissions>
-<fieldPermissions><editable>false</editable><field>Benefit_Award__c.Approved_By__c</field><readable>true</readable></fieldPermissions>
-<fieldPermissions><editable>false</editable><field>Benefit_Award__c.Consumed_By_Payroll_Run__c</field><readable>true</readable></fieldPermissions>
-<fieldPermissions><editable>false</editable><field>Benefit_Award__c.Quantity__c</field><readable>true</readable></fieldPermissions>
-<fieldPermissions><editable>false</editable><field>Benefit_Award__c.Reason__c</field><readable>true</readable></fieldPermissions>
-<fieldPermissions><editable>false</editable><field>Benefit_Award__c.Service_Period_End__c</field><readable>true</readable></fieldPermissions>
-<fieldPermissions><editable>false</editable><field>Benefit_Award__c.Service_Period_Start__c</field><readable>true</readable></fieldPermissions>
-<fieldPermissions><editable>false</editable><field>Benefit_Award__c.Status__c</field><readable>true</readable></fieldPermissions>
-<fieldPermissions><editable>false</editable><field>Employee_Pay_Component__c.Amount__c</field><readable>true</readable></fieldPermissions>
-<fieldPermissions><editable>false</editable><field>Employee_Pay_Component__c.Approval_Request__c</field><readable>true</readable></fieldPermissions>
-<fieldPermissions><editable>false</editable><field>Employee_Pay_Component__c.Effective_To__c</field><readable>true</readable></fieldPermissions>
-<fieldPermissions><editable>false</editable><field>Employee_Pay_Component__c.Formula_Parameter_JSON__c</field><readable>true</readable></fieldPermissions>
-<fieldPermissions><editable>false</editable><field>Employee_Pay_Component__c.Status__c</field><readable>true</readable></fieldPermissions>
-<fieldPermissions><editable>false</editable><field>Employee__c.Status__c</field><readable>true</readable></fieldPermissions>
-<fieldPermissions><editable>false</editable><field>Employee__c.User__c</field><readable>true</readable></fieldPermissions>
-<fieldPermissions><editable>false</editable><field>Employment__c.Cost_Center__c</field><readable>true</readable></fieldPermissions>
-<fieldPermissions><editable>false</editable><field>Employment__c.Department__c</field><readable>true</readable></fieldPermissions>
-<fieldPermissions><editable>false</editable><field>Employment__c.Employment_Status__c</field><readable>true</readable></fieldPermissions>
-<fieldPermissions><editable>false</editable><field>Employment__c.End_Date__c</field><readable>true</readable></fieldPermissions>
-<fieldPermissions><editable>false</editable><field>Pay_Component__c.Company__c</field><readable>true</readable></fieldPermissions>
-<fieldPermissions><editable>false</editable><field>Pay_Component__c.Country_Rule_Key__c</field><readable>true</readable></fieldPermissions>
-<fieldPermissions><editable>false</editable><field>Pay_Component__c.Expense_Account__c</field><readable>true</readable></fieldPermissions>
-<fieldPermissions><editable>false</editable><field>Pay_Component__c.Is_Active__c</field><readable>true</readable></fieldPermissions>
-<fieldPermissions><editable>false</editable><field>Pay_Component__c.Liability_Account__c</field><readable>true</readable></fieldPermissions>
-<fieldPermissions><editable>true</editable><field>Payroll_Component_Line__c.Benefit_Award__c</field><readable>true</readable></fieldPermissions>
-<fieldPermissions><editable>true</editable><field>Payroll_Component_Line__c.Eligibility_Snapshot__c</field><readable>true</readable></fieldPermissions>
-<fieldPermissions><editable>true</editable><field>Payroll_Component_Line__c.Expense_Account__c</field><readable>true</readable></fieldPermissions>
-<fieldPermissions><editable>true</editable><field>Payroll_Component_Line__c.Liability_Account__c</field><readable>true</readable></fieldPermissions>
-<fieldPermissions><editable>true</editable><field>Payroll_Component_Line__c.Rule_Version__c</field><readable>true</readable></fieldPermissions>
-<fieldPermissions><editable>true</editable><field>Payroll_Line__c.Cost_Center_Snapshot__c</field><readable>true</readable></fieldPermissions>
-<fieldPermissions><editable>true</editable><field>Payroll_Line__c.Deduction_Amount__c</field><readable>true</readable></fieldPermissions>
-<fieldPermissions><editable>true</editable><field>Payroll_Line__c.Department_Snapshot__c</field><readable>true</readable></fieldPermissions>
-<fieldPermissions><editable>true</editable><field>Payroll_Line__c.Employer_Contribution__c</field><readable>true</readable></fieldPermissions>
-<fieldPermissions><editable>true</editable><field>Payroll_Line__c.Gross_Amount__c</field><readable>true</readable></fieldPermissions>
-<fieldPermissions><editable>true</editable><field>Payroll_Line__c.Net_Amount__c</field><readable>true</readable></fieldPermissions>
-<fieldPermissions><editable>false</editable><field>Payroll_Line__c.Provider_Result_Key__c</field><readable>true</readable></fieldPermissions>
-<fieldPermissions><editable>false</editable><field>Payroll_Run__c.Accounting_Date__c</field><readable>true</readable></fieldPermissions>
-<fieldPermissions><editable>false</editable><field>Payroll_Run__c.Accounting_Event__c</field><readable>true</readable></fieldPermissions>
-<fieldPermissions><editable>true</editable><field>Payroll_Run__c.Deduction_Total__c</field><readable>true</readable></fieldPermissions>
-<fieldPermissions><editable>true</editable><field>Payroll_Run__c.Employer_Total__c</field><readable>true</readable></fieldPermissions>
-<fieldPermissions><editable>true</editable><field>Payroll_Run__c.Gross_Total__c</field><readable>true</readable></fieldPermissions>
-<fieldPermissions><editable>true</editable><field>Payroll_Run__c.Net_Total__c</field><readable>true</readable></fieldPermissions>
-<fieldPermissions><editable>false</editable><field>Payroll_Run__c.Provider_Reference__c</field><readable>true</readable></fieldPermissions>
-<fieldPermissions><editable>true</editable><field>Payroll_Run__c.Run_Key__c</field><readable>true</readable></fieldPermissions>
-<fieldPermissions><editable>true</editable><field>Payroll_Run__c.Workflow_State__c</field><readable>true</readable></fieldPermissions>
-<hasActivationRequired>false</hasActivationRequired>
-<label>SAB Payroll Calculation User</label>
-<objectPermissions><allowCreate>false</allowCreate><allowDelete>false</allowDelete><allowEdit>false</allowEdit><allowRead>true</allowRead><modifyAllRecords>false</modifyAllRecords><object>Accounting_Company__c</object><viewAllRecords>false</viewAllRecords></objectPermissions>
-<objectPermissions><allowCreate>false</allowCreate><allowDelete>false</allowDelete><allowEdit>false</allowEdit><allowRead>true</allowRead><modifyAllRecords>false</modifyAllRecords><object>Benefit_Award__c</object><viewAllRecords>false</viewAllRecords></objectPermissions>
-<objectPermissions><allowCreate>false</allowCreate><allowDelete>false</allowDelete><allowEdit>false</allowEdit><allowRead>true</allowRead><modifyAllRecords>false</modifyAllRecords><object>Employee_Pay_Component__c</object><viewAllRecords>false</viewAllRecords></objectPermissions>
-<objectPermissions><allowCreate>false</allowCreate><allowDelete>false</allowDelete><allowEdit>false</allowEdit><allowRead>true</allowRead><modifyAllRecords>false</modifyAllRecords><object>Employee__c</object><viewAllRecords>false</viewAllRecords></objectPermissions>
-<objectPermissions><allowCreate>false</allowCreate><allowDelete>false</allowDelete><allowEdit>false</allowEdit><allowRead>true</allowRead><modifyAllRecords>false</modifyAllRecords><object>Employment__c</object><viewAllRecords>false</viewAllRecords></objectPermissions>
-<objectPermissions><allowCreate>false</allowCreate><allowDelete>false</allowDelete><allowEdit>false</allowEdit><allowRead>true</allowRead><modifyAllRecords>false</modifyAllRecords><object>Pay_Component__c</object><viewAllRecords>false</viewAllRecords></objectPermissions>
-<objectPermissions><allowCreate>true</allowCreate><allowDelete>false</allowDelete><allowEdit>true</allowEdit><allowRead>true</allowRead><modifyAllRecords>false</modifyAllRecords><object>Payroll_Component_Line__c</object><viewAllRecords>false</viewAllRecords></objectPermissions>
-<objectPermissions><allowCreate>true</allowCreate><allowDelete>false</allowDelete><allowEdit>true</allowEdit><allowRead>true</allowRead><modifyAllRecords>false</modifyAllRecords><object>Payroll_Line__c</object><viewAllRecords>false</viewAllRecords></objectPermissions>
-<objectPermissions><allowCreate>true</allowCreate><allowDelete>false</allowDelete><allowEdit>true</allowEdit><allowRead>true</allowRead><modifyAllRecords>false</modifyAllRecords><object>Payroll_Run__c</object><viewAllRecords>false</viewAllRecords></objectPermissions>
+<?xml version="1.0" encoding="UTF-8"?>
+<PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <classAccesses>
+        <apexClass>SABPayrollCalculationService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <customPermissions>
+        <enabled>true</enabled>
+        <name>SAB_Calculate_Payroll</name>
+    </customPermissions>
+    <customPermissions>
+        <enabled>true</enabled>
+        <name>SAB_View_Payroll_Detail</name>
+    </customPermissions>
+    <description>Payroll calculation operator; requires separate effective company authorization. No posting, payment or delete permission.</description>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Benefit_Award__c.Approved_At__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Benefit_Award__c.Approved_By__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Benefit_Award__c.Consumed_By_Payroll_Run__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Benefit_Award__c.Quantity__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Benefit_Award__c.Reason__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Benefit_Award__c.Service_Period_End__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Benefit_Award__c.Service_Period_Start__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Benefit_Award__c.Status__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Employee_Pay_Component__c.Amount__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Employee_Pay_Component__c.Approval_Request__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Employee_Pay_Component__c.Effective_To__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Employee_Pay_Component__c.Formula_Parameter_JSON__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Employee__c.Status__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Employee__c.User__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Employment__c.Cost_Center__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Employment__c.Department__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Employment__c.Employment_Status__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Employment__c.End_Date__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Pay_Component__c.Company__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Pay_Component__c.Country_Rule_Key__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Pay_Component__c.Expense_Account__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Pay_Component__c.Is_Active__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Pay_Component__c.Liability_Account__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Payroll_Component_Line__c.Benefit_Award__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Payroll_Component_Line__c.Eligibility_Snapshot__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Payroll_Component_Line__c.Expense_Account__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Payroll_Component_Line__c.Liability_Account__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Payroll_Component_Line__c.Rule_Version__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Payroll_Line__c.Cost_Center_Snapshot__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Payroll_Line__c.Deduction_Amount__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Payroll_Line__c.Department_Snapshot__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Payroll_Line__c.Employer_Contribution__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Payroll_Line__c.Gross_Amount__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Payroll_Line__c.Net_Amount__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Payroll_Line__c.Provider_Result_Key__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Payroll_Run__c.Accounting_Date__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Payroll_Run__c.Accounting_Event__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Payroll_Run__c.Deduction_Total__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Payroll_Run__c.Employer_Total__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Payroll_Run__c.Gross_Total__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Payroll_Run__c.Net_Total__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Payroll_Run__c.Provider_Reference__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Payroll_Run__c.Run_Key__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Payroll_Run__c.Workflow_State__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <hasActivationRequired>false</hasActivationRequired>
+    <label>SAB Payroll Calculation User</label>
+    <objectPermissions>
+        <allowCreate>false</allowCreate>
+        <allowDelete>false</allowDelete>
+        <allowEdit>false</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>false</modifyAllRecords>
+        <object>Accounting_Company__c</object>
+        <viewAllRecords>false</viewAllRecords>
+    </objectPermissions>
+    <objectPermissions>
+        <allowCreate>false</allowCreate>
+        <allowDelete>false</allowDelete>
+        <allowEdit>false</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>false</modifyAllRecords>
+        <object>Benefit_Award__c</object>
+        <viewAllRecords>false</viewAllRecords>
+    </objectPermissions>
+    <objectPermissions>
+        <allowCreate>false</allowCreate>
+        <allowDelete>false</allowDelete>
+        <allowEdit>false</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>false</modifyAllRecords>
+        <object>Employee_Pay_Component__c</object>
+        <viewAllRecords>false</viewAllRecords>
+    </objectPermissions>
+    <objectPermissions>
+        <allowCreate>false</allowCreate>
+        <allowDelete>false</allowDelete>
+        <allowEdit>false</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>false</modifyAllRecords>
+        <object>Employee__c</object>
+        <viewAllRecords>false</viewAllRecords>
+    </objectPermissions>
+    <objectPermissions>
+        <allowCreate>false</allowCreate>
+        <allowDelete>false</allowDelete>
+        <allowEdit>false</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>false</modifyAllRecords>
+        <object>Employment__c</object>
+        <viewAllRecords>false</viewAllRecords>
+    </objectPermissions>
+    <objectPermissions>
+        <allowCreate>false</allowCreate>
+        <allowDelete>false</allowDelete>
+        <allowEdit>false</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>false</modifyAllRecords>
+        <object>Pay_Component__c</object>
+        <viewAllRecords>false</viewAllRecords>
+    </objectPermissions>
+    <objectPermissions>
+        <allowCreate>true</allowCreate>
+        <allowDelete>false</allowDelete>
+        <allowEdit>true</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>false</modifyAllRecords>
+        <object>Payroll_Component_Line__c</object>
+        <viewAllRecords>false</viewAllRecords>
+    </objectPermissions>
+    <objectPermissions>
+        <allowCreate>true</allowCreate>
+        <allowDelete>false</allowDelete>
+        <allowEdit>true</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>false</modifyAllRecords>
+        <object>Payroll_Line__c</object>
+        <viewAllRecords>false</viewAllRecords>
+    </objectPermissions>
+    <objectPermissions>
+        <allowCreate>true</allowCreate>
+        <allowDelete>false</allowDelete>
+        <allowEdit>true</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>false</modifyAllRecords>
+        <object>Payroll_Run__c</object>
+        <viewAllRecords>false</viewAllRecords>
+    </objectPermissions>
 </PermissionSet>

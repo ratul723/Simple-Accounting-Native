@@ -1,0 +1,93 @@
+Report_Definition__c,Group_Key__c,Row_Key__c,GL_Account__c,Display_Order__c,Sign_Multiplier__c,Effective_From__c
+HH-PL-SUMMARY-V1,Income,Sales Revenue,HH-4000,10,-1,2026-01-01
+HH-PL-SUMMARY-V1,Income,Service Revenue,HH-4100,20,-1,2026-01-01
+HH-PL-SUMMARY-V1,Income,Other Income,HH-4900,30,-1,2026-01-01
+HH-PL-SUMMARY-V1,Income,Other Income,HH-4950,30,-1,2026-01-01
+HH-PL-SUMMARY-V1,Cost of Sales,Cost of Goods Sold,HH-5000,40,1,2026-01-01
+HH-PL-SUMMARY-V1,Operating Expenses,Payroll Costs,HH-6000,50,1,2026-01-01
+HH-PL-SUMMARY-V1,Operating Expenses,Payroll Costs,HH-6010,50,1,2026-01-01
+HH-PL-SUMMARY-V1,Operating Expenses,Payroll Costs,HH-6020,50,1,2026-01-01
+HH-PL-SUMMARY-V1,Operating Expenses,Payroll Costs,HH-6030,50,1,2026-01-01
+HH-PL-SUMMARY-V1,Operating Expenses,Occupancy,HH-6100,60,1,2026-01-01
+HH-PL-SUMMARY-V1,Operating Expenses,Occupancy,HH-6200,60,1,2026-01-01
+HH-PL-SUMMARY-V1,Operating Expenses,Administration,HH-6300,70,1,2026-01-01
+HH-PL-SUMMARY-V1,Operating Expenses,Administration,HH-6500,70,1,2026-01-01
+HH-PL-SUMMARY-V1,Operating Expenses,Administration,HH-6600,70,1,2026-01-01
+HH-PL-SUMMARY-V1,Operating Expenses,Administration,HH-6700,70,1,2026-01-01
+HH-PL-SUMMARY-V1,Operating Expenses,Depreciation and Disposals,HH-6400,80,1,2026-01-01
+HH-PL-SUMMARY-V1,Operating Expenses,Depreciation and Disposals,HH-6990,80,1,2026-01-01
+HH-PL-SUMMARY-V1,Operating Expenses,FX Loss,HH-6900,90,1,2026-01-01
+HH-PL-DETAILED-V1,Income,4000 Sales Revenue,HH-4000,10,-1,2026-01-01
+HH-PL-DETAILED-V1,Income,4100 Service Revenue,HH-4100,20,-1,2026-01-01
+HH-PL-DETAILED-V1,Income,4900 Other Income,HH-4900,30,-1,2026-01-01
+HH-PL-DETAILED-V1,Income,4950 Realized FX Gain,HH-4950,40,-1,2026-01-01
+HH-PL-DETAILED-V1,Cost of Sales,5000 Cost of Goods Sold,HH-5000,50,1,2026-01-01
+HH-PL-DETAILED-V1,Operating Expenses,6000 Salaries and Wages,HH-6000,60,1,2026-01-01
+HH-PL-DETAILED-V1,Operating Expenses,6010 Incentive and Bonus Expense,HH-6010,70,1,2026-01-01
+HH-PL-DETAILED-V1,Operating Expenses,6020 Food Allowance Expense,HH-6020,80,1,2026-01-01
+HH-PL-DETAILED-V1,Operating Expenses,6030 Employer Contribution Expense,HH-6030,90,1,2026-01-01
+HH-PL-DETAILED-V1,Operating Expenses,6100 Rent Expense,HH-6100,100,1,2026-01-01
+HH-PL-DETAILED-V1,Operating Expenses,6200 Utilities Expense,HH-6200,110,1,2026-01-01
+HH-PL-DETAILED-V1,Operating Expenses,6300 Office Supplies Expense,HH-6300,120,1,2026-01-01
+HH-PL-DETAILED-V1,Operating Expenses,6400 Depreciation Expense,HH-6400,130,1,2026-01-01
+HH-PL-DETAILED-V1,Operating Expenses,6500 Bank Charges,HH-6500,140,1,2026-01-01
+HH-PL-DETAILED-V1,Operating Expenses,6600 Professional Fees,HH-6600,150,1,2026-01-01
+HH-PL-DETAILED-V1,Operating Expenses,6700 Travel and Entertainment,HH-6700,160,1,2026-01-01
+HH-PL-DETAILED-V1,Operating Expenses,6900 Realized FX Loss,HH-6900,170,1,2026-01-01
+HH-PL-DETAILED-V1,Operating Expenses,6990 Loss on Asset Disposal,HH-6990,180,1,2026-01-01
+HH-BS-SUMMARY-V1,Assets,Cash and Bank,HH-1000,10,1,2026-01-01
+HH-BS-SUMMARY-V1,Assets,Cash and Bank,HH-1010,10,1,2026-01-01
+HH-BS-SUMMARY-V1,Assets,Cash and Bank,HH-1020,10,1,2026-01-01
+HH-BS-SUMMARY-V1,Assets,Cash and Bank,HH-1030,10,1,2026-01-01
+HH-BS-SUMMARY-V1,Assets,Cash and Bank,HH-1040,10,1,2026-01-01
+HH-BS-SUMMARY-V1,Assets,Cash and Bank,HH-1050,10,1,2026-01-01
+HH-BS-SUMMARY-V1,Assets,Receivables,HH-1100,20,1,2026-01-01
+HH-BS-SUMMARY-V1,Assets,Prepaid and Tax Recoverable,HH-1200,30,1,2026-01-01
+HH-BS-SUMMARY-V1,Assets,Prepaid and Tax Recoverable,HH-1250,30,1,2026-01-01
+HH-BS-SUMMARY-V1,Assets,Fixed Assets at Cost,HH-1510,40,1,2026-01-01
+HH-BS-SUMMARY-V1,Assets,Fixed Assets at Cost,HH-1520,40,1,2026-01-01
+HH-BS-SUMMARY-V1,Assets,Fixed Assets at Cost,HH-1530,40,1,2026-01-01
+HH-BS-SUMMARY-V1,Assets,Fixed Assets at Cost,HH-1540,40,1,2026-01-01
+HH-BS-SUMMARY-V1,Assets,Fixed Assets at Cost,HH-1550,40,1,2026-01-01
+HH-BS-SUMMARY-V1,Assets,Accumulated Depreciation,HH-1591,50,1,2026-01-01
+HH-BS-SUMMARY-V1,Assets,Accumulated Depreciation,HH-1592,50,1,2026-01-01
+HH-BS-SUMMARY-V1,Assets,Accumulated Depreciation,HH-1593,50,1,2026-01-01
+HH-BS-SUMMARY-V1,Assets,Accumulated Depreciation,HH-1594,50,1,2026-01-01
+HH-BS-SUMMARY-V1,Assets,Accumulated Depreciation,HH-1595,50,1,2026-01-01
+HH-BS-SUMMARY-V1,Liabilities,Payables,HH-2000,60,-1,2026-01-01
+HH-BS-SUMMARY-V1,Liabilities,Tax Payable,HH-2100,70,-1,2026-01-01
+HH-BS-SUMMARY-V1,Liabilities,Accruals and Reimbursements,HH-2200,80,-1,2026-01-01
+HH-BS-SUMMARY-V1,Liabilities,Accruals and Reimbursements,HH-2400,80,-1,2026-01-01
+HH-BS-SUMMARY-V1,Liabilities,Payroll Liabilities,HH-2300,90,-1,2026-01-01
+HH-BS-SUMMARY-V1,Liabilities,Payroll Liabilities,HH-2310,90,-1,2026-01-01
+HH-BS-SUMMARY-V1,Liabilities,Payroll Liabilities,HH-2320,90,-1,2026-01-01
+HH-BS-SUMMARY-V1,Equity,Owner Capital,HH-3000,100,-1,2026-01-01
+HH-BS-SUMMARY-V1,Equity,Retained Earnings,HH-3100,110,-1,2026-01-01
+HH-BS-DETAILED-V1,Assets,1000 Cash on Hand,HH-1000,10,1,2026-01-01
+HH-BS-DETAILED-V1,Assets,1010 City Bank - Current USD,HH-1010,20,1,2026-01-01
+HH-BS-DETAILED-V1,Assets,1020 City Bank - Savings USD,HH-1020,30,1,2026-01-01
+HH-BS-DETAILED-V1,Assets,1030 Metro Bank - Operating USD,HH-1030,40,1,2026-01-01
+HH-BS-DETAILED-V1,Assets,1040 Payroll Bank Account,HH-1040,50,1,2026-01-01
+HH-BS-DETAILED-V1,Assets,1050 Petty Cash Fund,HH-1050,60,1,2026-01-01
+HH-BS-DETAILED-V1,Assets,1100 Accounts Receivable,HH-1100,70,1,2026-01-01
+HH-BS-DETAILED-V1,Assets,1200 Prepaid Expenses,HH-1200,80,1,2026-01-01
+HH-BS-DETAILED-V1,Assets,1250 VAT Input Recoverable,HH-1250,90,1,2026-01-01
+HH-BS-DETAILED-V1,Assets,1510 Computers and IT Equipment,HH-1510,100,1,2026-01-01
+HH-BS-DETAILED-V1,Assets,1520 Office Furniture,HH-1520,110,1,2026-01-01
+HH-BS-DETAILED-V1,Assets,1530 Vehicles,HH-1530,120,1,2026-01-01
+HH-BS-DETAILED-V1,Assets,1540 Machinery and Equipment,HH-1540,130,1,2026-01-01
+HH-BS-DETAILED-V1,Assets,1550 Leasehold Improvements,HH-1550,140,1,2026-01-01
+HH-BS-DETAILED-V1,Assets,1591 Accum Depreciation - Computers and IT,HH-1591,150,1,2026-01-01
+HH-BS-DETAILED-V1,Assets,1592 Accum Depreciation - Office Furniture,HH-1592,160,1,2026-01-01
+HH-BS-DETAILED-V1,Assets,1593 Accum Depreciation - Vehicles,HH-1593,170,1,2026-01-01
+HH-BS-DETAILED-V1,Assets,1594 Accum Depreciation - Machinery,HH-1594,180,1,2026-01-01
+HH-BS-DETAILED-V1,Assets,1595 Accum Depreciation - Leasehold Improvements,HH-1595,190,1,2026-01-01
+HH-BS-DETAILED-V1,Liabilities,2000 Accounts Payable,HH-2000,200,-1,2026-01-01
+HH-BS-DETAILED-V1,Liabilities,2100 VAT Output Payable,HH-2100,210,-1,2026-01-01
+HH-BS-DETAILED-V1,Liabilities,2200 Accrued Expenses,HH-2200,220,-1,2026-01-01
+HH-BS-DETAILED-V1,Liabilities,2300 Net Payroll Payable,HH-2300,230,-1,2026-01-01
+HH-BS-DETAILED-V1,Liabilities,2310 Payroll Deductions Payable,HH-2310,240,-1,2026-01-01
+HH-BS-DETAILED-V1,Liabilities,2320 Employer Contribution Payable,HH-2320,250,-1,2026-01-01
+HH-BS-DETAILED-V1,Liabilities,2400 Employee Reimbursement Payable,HH-2400,260,-1,2026-01-01
+HH-BS-DETAILED-V1,Equity,3000 Owner's Capital,HH-3000,270,-1,2026-01-01
+HH-BS-DETAILED-V1,Equity,3100 Retained Earnings,HH-3100,280,-1,2026-01-01

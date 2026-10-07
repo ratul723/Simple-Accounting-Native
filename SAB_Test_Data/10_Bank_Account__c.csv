@@ -1,0 +1,6 @@
+Name,Company__c,Bank_Name__c,Currency__c,GL_Account__c,Masked_Account_Number__c,Opening_Balance__c,Opening_Balance_Date__c,Is_Active__c
+City Bank Current,com2,City Bank,USD,HH-1010,HH-****1010,0,2026-10-01,true
+City Bank Savings,com2,City Bank,USD,HH-1020,HH-****1020,0,2026-10-01,true
+Metro Bank Operating,com2,Metro Bank,USD,HH-1030,HH-****1030,0,2026-10-01,true
+Payroll Bank,com2,City Bank,USD,HH-1040,HH-****1040,0,2026-10-01,true
+Petty Cash,com2,Cash,USD,HH-1050,HH-****1050,0,2026-10-01,true

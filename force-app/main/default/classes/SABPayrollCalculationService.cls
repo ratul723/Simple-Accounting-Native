@@ -25,8 +25,50 @@ public with sharing class SABPayrollCalculationService {
         SABCompanyAccessService.assertCompanyAccess(companyId);
         SABAccessControlService.assertRecordReadAccess(companyId);
     }
+
+    /**
+     * Existing API retained unchanged for backwards compatibility with tests, integrations and earlier G10 stages.
+     */
     @AuraEnabled
     public static Id createDraft(Id companyId, Date periodStart, Date periodEnd, String currencyCode, String runKey) {
+        return createDraftInternal(companyId, periodStart, periodEnd, currencyCode, runKey, true);
+    }
+
+    /**
+     * Production workspace entry point. The user supplies business inputs only; the service generates the internal
+     * idempotency/uniqueness key and fixes the starting lifecycle values.
+     */
+    @AuraEnabled
+    public static Id createDraftForWorkspace(
+        Id companyId,
+        Date periodStart,
+        Date periodEnd,
+        String currencyCode
+    ) {
+        String runKey = buildWorkspaceRunKey(companyId, periodStart, periodEnd);
+        // Provider_Reference__c is intentionally not written during Draft creation.
+        // It is an integration/provider field and remains read-only to the payroll
+        // calculation persona. This keeps USER_MODE DML and FLS enforcement intact.
+        return createDraftInternal(companyId, periodStart, periodEnd, currencyCode, runKey, false);
+    }
+
+    /**
+     * Creates the Draft after explicit action/company/CRUD/FLS checks.
+     *
+     * The service owns lifecycle/audit values such as Version, Workflow State,
+     * generated Run Key and zero totals. Those fields are intentionally not
+     * required to be user-editable. Enforcing USER_MODE DML on the whole row
+     * would incorrectly reject these service-owned fields.
+     */
+    @SuppressWarnings('PMD.ApexCRUDViolation')
+    private static Id createDraftInternal(
+        Id companyId,
+        Date periodStart,
+        Date periodEnd,
+        String currencyCode,
+        String runKey,
+        Boolean requireRunKeyCreateAccess
+    ) {
         authorize(companyId);
         if (periodStart == null || periodEnd == null || periodEnd < periodStart) {
             throw new PayrollException('A valid payroll start and end date are required.');
@@ -35,15 +77,63 @@ public with sharing class SABPayrollCalculationService {
             throw new PayrollException('Run key is required and must not exceed 180 characters.');
         }
         String normalized = SABMoneyService.normalizeCurrencyCode(currencyCode);
-        Payroll_Run__c run = new Payroll_Run__c(Company__c=companyId,
-            Pay_Period_Start__c=periodStart, Pay_Period_End__c=periodEnd,
-            Currency__c=normalized, Run_Key__c=runKey.trim(), Version__c=1,
-            Workflow_State__c='Draft', Gross_Total__c=0, Deduction_Total__c=0,
-            Employer_Total__c=0, Net_Total__c=0);
+
+        // The caller must be able to create Payroll Runs and write the actual
+        // business-input fields. Required custom fields are universally required
+        // by Salesforce and therefore do not need PermissionSet fieldPermissions.
+        List<Schema.SObjectField> userInputFields = new List<Schema.SObjectField>{
+            Payroll_Run__c.Company__c,
+            Payroll_Run__c.Pay_Period_Start__c,
+            Payroll_Run__c.Pay_Period_End__c,
+            Payroll_Run__c.Currency__c
+        };
+        if (requireRunKeyCreateAccess == true) {
+            // Legacy API callers still supply their own Run Key.
+            userInputFields.add(Payroll_Run__c.Run_Key__c);
+        }
+        SABAccessControlService.assertCreateable(
+            Payroll_Run__c.SObjectType,
+            userInputFields
+        );
+
+        Payroll_Run__c run = new Payroll_Run__c(
+            Company__c=companyId,
+            Pay_Period_Start__c=periodStart,
+            Pay_Period_End__c=periodEnd,
+            Currency__c=normalized,
+            Run_Key__c=runKey.trim(),
+            Version__c=1,
+            Workflow_State__c='Draft',
+            Gross_Total__c=0,
+            Deduction_Total__c=0,
+            Employer_Total__c=0,
+            Net_Total__c=0
+        );
+
+        // System mode is deliberate only for service-owned fields above.
+        // Authorization, company access, object create access and FLS for all
+        // user-supplied business fields have already been checked explicitly.
         writing=true;
-        try { insert as user run; } finally { writing=false; }
+        try {
+            Database.insert(run, AccessLevel.SYSTEM_MODE);
+        } finally {
+            writing=false;
+        }
         return run.Id;
     }
+
+    private static String buildWorkspaceRunKey(Id companyId, Date periodStart, Date periodEnd) {
+        if (companyId == null) {
+            throw new PayrollException('Accounting Company is required.');
+        }
+        if (periodStart == null || periodEnd == null || periodEnd < periodStart) {
+            throw new PayrollException('A valid payroll start and end date are required.');
+        }
+        String token = EncodingUtil.convertToHex(Crypto.generateAesKey(128));
+        return 'PAY|' + String.valueOf(companyId) + '|' + String.valueOf(periodStart)
+            + '|' + String.valueOf(periodEnd) + '|' + token;
+    }
+
     @AuraEnabled
     public static Id calculate(Id runId, List<Id> employmentIds, Integer minorUnits) {
         if (runId == null || employmentIds == null || employmentIds.isEmpty() || employmentIds.size() > 200) {

@@ -1,0 +1,14 @@
+Journal_Entry__c,Line_Number__c,GL_Account__c,Debit_Base__c,Credit_Base__c,Functional_Currency__c,Explanation__c,Department__c,Cost_Center__c
+[HH-JE-01] Owner capital injection,1,HH-1000,50000,0,USD,Owner capital injection,,
+[HH-JE-01] Owner capital injection,2,HH-3000,0,50000,USD,Owner capital injection,,
+[HH-JE-02] Laptops purchased for cash,1,HH-1510,4800,0,USD,Laptops purchased for cash,HH-IT,HH-CC-500
+[HH-JE-02] Laptops purchased for cash,2,HH-1000,0,4800,USD,Laptops purchased for cash,,
+[HH-JE-03] Insurance paid in advance,1,HH-1200,1200,0,USD,Insurance paid in advance,,
+[HH-JE-03] Insurance paid in advance,2,HH-1000,0,1200,USD,Insurance paid in advance,,
+[HH-JE-04] Cash sales week 1,1,HH-1000,6200,0,USD,Cash sales week 1,,
+[HH-JE-04] Cash sales week 1,2,HH-4000,0,6200,USD,Cash sales week 1,HH-SALES,HH-CC-300
+[HH-JE-05] Consulting income received,1,HH-1000,3500,0,USD,Consulting income received,,
+[HH-JE-05] Consulting income received,2,HH-4100,0,3500,USD,Consulting income received,HH-SALES,HH-CC-300
+[HH-JE-06] Utilities and supplies paid,1,HH-6200,380,0,USD,Utilities and supplies paid,HH-OPS,HH-CC-400
+[HH-JE-06] Utilities and supplies paid,2,HH-6300,120,0,USD,Utilities and supplies paid,HH-FIN,HH-CC-200
+[HH-JE-06] Utilities and supplies paid,3,HH-1000,0,500,USD,Utilities and supplies paid,,

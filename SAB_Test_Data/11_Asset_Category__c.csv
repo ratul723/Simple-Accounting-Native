@@ -1,0 +1,6 @@
+Name,Category_Key__c,Company__c,Asset_Account__c,Accumulated_Depreciation_Account__c,Depreciation_Expense_Account__c,Disposal_Gain_Loss_Account__c,Default_Useful_Life_Months__c,Allowed_Methods__c,Is_Active__c
+Computers and IT,HH-CAT-IT,com2,HH-1510,HH-1591,HH-6400,HH-6990,36,Straight Line,true
+Office Furniture,HH-CAT-FURN,com2,HH-1520,HH-1592,HH-6400,HH-6990,60,Straight Line,true
+Vehicles,HH-CAT-VEH,com2,HH-1530,HH-1593,HH-6400,HH-6990,60,Straight Line,true
+Machinery and Equipment,HH-CAT-MACH,com2,HH-1540,HH-1594,HH-6400,HH-6990,84,Straight Line,true
+Leasehold Improvements,HH-CAT-LHI,com2,HH-1550,HH-1595,HH-6400,HH-6990,120,Straight Line,true

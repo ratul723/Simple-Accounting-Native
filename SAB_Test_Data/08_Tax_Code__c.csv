@@ -1,0 +1,6 @@
+Name,Code__c,Company__c,Jurisdiction__c,Treatment__c,Recoverability__c,Inclusive__c,Is_Active__c,Output_Tax_Account__c,Input_Tax_Account__c
+Sales Tax 15% (Output),SALES15,com2,Default,Standard,None,false,true,HH-2100,
+Purchase Tax 15% (Input),PURCH15,com2,Default,Standard,Full,false,true,,HH-1250
+Purchase Tax 15% (Partial Recovery),PURCH15P,com2,Default,Standard,Partial,false,true,,HH-1250
+Zero Rated,ZERO0,com2,Default,Zero,None,false,true,HH-2100,
+Tax Exempt,EXEMPT,com2,Default,Exempt,None,false,true,HH-2100,

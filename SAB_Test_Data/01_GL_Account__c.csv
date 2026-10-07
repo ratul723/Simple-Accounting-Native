@@ -1,0 +1,47 @@
+Name,Account_Code__c,Account_Type__c,Normal_Balance__c,Company_Account_Key__c,Company__c,Control_Type__c,Is_Control_Account__c,Manual_Posting_Allowed__c,Is_Active__c,Report_Group__c
+Cash on Hand,1000,Asset,Debit,HH-1000,com2,None,false,true,true,Assets
+City Bank - Current USD,1010,Asset,Debit,HH-1010,com2,Bank,true,false,true,Assets
+City Bank - Savings USD,1020,Asset,Debit,HH-1020,com2,Bank,true,false,true,Assets
+Metro Bank - Operating USD,1030,Asset,Debit,HH-1030,com2,Bank,true,false,true,Assets
+Payroll Bank Account,1040,Asset,Debit,HH-1040,com2,Bank,true,false,true,Assets
+Petty Cash Fund,1050,Asset,Debit,HH-1050,com2,Bank,true,false,true,Assets
+Accounts Receivable,1100,Asset,Debit,HH-1100,com2,AR,true,false,true,Assets
+Prepaid Expenses,1200,Asset,Debit,HH-1200,com2,None,false,true,true,Assets
+VAT Input Recoverable,1250,Asset,Debit,HH-1250,com2,Tax,true,false,true,Assets
+Computers and IT Equipment,1510,Asset,Debit,HH-1510,com2,None,false,true,true,Assets
+Office Furniture,1520,Asset,Debit,HH-1520,com2,None,false,true,true,Assets
+Vehicles,1530,Asset,Debit,HH-1530,com2,None,false,true,true,Assets
+Machinery and Equipment,1540,Asset,Debit,HH-1540,com2,None,false,true,true,Assets
+Leasehold Improvements,1550,Asset,Debit,HH-1550,com2,None,false,true,true,Assets
+Accum Depreciation - Computers and IT,1591,Asset,Credit,HH-1591,com2,None,false,false,true,Assets
+Accum Depreciation - Office Furniture,1592,Asset,Credit,HH-1592,com2,None,false,false,true,Assets
+Accum Depreciation - Vehicles,1593,Asset,Credit,HH-1593,com2,None,false,false,true,Assets
+Accum Depreciation - Machinery,1594,Asset,Credit,HH-1594,com2,None,false,false,true,Assets
+Accum Depreciation - Leasehold Improvements,1595,Asset,Credit,HH-1595,com2,None,false,false,true,Assets
+Accounts Payable,2000,Liability,Credit,HH-2000,com2,AP,true,false,true,Liabilities
+VAT Output Payable,2100,Liability,Credit,HH-2100,com2,Tax,true,false,true,Liabilities
+Accrued Expenses,2200,Liability,Credit,HH-2200,com2,None,false,true,true,Liabilities
+Net Payroll Payable,2300,Liability,Credit,HH-2300,com2,Payroll,true,false,true,Liabilities
+Payroll Deductions Payable,2310,Liability,Credit,HH-2310,com2,Payroll,true,false,true,Liabilities
+Employer Contribution Payable,2320,Liability,Credit,HH-2320,com2,Payroll,true,false,true,Liabilities
+Employee Reimbursement Payable,2400,Liability,Credit,HH-2400,com2,Other,true,false,true,Liabilities
+Owner's Capital,3000,Equity,Credit,HH-3000,com2,None,false,true,true,Equity
+Retained Earnings,3100,Equity,Credit,HH-3100,com2,None,false,true,true,Equity
+Sales Revenue,4000,Revenue,Credit,HH-4000,com2,None,false,true,true,Revenue
+Service Revenue,4100,Revenue,Credit,HH-4100,com2,None,false,true,true,Revenue
+Other Income,4900,Revenue,Credit,HH-4900,com2,None,false,true,true,Revenue
+Realized FX Gain,4950,Revenue,Credit,HH-4950,com2,None,false,false,true,Revenue
+Cost of Goods Sold,5000,Expense,Debit,HH-5000,com2,None,false,true,true,Expenses
+Salaries and Wages,6000,Expense,Debit,HH-6000,com2,None,false,false,true,Expenses
+Incentive and Bonus Expense,6010,Expense,Debit,HH-6010,com2,None,false,false,true,Expenses
+Food Allowance Expense,6020,Expense,Debit,HH-6020,com2,None,false,false,true,Expenses
+Employer Contribution Expense,6030,Expense,Debit,HH-6030,com2,None,false,false,true,Expenses
+Rent Expense,6100,Expense,Debit,HH-6100,com2,None,false,true,true,Expenses
+Utilities Expense,6200,Expense,Debit,HH-6200,com2,None,false,true,true,Expenses
+Office Supplies Expense,6300,Expense,Debit,HH-6300,com2,None,false,true,true,Expenses
+Depreciation Expense,6400,Expense,Debit,HH-6400,com2,None,false,false,true,Expenses
+Bank Charges,6500,Expense,Debit,HH-6500,com2,None,false,true,true,Expenses
+Professional Fees,6600,Expense,Debit,HH-6600,com2,None,false,true,true,Expenses
+Travel and Entertainment,6700,Expense,Debit,HH-6700,com2,None,false,true,true,Expenses
+Realized FX Loss,6900,Expense,Debit,HH-6900,com2,None,false,false,true,Expenses
+Loss on Asset Disposal,6990,Expense,Debit,HH-6990,com2,None,false,false,true,Expenses

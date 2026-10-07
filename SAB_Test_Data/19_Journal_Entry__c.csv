@@ -1,0 +1,7 @@
+Company__c,Accounting_Date__c,Accounting_Period__c,Entry_Type__c,Status__c,Description__c
+com2,2026-10-01,@date,Manual,Draft,[HH-JE-01] Owner capital injection
+com2,2026-10-02,@date,Manual,Draft,[HH-JE-02] Laptops purchased for cash
+com2,2026-10-02,@date,Manual,Draft,[HH-JE-03] Insurance paid in advance
+com2,2026-10-04,@date,Manual,Draft,[HH-JE-04] Cash sales week 1
+com2,2026-10-05,@date,Manual,Draft,[HH-JE-05] Consulting income received
+com2,2026-10-06,@date,Manual,Draft,[HH-JE-06] Utilities and supplies paid

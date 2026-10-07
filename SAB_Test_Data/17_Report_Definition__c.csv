@@ -1,0 +1,6 @@
+Name,Definition_Key__c,Company__c,Report_Type__c,Status__c,Version__c,Effective_From__c
+Profit and Loss - Summary,HH-PL-SUMMARY-V1,com2,P&L,Active,1,2026-01-01
+Profit and Loss - Detailed,HH-PL-DETAILED-V1,com2,P&L,Active,1,2026-01-01
+Balance Sheet - Summary,HH-BS-SUMMARY-V1,com2,Balance Sheet,Active,1,2026-01-01
+Balance Sheet - Detailed,HH-BS-DETAILED-V1,com2,Balance Sheet,Active,1,2026-01-01
+Cash Flow - Draft,HH-CF-DRAFT-V1,com2,Cash Flow,Draft,1,2026-01-01

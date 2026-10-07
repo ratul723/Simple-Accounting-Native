@@ -74,3 +74,109 @@
     padding: 1rem 0;
     color: var(--slds-g-color-neutral-base-50, #747474);
 }
+
+/* Payroll Run creation UX only. Existing Run Detail, settlement and HR Approval layouts are unchanged. */
+.section-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.section-subtitle,
+.modal-subtitle {
+    color: var(--slds-g-color-neutral-base-50, #706e6b);
+}
+
+.payroll-empty-state {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.new-run-modal {
+    width: min(48rem, calc(100vw - 2rem));
+    max-width: 48rem;
+}
+
+.context-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+}
+
+.context-item {
+    padding: 0.75rem;
+    border: 1px solid var(--slds-g-color-border-base-1, #d8dde6);
+    border-radius: 0.25rem;
+    background: var(--slds-g-color-neutral-base-100, #ffffff);
+}
+
+.context-label {
+    display: block;
+    margin-bottom: 0.2rem;
+    font-size: 0.75rem;
+    color: var(--slds-g-color-neutral-base-50, #706e6b);
+}
+
+.modal-section {
+    padding-top: 1rem;
+    margin-top: 1rem;
+    border-top: 1px solid var(--slds-g-color-border-base-1, #d8dde6);
+}
+
+.modal-section h3 {
+    margin-bottom: 0.25rem;
+    font-weight: 600;
+}
+
+.modal-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    margin-top: 0.75rem;
+}
+
+.run-key-input {
+    display: block;
+    margin-top: 0.75rem;
+}
+
+.inline-error {
+    margin-top: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.25rem;
+    color: var(--slds-g-color-error-base-40, #ba0517);
+    background: var(--slds-g-color-error-base-95, #fef1ee);
+}
+
+.readiness-section {
+    margin-bottom: 0.25rem;
+}
+
+.readiness-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin-top: 0.6rem;
+    line-height: 1.4;
+}
+
+@media (max-width: 48rem) {
+    .section-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .context-grid,
+    .modal-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .new-run-modal {
+        width: calc(100vw - 1rem);
+        margin: 0 0.5rem;
+    }
+}

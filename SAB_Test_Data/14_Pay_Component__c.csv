@@ -1,0 +1,6 @@
+Name,Component_Key__c,Company__c,Category__c,Expense_Account__c,Liability_Account__c,Is_Active__c
+Basic Salary,HH-BASIC,com2,Basic Salary,HH-6000,,true
+Performance Incentive,HH-INCENTIVE,com2,Incentive,HH-6010,,true
+Food Allowance,HH-FOOD,com2,Food Allowance,HH-6020,,true
+Income Tax Deduction,HH-TAXDED,com2,Deduction,,HH-2310,true
+Employer Pension Contribution,HH-PENSION,com2,Employer Contribution,HH-6030,HH-2320,true

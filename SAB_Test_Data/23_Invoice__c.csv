@@ -1,0 +1,6 @@
+Company__c,Party_Profile__c,Document_Type__c,Status__c,Document_Date__c,Due_Date__c,Transaction_Currency__c,Functional_Currency__c,Exchange_Rate__c,Exchange_Rate_Date__c,Subtotal__c,Tax_Total__c,Total__c,Legal_Number__c
+com2,HH-CUST-001,Invoice,Draft,2026-10-01,2026-10-31,USD,USD,1,2026-10-01,3000,0,3000,HH-INV-0001
+com2,HH-CUST-002,Invoice,Draft,2026-10-02,2026-10-17,USD,USD,1,2026-10-02,3800,0,3800,HH-INV-0002
+com2,HH-CUST-003,Invoice,Draft,2026-10-03,2026-11-17,USD,USD,1,2026-10-03,3250,0,3250,HH-INV-0003
+com2,HH-CUST-004,Invoice,Draft,2026-10-04,2026-11-03,USD,USD,1,2026-10-04,3600,0,3600,HH-INV-0004
+com2,HH-CUST-005,Invoice,Draft,2026-10-05,2026-10-31,USD,USD,1,2026-10-05,2400,0,2400,HH-INV-0005

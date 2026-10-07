@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>SABPayrollCalculationService</members>
+        <members>SABPayrollWorkspaceCreationTest</members>
+        <members>SABJournalCorrectionService</members>
+        <members>SABJournalCorrectionServiceTest</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>sabPayrollWorkspace</members>
+        <members>sabJournalWorkspace</members>
+        <name>LightningComponentBundle</name>
+    </types>
+    <types>
+        <members>SAB_Payroll_Calculation_User</members>
+        <members>SAB_Reverse_Journal_Action</members>
+        <name>PermissionSet</name>
+    </types>
+    <version>67.0</version>
+</Package>

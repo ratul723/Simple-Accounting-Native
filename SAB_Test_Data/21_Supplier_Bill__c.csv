@@ -1,0 +1,6 @@
+Company__c,Supplier_Profile__c,Document_Type__c,Status__c,Document_Date__c,Due_Date__c,Transaction_Currency__c,Functional_Currency__c,Exchange_Rate__c,Subtotal__c,Tax_Total__c,Total__c,Vendor_Reference__c
+com2,HH-SUPP-001,Bill,Draft,2026-10-01,2026-10-31,USD,USD,1,790,0,790,HH-BILL-001
+com2,HH-SUPP-002,Bill,Draft,2026-10-02,2026-11-01,USD,USD,1,1200,0,1200,HH-BILL-002
+com2,HH-SUPP-003,Bill,Draft,2026-10-03,2026-10-31,USD,USD,1,1500,0,1500,HH-BILL-003
+com2,HH-SUPP-004,Bill,Draft,2026-10-04,2026-10-19,USD,USD,1,640,0,640,HH-BILL-004
+com2,HH-SUPP-005,Bill,Draft,2026-10-05,2026-11-19,USD,USD,1,1920,0,1920,HH-BILL-005

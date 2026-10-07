@@ -22,6 +22,10 @@ import postJournal
     from '@salesforce/apex/SABJournalWorkspaceController.postJournal';
 import reverseJournal
     from '@salesforce/apex/SABJournalWorkspaceController.reverseJournal';
+import createCorrectedDraft
+    from '@salesforce/apex/SABJournalCorrectionService.createCorrectedDraft';
+import getReversedJournals
+    from '@salesforce/apex/SABJournalCorrectionService.getReversedJournals';
 
 const STORAGE_KEY = 'sabSelectedAccountingCompanyId';
 
@@ -38,12 +42,17 @@ export default class SabJournalWorkspace extends LightningElement {
     projectOptions = [];
     draftOptions = [];
     postedOptions = [];
+    reversedOptions = [];
 
     selectedDraftId;
     selectedPostedId;
+    selectedReversedId;
     journalId;
     journalName;
     journalStatus = 'Draft';
+    journalEntryType;
+    reversalJournalId;
+    reversalOfId;
     periodId;
     accountingDate;
     description = '';
@@ -216,6 +225,21 @@ export default class SabJournalWorkspace extends LightningElement {
                     })
                 );
 
+            this.reversedOptions = [];
+            if (this.canReverseJournal) {
+                const reversed = await getReversedJournals({ companyId: requestedCompanyId });
+                if (this.companyId !== requestedCompanyId) {
+                    return;
+                }
+                this.reversedOptions = (reversed || []).map((journal) => ({
+                    label: journal.journalName
+                        + ' · ' + journal.accountingDate
+                        + ' · ' + journal.entryType
+                        + (journal.description ? ' · ' + journal.description : ''),
+                    value: journal.journalId
+                }));
+            }
+
             if (
                 !this.periodId
                 && this.periodOptions.length > 0
@@ -266,6 +290,8 @@ export default class SabJournalWorkspace extends LightningElement {
                 result.journalId;
             this.selectedPostedId =
                 undefined;
+            this.selectedReversedId =
+                undefined;
         } catch (error) {
             this.errorMessage =
                 this.reduceError(error);
@@ -309,11 +335,41 @@ export default class SabJournalWorkspace extends LightningElement {
                 result.journalId;
             this.selectedDraftId =
                 undefined;
+            this.selectedReversedId =
+                undefined;
 
             this.prepareReversalDefaults();
         } catch (error) {
             this.errorMessage =
                 this.reduceError(error);
+        } finally {
+            this.isLoading = false;
+        }
+    }
+
+
+    async handleReversedChange(event) {
+        const journalId = event.detail.value;
+        if (!journalId) {
+            return;
+        }
+
+        const requestedCompanyId = this.companyId;
+        this.isLoading = true;
+        this.errorMessage = undefined;
+        this.successMessage = undefined;
+
+        try {
+            const result = await getJournal({ journalId });
+            if (this.companyId !== requestedCompanyId || result.companyId !== requestedCompanyId) {
+                return;
+            }
+            this.applyJournal(result);
+            this.selectedReversedId = result.journalId;
+            this.selectedDraftId = undefined;
+            this.selectedPostedId = undefined;
+        } catch (error) {
+            this.errorMessage = this.reduceError(error);
         } finally {
             this.isLoading = false;
         }
@@ -448,6 +504,8 @@ export default class SabJournalWorkspace extends LightningElement {
             this.selectedDraftId =
                 result.journalId;
             this.selectedPostedId =
+                undefined;
+            this.selectedReversedId =
                 undefined;
 
             this.successMessage =
@@ -642,6 +700,8 @@ export default class SabJournalWorkspace extends LightningElement {
                 result;
             this.journalStatus =
                 result.originalStatus;
+            this.reversalJournalId =
+                result.reversalJournalId;
 
             this.successMessage =
                 result.replay
@@ -652,6 +712,69 @@ export default class SabJournalWorkspace extends LightningElement {
         } catch (error) {
             this.errorMessage =
                 this.reduceError(error);
+        } finally {
+            this.isLoading = false;
+        }
+    }
+
+
+    async handleViewReversal() {
+        this.errorMessage = undefined;
+        this.successMessage = undefined;
+
+        if (!this.reversalJournalId) {
+            this.errorMessage = 'This Journal does not reference a Reversal Journal.';
+            return;
+        }
+
+        const requestedCompanyId = this.companyId;
+        this.isLoading = true;
+        try {
+            const result = await getJournal({ journalId: this.reversalJournalId });
+            if (this.companyId !== requestedCompanyId || result.companyId !== requestedCompanyId) {
+                return;
+            }
+            this.applyJournal(result);
+            this.selectedDraftId = undefined;
+            this.selectedPostedId = undefined;
+            this.selectedReversedId = undefined;
+            this.successMessage = 'Reversal Journal loaded in read-only mode.';
+        } catch (error) {
+            this.errorMessage = this.reduceError(error);
+        } finally {
+            this.isLoading = false;
+        }
+    }
+
+    async handleCreateCorrectedJournal() {
+        this.errorMessage = undefined;
+        this.successMessage = undefined;
+
+        if (!this.journalId || !this.isReversed || !this.isManualJournal) {
+            this.errorMessage = 'Select a Reversed Manual Journal to create a corrected Draft.';
+            return;
+        }
+
+        const confirmed = await LightningConfirm.open({
+            label: 'Create Corrected Journal',
+            message: 'A new editable Draft will be created from the original Journal lines. The original and reversal remain immutable. Continue?',
+            variant: 'header'
+        });
+        if (!confirmed) {
+            return;
+        }
+
+        this.isLoading = true;
+        try {
+            const result = await createCorrectedDraft({ originalJournalId: this.journalId });
+            this.applyJournal(result);
+            this.selectedDraftId = result.journalId;
+            this.selectedPostedId = undefined;
+            this.selectedReversedId = undefined;
+            this.successMessage = 'Corrected Draft created. Review the period, date, description and lines before validating and posting.';
+            await this.loadWorkspace();
+        } catch (error) {
+            this.errorMessage = this.reduceError(error);
         } finally {
             this.isLoading = false;
         }
@@ -710,6 +833,12 @@ export default class SabJournalWorkspace extends LightningElement {
             result.journalName;
         this.journalStatus =
             result.status;
+        this.journalEntryType =
+            result.entryType;
+        this.reversalJournalId =
+            result.reversalJournalId;
+        this.reversalOfId =
+            result.reversalOfId;
         this.periodId =
             result.periodId;
         this.accountingDate =
@@ -769,6 +898,7 @@ export default class SabJournalWorkspace extends LightningElement {
         this.projectOptions = [];
         this.draftOptions = [];
         this.postedOptions = [];
+        this.reversedOptions = [];
         this.canPostJournal = false;
         this.canReverseJournal = false;
         this.resetJournal();
@@ -777,9 +907,13 @@ export default class SabJournalWorkspace extends LightningElement {
     resetJournal() {
         this.selectedDraftId = undefined;
         this.selectedPostedId = undefined;
+        this.selectedReversedId = undefined;
         this.journalId = undefined;
         this.journalName = undefined;
         this.journalStatus = 'Draft';
+        this.journalEntryType = undefined;
+        this.reversalJournalId = undefined;
+        this.reversalOfId = undefined;
         this.description = '';
         this.accountingDate =
             new Date().toISOString().slice(0, 10);
@@ -928,6 +1062,27 @@ export default class SabJournalWorkspace extends LightningElement {
 
     get isReversed() {
         return this.journalStatus === 'Reversed';
+    }
+
+    get isManualJournal() {
+        return this.journalEntryType === 'Manual';
+    }
+
+    get canShowReverseForm() {
+        return this.isPosted && !this.reversalOfId;
+    }
+
+    get showCorrectionActions() {
+        return this.isReversed && Boolean(this.reversalJournalId);
+    }
+
+    get createCorrectionDisabled() {
+        return !this.canReverseJournal || this.isLoading || !this.isReversed
+            || !this.isManualJournal || !this.reversalJournalId;
+    }
+
+    get viewReversalDisabled() {
+        return this.isLoading || !this.reversalJournalId;
     }
 
     get showReversalPanel() {
