@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Source_Account__c</fullName>
+    <deleteConstraint>Restrict</deleteConstraint>
+    <description>G17: Equity account charged on declaration, usually retained earnings.</description>
+    <label>Source Account</label>
+    <referenceTo>GL_Account__c</referenceTo>
+    <relationshipLabel>Distributions (Source)</relationshipLabel>
+    <relationshipName>SAB_Distribution_Source_Account</relationshipName>
+    <required>false</required>
+    <type>Lookup</type>
+</CustomField>

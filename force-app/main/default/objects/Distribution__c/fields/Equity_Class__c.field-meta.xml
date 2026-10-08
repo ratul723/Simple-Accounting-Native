@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Equity_Class__c</fullName>
+    <deleteConstraint>Restrict</deleteConstraint>
+    <description>G17: the share class whose holders are entitled at the record date.</description>
+    <label>Equity Class</label>
+    <referenceTo>Equity_Class__c</referenceTo>
+    <relationshipLabel>Distributions</relationshipLabel>
+    <relationshipName>SAB_Distributions</relationshipName>
+    <required>false</required>
+    <type>Lookup</type>
+</CustomField>

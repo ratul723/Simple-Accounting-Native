@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Distribution__c</fullName>
+    <deleteConstraint>Restrict</deleteConstraint>
+    <description>G17: set on distribution settlement payments. Tagged payments are processed only by SABDistributionService; other payment services reject them.</description>
+    <label>Distribution</label>
+    <referenceTo>Distribution__c</referenceTo>
+    <relationshipLabel>Distribution Payments</relationshipLabel>
+    <relationshipName>SAB_Distribution_Payments</relationshipName>
+    <required>false</required>
+    <type>Lookup</type>
+</CustomField>

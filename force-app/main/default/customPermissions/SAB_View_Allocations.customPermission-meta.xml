@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomPermission xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>G14B: open the Allocation Workspace for companies the user holds a grant for. Actions need the G14 permissions.</description>
+    <isLicensed>false</isLicensed>
+    <label>SAB View Allocations</label>
+</CustomPermission>

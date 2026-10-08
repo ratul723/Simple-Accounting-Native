@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>SABBudgetWorkspaceController</members>
+        <members>SABBudgetWorkspaceControllerTest</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>SAB_View_Budgets</members>
+        <name>CustomPermission</name>
+    </types>
+    <types>
+        <members>sabBudgetWorkspace</members>
+        <name>LightningComponentBundle</name>
+    </types>
+    <types>
+        <members>SAB_Budget_Workspace_User</members>
+        <name>PermissionSet</name>
+    </types>
+    <version>67.0</version>
+</Package>

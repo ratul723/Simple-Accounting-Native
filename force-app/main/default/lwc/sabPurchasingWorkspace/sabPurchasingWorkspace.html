@@ -1,0 +1,169 @@
+<template>
+    <lightning-card title="Purchasing Workspace" icon-name="standard:orders">
+        <div class="workspace">
+            <template lwc:if={hasCompany}>
+                <div class="header-row">
+                    <div>
+                        <h2 class="company-name">{companyName}</h2>
+                        <p>Functional Currency: {functionalCurrency}</p>
+                    </div>
+                    <lightning-button label="Refresh" icon-name="utility:refresh" onclick={handleRefresh} disabled={isLoading}></lightning-button>
+                </div>
+                <template lwc:if={isLoading}>
+                    <lightning-spinner alternative-text="Loading purchasing" size="medium"></lightning-spinner>
+                </template>
+                <template lwc:if={errorMessage}>
+                    <div class="error-banner" role="alert">{errorMessage}</div>
+                </template>
+
+                <template lwc:if={hasWorkspace}>
+                    <div class="summary-grid">
+                        <template for:each={stateCounts} for:item="item">
+                            <div key={item.state} class="metric-card"><span>{item.state}</span><strong>{item.count}</strong></div>
+                        </template>
+                        <div class="metric-card emphasized">
+                            <span>Open commitment (approved, not fully received)</span>
+                            <strong><lightning-formatted-number value={openCommitment} minimum-fraction-digits="2"></lightning-formatted-number></strong>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h3>Purchase orders</h3>
+                            <lightning-button class="new-order" label="New Purchase Order" icon-name="utility:add" onclick={handleNewOrder}
+                                disabled={newOrderDisabled}></lightning-button>
+                        </div>
+                        <template lwc:if={hasOrders}>
+                            <lightning-datatable key-field="purchaseOrderId" data={orders} columns={orderColumns} max-row-selection="1"
+                                selected-rows={selectedOrderRows} onrowselection={handleOrderSelection}></lightning-datatable>
+                        </template>
+                        <template lwc:else>
+                            <p class="empty-state">No purchase orders for this company yet.</p>
+                        </template>
+                    </div>
+
+                    <template lwc:if={showOrderForm}>
+                        <div class="panel order-form">
+                            <h3>Draft purchase order</h3>
+                            <div class="form-row">
+                                <lightning-combobox label="Supplier" options={supplierOptions} value={orderForm.supplierProfileId}
+                                    data-field="supplierProfileId" onchange={handleFormField}></lightning-combobox>
+                                <lightning-input type="date" label="Order date" value={orderForm.orderDate} data-field="orderDate"
+                                    onchange={handleFormField}></lightning-input>
+                                <lightning-input label="Currency" value={orderForm.currencyCode} max-length="3" data-field="currencyCode"
+                                    onchange={handleFormField}></lightning-input>
+                            </div>
+                            <template for:each={orderForm.lines} for:item="line">
+                                <div key={line.key} class="form-row line-row">
+                                    <lightning-input label="Description" value={line.description} max-length="255" data-key={line.key}
+                                        data-field="description" onchange={handleLineField}></lightning-input>
+                                    <lightning-input type="number" label="Quantity" step="0.0001" value={line.quantity} data-key={line.key}
+                                        data-field="quantity" onchange={handleLineField}></lightning-input>
+                                    <lightning-input type="number" label="Unit price" step="0.0001" value={line.unitPrice} data-key={line.key}
+                                        data-field="unitPrice" onchange={handleLineField}></lightning-input>
+                                    <lightning-combobox label="Department" options={departmentOptions} value={line.departmentId}
+                                        data-key={line.key} data-field="departmentId" onchange={handleLineField}></lightning-combobox>
+                                    <lightning-combobox label="Cost center" options={costCenterOptions} value={line.costCenterId}
+                                        data-key={line.key} data-field="costCenterId" onchange={handleLineField}></lightning-combobox>
+                                    <lightning-button-icon icon-name="utility:delete" alternative-text="Remove line" data-key={line.key}
+                                        onclick={handleRemoveLine}></lightning-button-icon>
+                                </div>
+                            </template>
+                            <p class="hint">{formTotalLabel}</p>
+                            <div class="button-row">
+                                <lightning-button class="add-line" label="Add Line" onclick={handleAddLine}></lightning-button>
+                                <lightning-button class="save-order" label="Save Draft" variant="brand" onclick={handleSaveOrder}
+                                    disabled={saveOrderDisabled}></lightning-button>
+                                <lightning-button label="Cancel" onclick={handleCancelForm}></lightning-button>
+                            </div>
+                        </div>
+                    </template>
+
+                    <template lwc:if={hasSelectedOrder}>
+                        <div class="panel">
+                            <h3>{order.name}: {order.status}</h3>
+                            <p>{order.supplierName} · {order.orderDate} · {order.currencyCode}
+                                <lightning-formatted-number value={order.total} minimum-fraction-digits="2"></lightning-formatted-number></p>
+                            <lightning-datatable key-field="lineId" data={lines} columns={lineColumns} hide-checkbox-column></lightning-datatable>
+
+                            <div class="action-panel">
+                                <lightning-input label="Reason (required to return, cancel, close or cancel a receipt)" value={reason}
+                                    max-length="255" data-field="reason" onchange={handleReasonChange}></lightning-input>
+                                <div class="button-row">
+                                    <template lwc:if={isDraft}>
+                                        <lightning-button class="edit-order" label="Edit Draft" onclick={handleEditOrder}
+                                            disabled={manageDisabled}></lightning-button>
+                                        <lightning-button class="submit-order" label="Submit" variant="brand" onclick={handleSubmit}
+                                            disabled={manageDisabled}></lightning-button>
+                                    </template>
+                                    <template lwc:if={isSubmitted}>
+                                        <lightning-button class="approve-order" label="Approve" variant="brand" onclick={handleApprove}
+                                            disabled={approveDisabled}></lightning-button>
+                                        <lightning-button class="return-order" label="Return to Draft" onclick={handleReturn}
+                                            disabled={returnDisabled}></lightning-button>
+                                    </template>
+                                    <template lwc:if={isCancellable}>
+                                        <lightning-button class="cancel-order" label="Cancel Order" variant="destructive"
+                                            onclick={handleCancelOrder} disabled={reasonActionDisabled}></lightning-button>
+                                    </template>
+                                    <template lwc:if={isClosable}>
+                                        <lightning-button class="close-order" label="Close Order" onclick={handleCloseOrder}
+                                            disabled={reasonActionDisabled}></lightning-button>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+
+                        <template lwc:if={isReceivable}>
+                            <div class="panel receive-panel">
+                                <h3>Receive goods or services</h3>
+                                <lightning-input type="date" label="Receipt date" value={receiptDate} onchange={handleReceiptDate}></lightning-input>
+                                <template for:each={receiveLines} for:item="line">
+                                    <div key={line.lineId} class="form-row">
+                                        <span class="line-label">{line.lineNumber}. {line.description} (remaining {line.remainingQuantity})</span>
+                                        <lightning-input type="number" label="Quantity received" step="0.0001" value={line.receiveQuantity}
+                                            data-line-id={line.lineId} onchange={handleReceiveQuantity}></lightning-input>
+                                    </div>
+                                </template>
+                                <lightning-button class="create-receipt" label="Create Draft Receipt" variant="brand"
+                                    onclick={handleCreateReceipt} disabled={createReceiptDisabled}></lightning-button>
+                            </div>
+                        </template>
+
+                        <div class="panel">
+                            <h3>Goods receipts</h3>
+                            <template lwc:if={hasReceipts}>
+                                <lightning-datatable key-field="goodsReceiptId" data={receipts} columns={receiptColumns} max-row-selection="1"
+                                    selected-rows={selectedReceiptRows} onrowselection={handleReceiptSelection}></lightning-datatable>
+                                <div class="button-row">
+                                    <template lwc:if={receiptIsDraft}>
+                                        <lightning-button class="accept-receipt" label="Accept Receipt" variant="brand"
+                                            onclick={handleAcceptReceipt} disabled={receiptActionDisabled}></lightning-button>
+                                    </template>
+                                    <template lwc:if={receiptIsCancellable}>
+                                        <lightning-button class="cancel-receipt" label="Cancel Receipt" variant="destructive"
+                                            onclick={handleCancelReceipt} disabled={cancelReceiptDisabled}></lightning-button>
+                                    </template>
+                                </div>
+                            </template>
+                            <template lwc:else>
+                                <p class="empty-state">No goods receipts yet.</p>
+                            </template>
+                        </div>
+
+                        <template lwc:if={hasBills}>
+                            <div class="panel">
+                                <h3>Supplier bills matched to this order</h3>
+                                <lightning-datatable key-field="supplierBillId" data={bills} columns={billColumns}
+                                    hide-checkbox-column></lightning-datatable>
+                            </div>
+                        </template>
+                    </template>
+                </template>
+            </template>
+            <template lwc:else>
+                <div class="empty-state">Select an Accounting Company from the SAB Company Context Selector.</div>
+            </template>
+        </div>
+    </lightning-card>
+</template>

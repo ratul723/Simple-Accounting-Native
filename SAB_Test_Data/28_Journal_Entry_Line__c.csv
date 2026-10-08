@@ -1,0 +1,13 @@
+Journal_Entry__c,Line_Number__c,GL_Account__c,Debit_Base__c,Credit_Base__c,Functional_Currency__c,Explanation__c
+[HH-DB-01] Capital deposited to bank,1,HH-1015,25000,0,USD,Capital deposited to bank
+[HH-DB-01] Capital deposited to bank,2,HH-3000,0,25000,USD,Capital deposited to bank
+[HH-DB-02] Rent paid by bank transfer,1,HH-6100,1500,0,USD,Rent paid by bank transfer
+[HH-DB-02] Rent paid by bank transfer,2,HH-1015,0,1500,USD,Rent paid by bank transfer
+[HH-DB-03] Card sales deposit,1,HH-1015,6200,0,USD,Card sales deposit
+[HH-DB-03] Card sales deposit,2,HH-4000,0,6200,USD,Card sales deposit
+[HH-DB-04] Electricity paid,1,HH-6200,380,0,USD,Electricity paid
+[HH-DB-04] Electricity paid,2,HH-1015,0,380,USD,Electricity paid
+[HH-DB-05] Stationery purchase,1,HH-6300,120,0,USD,Stationery purchase
+[HH-DB-05] Stationery purchase,2,HH-1015,0,120,USD,Stationery purchase
+[HH-DB-06] Bank charges,1,HH-6500,15,0,USD,Bank charges
+[HH-DB-06] Bank charges,2,HH-1015,0,15,USD,Bank charges

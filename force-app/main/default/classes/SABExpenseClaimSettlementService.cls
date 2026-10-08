@@ -372,7 +372,8 @@ public without sharing class SABExpenseClaimSettlementService {
                    Effective_Date__c,
                    Processing_State__c,
                    Accounting_Event__c,
-                   Payroll_Run__c
+                   Payroll_Run__c,
+                   Distribution__c
             FROM Accounting_Payment__c
             WHERE Id = :paymentId
             LIMIT 1
@@ -389,6 +390,12 @@ public without sharing class SABExpenseClaimSettlementService {
         if (payments[0].Payroll_Run__c != null) {
             throw new ExpenseClaimSettlementException(
                 'Payroll payments are processed only through payroll settlement.'
+            );
+        }
+        // G17: distribution (dividend) payments are settled only by SABDistributionService.
+        if (payments[0].Distribution__c != null) {
+            throw new ExpenseClaimSettlementException(
+                'Distribution payments are processed only through distribution settlement.'
             );
         }
 

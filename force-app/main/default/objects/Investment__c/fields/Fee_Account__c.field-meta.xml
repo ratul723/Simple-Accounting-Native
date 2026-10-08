@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Fee_Account__c</fullName>
+    <deleteConstraint>Restrict</deleteConstraint>
+    <description>G16: investment fees.</description>
+    <label>Fee Account</label>
+    <referenceTo>GL_Account__c</referenceTo>
+    <relationshipLabel>Investments (Fees)</relationshipLabel>
+    <relationshipName>SAB_Investment_Fee_Account</relationshipName>
+    <required>false</required>
+    <type>Lookup</type>
+</CustomField>

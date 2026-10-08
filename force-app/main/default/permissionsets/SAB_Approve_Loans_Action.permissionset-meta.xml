@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <customPermissions>
+        <enabled>true</enabled>
+        <name>SAB_Approve_Loans</name>
+    </customPermissions>
+    <description>G16: approve loans (schedule and drawdown); never loans the user created. Requires SAB Loan User and Post Journal.</description>
+    <hasActivationRequired>false</hasActivationRequired>
+    <label>SAB Approve Loans Action</label>
+</PermissionSet>

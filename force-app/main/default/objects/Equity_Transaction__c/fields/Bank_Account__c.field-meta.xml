@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Bank_Account__c</fullName>
+    <deleteConstraint>Restrict</deleteConstraint>
+    <description>G17: bank account receiving or paying cash for issues, redemptions and contributions.</description>
+    <label>Bank Account</label>
+    <referenceTo>Bank_Account__c</referenceTo>
+    <relationshipLabel>Equity Transactions</relationshipLabel>
+    <relationshipName>SAB_Equity_Transaction_Bank_Accounts</relationshipName>
+    <required>false</required>
+    <type>Lookup</type>
+</CustomField>

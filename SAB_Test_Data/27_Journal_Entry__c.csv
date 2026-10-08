@@ -1,0 +1,7 @@
+Company__c,Accounting_Date__c,Accounting_Period__c,Entry_Type__c,Status__c,Description__c
+com2,2026-10-01,@date,Manual,Draft,[HH-DB-01] Capital deposited to bank
+com2,2026-10-02,@date,Manual,Draft,[HH-DB-02] Rent paid by bank transfer
+com2,2026-10-03,@date,Manual,Draft,[HH-DB-03] Card sales deposit
+com2,2026-10-04,@date,Manual,Draft,[HH-DB-04] Electricity paid
+com2,2026-10-05,@date,Manual,Draft,[HH-DB-05] Stationery purchase
+com2,2026-10-06,@date,Manual,Draft,[HH-DB-06] Bank charges

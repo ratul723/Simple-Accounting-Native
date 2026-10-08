@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Investment_Account__c</fullName>
+    <deleteConstraint>Restrict</deleteConstraint>
+    <description>G16: asset account carrying the investment.</description>
+    <label>Investment Account</label>
+    <referenceTo>GL_Account__c</referenceTo>
+    <relationshipLabel>Investments (Asset)</relationshipLabel>
+    <relationshipName>SAB_Investment_Asset_Account</relationshipName>
+    <required>false</required>
+    <type>Lookup</type>
+</CustomField>

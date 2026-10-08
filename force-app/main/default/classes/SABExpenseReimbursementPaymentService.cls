@@ -423,7 +423,7 @@ public without sharing class SABExpenseReimbursementPaymentService {
             + 'Amount__c, Transaction_Currency__c, '
             + 'Functional_Currency__c, Exchange_Rate__c, '
             + 'Effective_Date__c, Processing_State__c, '
-            + 'Provider_Request_Key__c, Accounting_Event__c, Payroll_Run__c '
+            + 'Provider_Request_Key__c, Accounting_Event__c, Payroll_Run__c, Distribution__c '
             + 'FROM Accounting_Payment__c '
             + 'WHERE Id = \'' 
             + String.escapeSingleQuotes(String.valueOf(paymentId))
@@ -452,6 +452,12 @@ public without sharing class SABExpenseReimbursementPaymentService {
         if (payment.Payroll_Run__c != null) {
             throw new ExpenseReimbursementException(
                 'Payroll payments are processed only through payroll settlement.'
+            );
+        }
+        // G17: distribution (dividend) payments are settled only by SABDistributionService.
+        if (payment.Distribution__c != null) {
+            throw new ExpenseReimbursementException(
+                'Distribution payments are processed only through distribution settlement.'
             );
         }
 

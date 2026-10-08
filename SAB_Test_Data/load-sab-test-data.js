@@ -67,6 +67,12 @@ const PLAN = [
   { file: '23_Invoice__c', sobject: 'Invoice__c', dedupe: ['Legal_Number__c'], lookups: { Company__c: CO, Party_Profile__c: PROFILE } },
   { file: '24_Invoice_Line__c', sobject: 'Invoice_Line__c', dedupe: ['Invoice__c', 'Line_Number__c'],
     lookups: { Invoice__c: { obj: 'Invoice__c', field: 'Legal_Number__c' }, Revenue_Account__c: GL } },
+  // Bank reconciliation demo: a bank-mapped GL account that manual journals may use, plus 6 Draft journals on it.
+  { file: '25_GL_Account__c', sobject: 'GL_Account__c', dedupe: ['Company_Account_Key__c'], lookups: { Company__c: CO } },
+  { file: '26_Bank_Account__c', sobject: 'Bank_Account__c', dedupe: ['Masked_Account_Number__c'], lookups: { Company__c: CO, GL_Account__c: GL } },
+  { file: '27_Journal_Entry__c', sobject: 'Journal_Entry__c', dedupe: ['Description__c'], period: true, lookups: { Company__c: CO } },
+  { file: '28_Journal_Entry_Line__c', sobject: 'Journal_Entry_Line__c', dedupe: ['Journal_Entry__c', 'Line_Number__c'],
+    lookups: { Journal_Entry__c: { obj: 'Journal_Entry__c', field: 'Description__c' }, GL_Account__c: GL } },
 ];
 
 // ---------- CSV helpers

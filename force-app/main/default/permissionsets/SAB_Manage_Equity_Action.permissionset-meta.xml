@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <customPermissions>
+        <enabled>true</enabled>
+        <name>SAB_Manage_Equity</name>
+    </customPermissions>
+    <description>G17: maintain stakeholders and classes, draft equity transactions and distributions, settle distributions. Posting also needs Post Journal.</description>
+    <hasActivationRequired>false</hasActivationRequired>
+    <label>SAB Manage Equity Action</label>
+</PermissionSet>

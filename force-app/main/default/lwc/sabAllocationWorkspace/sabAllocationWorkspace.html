@@ -1,0 +1,204 @@
+<template>
+    <lightning-card title="Allocation Workspace" icon-name="standard:shift_pattern">
+        <div class="workspace">
+            <template lwc:if={hasCompany}>
+                <div class="header-row">
+                    <div>
+                        <h2 class="company-name">{companyName}</h2>
+                        <p>Functional Currency: {functionalCurrency}</p>
+                    </div>
+                    <lightning-button label="Refresh" icon-name="utility:refresh" onclick={handleRefresh} disabled={isLoading}></lightning-button>
+                </div>
+
+                <template lwc:if={isLoading}>
+                    <lightning-spinner alternative-text="Loading allocations" size="medium"></lightning-spinner>
+                </template>
+                <template lwc:if={errorMessage}>
+                    <div class="error-banner" role="alert">{errorMessage}</div>
+                </template>
+
+                <template lwc:if={hasWorkspace}>
+                    <div class="summary-grid">
+                        <template for:each={ruleCounts} for:item="item">
+                            <div key={item.state} class="metric-card"><span>Rules {item.state}</span><strong>{item.count}</strong></div>
+                        </template>
+                        <template for:each={runCounts} for:item="item">
+                            <div key={item.state} class="metric-card"><span>Runs {item.state}</span><strong>{item.count}</strong></div>
+                        </template>
+                    </div>
+
+                    <lightning-tabset>
+                        <lightning-tab label="Rules">
+                            <div class="panel">
+                                <div class="panel-header">
+                                    <h3>Allocation rules</h3>
+                                    <lightning-button class="new-rule" label="New Rule" icon-name="utility:add" onclick={handleNewRule}
+                                        disabled={newRuleDisabled}></lightning-button>
+                                </div>
+                                <template lwc:if={hasRules}>
+                                    <lightning-datatable key-field="ruleId" data={rules} columns={ruleColumns} max-row-selection="1"
+                                        selected-rows={selectedRuleRows} onrowselection={handleRuleSelection}></lightning-datatable>
+                                </template>
+                                <template lwc:else>
+                                    <p class="empty-state">No allocation rules for this company yet.</p>
+                                </template>
+                            </div>
+
+                            <template lwc:if={showRuleForm}>
+                                <div class="panel rule-form">
+                                    <h3>Draft rule</h3>
+                                    <div class="form-row">
+                                        <lightning-input label="Name" value={ruleForm.name} max-length="80" data-field="name"
+                                            onchange={handleFormField}></lightning-input>
+                                        <lightning-input label="Rule key" value={ruleForm.ruleKey} max-length="80" data-field="ruleKey"
+                                            onchange={handleFormField}></lightning-input>
+                                        <lightning-combobox label="Driver" options={driverOptions} value={ruleForm.driverType}
+                                            data-field="driverType" onchange={handleFormField}></lightning-combobox>
+                                        <lightning-combobox label="Rounding" options={roundingOptions} value={ruleForm.roundingPolicy}
+                                            data-field="roundingPolicy" onchange={handleFormField}></lightning-combobox>
+                                    </div>
+                                    <template lwc:if={roundingAccountWarning}>
+                                        <p class="hint">Set a default rounding account on the company before using this policy.</p>
+                                    </template>
+                                    <div class="form-row">
+                                        <lightning-input type="date" label="Effective from" value={ruleForm.effectiveFrom}
+                                            data-field="effectiveFrom" onchange={handleFormField}></lightning-input>
+                                        <lightning-input type="date" label="Effective to (optional)" value={ruleForm.effectiveTo}
+                                            data-field="effectiveTo" onchange={handleFormField}></lightning-input>
+                                        <lightning-combobox label="Source department filter" options={departmentOptions}
+                                            value={ruleForm.sourceDepartmentId} data-field="sourceDepartmentId"
+                                            onchange={handleFormField}></lightning-combobox>
+                                        <lightning-combobox label="Source cost center filter" options={costCenterOptions}
+                                            value={ruleForm.sourceCostCenterId} data-field="sourceCostCenterId"
+                                            onchange={handleFormField}></lightning-combobox>
+                                    </div>
+                                    <lightning-dual-listbox label="Source GL accounts" source-label="Available" selected-label="Allocate"
+                                        options={accountOptions} value={ruleForm.sourceAccountIds} data-field="sourceAccountIds"
+                                        onchange={handleFormField}></lightning-dual-listbox>
+                                    <h3 class="targets-heading">Targets</h3>
+                                    <template for:each={ruleForm.targets} for:item="target">
+                                        <div key={target.key} class="form-row target-row">
+                                            <lightning-combobox label="GL account" options={targetAccountOptions}
+                                                value={target.targetGlAccountId} data-key={target.key} data-field="targetGlAccountId"
+                                                onchange={handleTargetField}></lightning-combobox>
+                                            <lightning-combobox label="Department" options={departmentOptions}
+                                                value={target.targetDepartmentId} data-key={target.key} data-field="targetDepartmentId"
+                                                onchange={handleTargetField}></lightning-combobox>
+                                            <lightning-combobox label="Cost center" options={costCenterOptions}
+                                                value={target.targetCostCenterId} data-key={target.key} data-field="targetCostCenterId"
+                                                onchange={handleTargetField}></lightning-combobox>
+                                            <lightning-input type="number" label={weightLabel} step="0.0001" value={target.weight}
+                                                data-key={target.key} data-field="weight" onchange={handleTargetField}></lightning-input>
+                                            <lightning-button-icon icon-name="utility:delete" alternative-text="Remove target"
+                                                data-key={target.key} onclick={handleRemoveTarget}></lightning-button-icon>
+                                        </div>
+                                    </template>
+                                    <p class="hint">{percentTotalLabel}</p>
+                                    <div class="button-row">
+                                        <lightning-button class="add-target" label="Add Target" onclick={handleAddTarget}></lightning-button>
+                                        <lightning-button class="save-rule" label="Save Draft" variant="brand" onclick={handleSaveRule}
+                                            disabled={saveRuleDisabled}></lightning-button>
+                                        <lightning-button label="Cancel" onclick={handleCancelForm}></lightning-button>
+                                    </div>
+                                </div>
+                            </template>
+
+                            <template lwc:if={hasSelectedRule}>
+                                <div class="panel">
+                                    <h3>{rule.ruleKey} v{rule.version}: {rule.status}</h3>
+                                    <p>{rule.name} · {rule.driverType} · {rule.roundingPolicy}</p>
+                                    <p>Sources: {sourceAccountNames}</p>
+                                    <template lwc:if={ruleDetail.sourceDepartmentName}>
+                                        <p>Source department: {ruleDetail.sourceDepartmentName}</p>
+                                    </template>
+                                    <template lwc:if={ruleDetail.sourceCostCenterName}>
+                                        <p>Source cost center: {ruleDetail.sourceCostCenterName}</p>
+                                    </template>
+                                    <lightning-datatable key-field="sequence" data={ruleTargets} columns={targetColumns}
+                                        hide-checkbox-column></lightning-datatable>
+                                    <div class="action-panel">
+                                        <template lwc:if={ruleIsDraft}>
+                                            <div class="button-row">
+                                                <lightning-button class="edit-rule" label="Edit Draft" onclick={handleEditRule}
+                                                    disabled={newRuleDisabled}></lightning-button>
+                                                <lightning-button class="approve-rule" label="Approve" variant="brand"
+                                                    onclick={handleApproveRule} disabled={approveRuleDisabled}></lightning-button>
+                                            </div>
+                                        </template>
+                                        <template lwc:if={ruleIsApproved}>
+                                            <lightning-input label="Reason (required to revise or retire)" value={reason} max-length="255"
+                                                data-field="reason" onchange={handleReasonChange}></lightning-input>
+                                            <div class="button-row">
+                                                <lightning-button class="revise-rule" label="Revise" onclick={handleReviseRule}
+                                                    disabled={reviseRuleDisabled}></lightning-button>
+                                                <lightning-button class="retire-rule" label="Retire" variant="destructive"
+                                                    onclick={handleRetireRule} disabled={reviseRuleDisabled}></lightning-button>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
+                        </lightning-tab>
+
+                        <lightning-tab label="Runs">
+                            <div class="panel">
+                                <h3>Preview an allocation</h3>
+                                <div class="form-row">
+                                    <lightning-combobox label="Approved rule" options={approvedRuleOptions} value={previewRuleId}
+                                        data-field="previewRuleId" onchange={handlePreviewField}></lightning-combobox>
+                                    <lightning-combobox label="Open period" options={periodOptions} value={previewPeriodId}
+                                        data-field="previewPeriodId" onchange={handlePreviewField}></lightning-combobox>
+                                    <lightning-button class="preview" label="Preview" variant="brand" onclick={handlePreview}
+                                        disabled={previewDisabled}></lightning-button>
+                                </div>
+                                <p class="hint">Preview splits each source account's posted balance for the period; posting re-checks it.</p>
+                            </div>
+                            <div class="panel">
+                                <h3>Allocation runs</h3>
+                                <template lwc:if={hasRuns}>
+                                    <lightning-datatable key-field="runId" data={runs} columns={runColumns} max-row-selection="1"
+                                        selected-rows={selectedRunRows} onrowselection={handleRunSelection}></lightning-datatable>
+                                </template>
+                                <template lwc:else>
+                                    <p class="empty-state">No allocation runs yet.</p>
+                                </template>
+                            </div>
+                            <template lwc:if={hasSelectedRun}>
+                                <div class="panel">
+                                    <h3>{run.name}: {run.status}</h3>
+                                    <p>{run.ruleKey} v{run.ruleVersion} · {run.periodName}</p>
+                                    <template lwc:if={run.journalName}>
+                                        <p>Journal: {run.journalName}</p>
+                                    </template>
+                                    <lightning-datatable key-field="rowKey" data={runLines} columns={lineColumns}
+                                        hide-checkbox-column></lightning-datatable>
+                                    <template lwc:if={runIsOpen}>
+                                        <div class="action-panel">
+                                            <lightning-input label="Reason (required to discard)" value={reason} max-length="255"
+                                                data-field="reason" onchange={handleReasonChange}></lightning-input>
+                                            <div class="button-row">
+                                                <template lwc:if={runIsPreview}>
+                                                    <lightning-button class="approve-run" label="Approve" variant="brand"
+                                                        onclick={handleApproveRun} disabled={approveRunDisabled}></lightning-button>
+                                                </template>
+                                                <template lwc:if={runIsApproved}>
+                                                    <lightning-button class="post-run" label="Post Journal" variant="brand"
+                                                        onclick={handlePostRun} disabled={postRunDisabled}></lightning-button>
+                                                </template>
+                                                <lightning-button class="discard-run" label="Discard" variant="destructive"
+                                                    onclick={handleDiscardRun} disabled={discardRunDisabled}></lightning-button>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+                        </lightning-tab>
+                    </lightning-tabset>
+                </template>
+            </template>
+            <template lwc:else>
+                <div class="empty-state">Select an Accounting Company from the SAB Company Context Selector.</div>
+            </template>
+        </div>
+    </lightning-card>
+</template>

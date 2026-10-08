@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Par_Value__c</fullName>
+    <description>G17: nominal value per unit; 0 puts the whole issue value in the premium account.</description>
+    <label>Par Value</label>
+    <precision>18</precision>
+    <scale>6</scale>
+    <required>false</required>
+    <type>Number</type>
+</CustomField>

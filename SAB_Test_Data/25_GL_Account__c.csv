@@ -1,0 +1,2 @@
+Name,Account_Code__c,Account_Type__c,Normal_Balance__c,Company_Account_Key__c,Company__c,Control_Type__c,Is_Control_Account__c,Manual_Posting_Allowed__c,Is_Active__c,Report_Group__c
+Demo Operating Bank - USD,1015,Asset,Debit,HH-1015,com2,None,false,true,true,Assets

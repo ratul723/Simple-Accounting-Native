@@ -26,6 +26,9 @@ Salesforce imports need record Ids for every lookup. The CSVs use readable keys 
 | 19-20 | Draft manual journals and lines | 6, 13 |
 | 21-24 | Draft supplier bills, bill lines, invoices, invoice lines | 5, 6, 5, 6 |
 
+## Bank reconciliation demo
+Files 25-28 add a demo bank account with 6 Draft journals. See `BANK_RECONCILIATION_DEMO.md` for the full presenter script and the statement lines to type in.
+
 ## After loading (done in the UI, in this order)
 1. **Journal Workspace:** post JE-01 to JE-06. Then the reports show: P&L net profit **9,200** (revenue 9,700, expenses 500); Balance Sheet total assets **59,200** = capital 50,000 + current-year earnings 9,200.
 2. **HR Workspace > HR Approvals:** approve compensation and awards with a user who is not the creator and holds the approve permission sets.

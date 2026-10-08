@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Approved_At__c</fullName>
+    <description>G16: maintained by the loan service; changes only through SABLoanService.</description>
+    <label>Approved At</label>
+    <required>false</required>
+    <type>DateTime</type>
+</CustomField>

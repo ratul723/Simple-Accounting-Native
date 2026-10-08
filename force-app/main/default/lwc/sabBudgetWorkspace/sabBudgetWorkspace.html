@@ -1,0 +1,159 @@
+<template>
+    <lightning-card title="Budget Workspace" icon-name="standard:forecasts">
+        <div class="workspace">
+            <template lwc:if={hasCompany}>
+                <div class="header-row">
+                    <div>
+                        <h2 class="company-name">{companyName}</h2>
+                        <p>Functional Currency: {functionalCurrency}</p>
+                    </div>
+                    <lightning-button label="Refresh" icon-name="utility:refresh" onclick={handleRefresh} disabled={isLoading}></lightning-button>
+                </div>
+                <template lwc:if={isLoading}>
+                    <lightning-spinner alternative-text="Loading budgets" size="medium"></lightning-spinner>
+                </template>
+                <template lwc:if={errorMessage}>
+                    <div class="error-banner" role="alert">{errorMessage}</div>
+                </template>
+
+                <template lwc:if={hasWorkspace}>
+                    <div class="summary-grid">
+                        <template for:each={stateCounts} for:item="item">
+                            <div key={item.state} class="metric-card"><span>{item.state}</span><strong>{item.count}</strong></div>
+                        </template>
+                    </div>
+
+                    <lightning-tabset>
+                        <lightning-tab label="Budgets">
+                            <div class="panel">
+                                <div class="panel-header">
+                                    <lightning-combobox class="year-filter" label="Fiscal year" options={yearFilterOptions} value={yearFilter}
+                                        onchange={handleYearFilter}></lightning-combobox>
+                                    <lightning-button class="new-budget" label="New Budget" icon-name="utility:add" onclick={handleNewBudget}
+                                        disabled={newBudgetDisabled}></lightning-button>
+                                </div>
+                                <template lwc:if={hasBudgets}>
+                                    <lightning-datatable key-field="budgetId" data={budgets} columns={budgetColumns} max-row-selection="1"
+                                        selected-rows={selectedBudgetRows} onrowselection={handleBudgetSelection}></lightning-datatable>
+                                </template>
+                                <template lwc:else>
+                                    <p class="empty-state">No budgets for this selection yet.</p>
+                                </template>
+                            </div>
+
+                            <template lwc:if={showBudgetForm}>
+                                <div class="panel budget-form">
+                                    <h3>Draft budget</h3>
+                                    <div class="form-row">
+                                        <lightning-combobox label="Fiscal year" options={yearOptions} value={budgetForm.fiscalYear}
+                                            data-field="fiscalYear" onchange={handleFormField}></lightning-combobox>
+                                        <lightning-input label="Name (optional)" value={budgetForm.name} max-length="80" data-field="name"
+                                            onchange={handleFormField}></lightning-input>
+                                    </div>
+                                    <p class="hint">Enter amounts in each account's normal direction (revenue and expense as positive figures).</p>
+                                    <template for:each={budgetForm.lines} for:item="line">
+                                        <div key={line.key} class="form-row line-row">
+                                            <lightning-combobox label="Period" options={formPeriodOptions} value={line.accountingPeriodId}
+                                                data-key={line.key} data-field="accountingPeriodId" onchange={handleLineField}></lightning-combobox>
+                                            <lightning-combobox label="GL account" options={accountOptions} value={line.glAccountId}
+                                                data-key={line.key} data-field="glAccountId" onchange={handleLineField}></lightning-combobox>
+                                            <lightning-combobox label="Department" options={departmentOptions} value={line.departmentId}
+                                                data-key={line.key} data-field="departmentId" onchange={handleLineField}></lightning-combobox>
+                                            <lightning-combobox label="Cost center" options={costCenterOptions} value={line.costCenterId}
+                                                data-key={line.key} data-field="costCenterId" onchange={handleLineField}></lightning-combobox>
+                                            <lightning-input type="number" label="Amount" step="0.01" value={line.amount} data-key={line.key}
+                                                data-field="amount" onchange={handleLineField}></lightning-input>
+                                            <lightning-button-icon icon-name="utility:delete" alternative-text="Remove line" data-key={line.key}
+                                                onclick={handleRemoveLine}></lightning-button-icon>
+                                        </div>
+                                    </template>
+                                    <p class="hint">{formTotalLabel}</p>
+                                    <div class="button-row">
+                                        <lightning-button class="add-line" label="Add Line" onclick={handleAddLine}></lightning-button>
+                                        <lightning-button class="save-budget" label="Save Draft" variant="brand" onclick={handleSaveBudget}
+                                            disabled={saveBudgetDisabled}></lightning-button>
+                                        <lightning-button label="Cancel" onclick={handleCancelForm}></lightning-button>
+                                    </div>
+                                </div>
+                            </template>
+
+                            <template lwc:if={hasSelectedBudget}>
+                                <div class="panel">
+                                    <h3>{budget.name}: {budget.status}</h3>
+                                    <p>FY{budget.fiscalYear} · version {budget.version} · {budget.currencyCode} · total
+                                        <lightning-formatted-number value={detail.total} minimum-fraction-digits="2"></lightning-formatted-number></p>
+                                    <lightning-datatable key-field="lineId" data={detailLines} columns={lineColumns}
+                                        hide-checkbox-column></lightning-datatable>
+                                    <div class="action-panel">
+                                        <template lwc:if={isDraft}>
+                                            <div class="button-row">
+                                                <lightning-button class="edit-budget" label="Edit Draft" onclick={handleEditBudget}
+                                                    disabled={manageDisabled}></lightning-button>
+                                                <lightning-button class="submit-budget" label="Submit" variant="brand" onclick={handleSubmit}
+                                                    disabled={manageDisabled}></lightning-button>
+                                            </div>
+                                        </template>
+                                        <template lwc:if={isSubmitted}>
+                                            <lightning-input label="Reason (required to return)" value={reason} max-length="255"
+                                                data-field="reason" onchange={handleReasonChange}></lightning-input>
+                                            <div class="button-row">
+                                                <lightning-button class="approve-budget" label="Approve" variant="brand" onclick={handleApprove}
+                                                    disabled={approveDisabled}></lightning-button>
+                                                <lightning-button class="return-budget" label="Return to Draft" onclick={handleReturn}
+                                                    disabled={returnDisabled}></lightning-button>
+                                            </div>
+                                        </template>
+                                        <template lwc:if={isApproved}>
+                                            <lightning-input label="Reason (required to revise)" value={reason} max-length="255"
+                                                data-field="reason" onchange={handleReasonChange}></lightning-input>
+                                            <lightning-button class="revise-budget" label="Revise" onclick={handleRevise}
+                                                disabled={reviseDisabled}></lightning-button>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
+                        </lightning-tab>
+
+                        <lightning-tab label="Budget vs Actual">
+                            <div class="panel">
+                                <div class="form-row">
+                                    <lightning-combobox label="Fiscal year" options={yearOptions} value={varianceYear} data-field="varianceYear"
+                                        onchange={handleVarianceField}></lightning-combobox>
+                                    <lightning-combobox label="Budget version" options={varianceBudgetOptions} value={varianceBudgetId}
+                                        data-field="varianceBudgetId" onchange={handleVarianceField}></lightning-combobox>
+                                    <lightning-combobox label="Group by" options={groupingOptions} value={varianceGrouping}
+                                        data-field="varianceGrouping" onchange={handleVarianceField}></lightning-combobox>
+                                </div>
+                                <lightning-dual-listbox label="Periods (leave empty for the whole year)" source-label="Available"
+                                    selected-label="Included" options={variancePeriodOptions} value={variancePeriodIds}
+                                    data-field="variancePeriodIds" onchange={handleVarianceField}></lightning-dual-listbox>
+                                <lightning-button class="run-variance" label="Compare" variant="brand" onclick={handleRunVariance}
+                                    disabled={runVarianceDisabled}></lightning-button>
+                            </div>
+                            <template lwc:if={hasVariance}>
+                                <div class="panel">
+                                    <h3>{varianceTitle}</h3>
+                                    <div class="summary-grid">
+                                        <div class="metric-card"><span>Revenue budget</span><strong>
+                                            <lightning-formatted-number value={variance.totalRevenueBudget} minimum-fraction-digits="2"></lightning-formatted-number></strong></div>
+                                        <div class="metric-card"><span>Revenue actual</span><strong>
+                                            <lightning-formatted-number value={variance.totalRevenueActual} minimum-fraction-digits="2"></lightning-formatted-number></strong></div>
+                                        <div class="metric-card"><span>Expense budget</span><strong>
+                                            <lightning-formatted-number value={variance.totalExpenseBudget} minimum-fraction-digits="2"></lightning-formatted-number></strong></div>
+                                        <div class="metric-card"><span>Expense actual</span><strong>
+                                            <lightning-formatted-number value={variance.totalExpenseActual} minimum-fraction-digits="2"></lightning-formatted-number></strong></div>
+                                    </div>
+                                    <lightning-datatable key-field="rowKey" data={varianceRows} columns={varianceColumns}
+                                        hide-checkbox-column></lightning-datatable>
+                                </div>
+                            </template>
+                        </lightning-tab>
+                    </lightning-tabset>
+                </template>
+            </template>
+            <template lwc:else>
+                <div class="empty-state">Select an Accounting Company from the SAB Company Context Selector.</div>
+            </template>
+        </div>
+    </lightning-card>
+</template>

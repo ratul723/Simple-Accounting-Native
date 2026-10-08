@@ -1,0 +1,2 @@
+Name,Company__c,Bank_Name__c,Currency__c,GL_Account__c,Masked_Account_Number__c,Opening_Balance__c,Opening_Balance_Date__c,Is_Active__c
+Demo Operating Bank,com2,Demo Bank,USD,HH-1015,HH-****1015,0,2026-10-01,true

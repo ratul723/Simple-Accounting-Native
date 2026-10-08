@@ -33,7 +33,7 @@ public with sharing class SABPaymentAllocationService {
         Accounting_Payment__c payment = [
             SELECT Id, Company__c, Amount__c, Transaction_Currency__c,
                    Functional_Currency__c, Exchange_Rate__c, Effective_Date__c,
-                   Processing_State__c, Payroll_Run__c
+                   Processing_State__c, Payroll_Run__c, Distribution__c
             FROM Accounting_Payment__c
             WHERE Id = :paymentId
             FOR UPDATE
@@ -45,6 +45,10 @@ public with sharing class SABPaymentAllocationService {
         // G10H: payroll net pay is settled per employee, never allocated to supplier bills or customer invoices.
         if (payment.Payroll_Run__c != null) {
             throw new PaymentAllocationException('Payroll payments are processed only through payroll settlement.');
+        }
+        // G17: distribution (dividend) payments are settled per stakeholder, never allocated to bills or invoices.
+        if (payment.Distribution__c != null) {
+            throw new PaymentAllocationException('Distribution payments are processed only through distribution settlement.');
         }
 
         Set<Id> billIds = new Set<Id>();

@@ -59,6 +59,7 @@ public without sharing class SABCompanySharingService {
             'Tax_Code__c',
             'Tax_Return__c',
             'Allocation_Rule__c',
+            'Allocation_Run__c',
             'Stakeholder__c',
             'Equity_Transaction__c',
             'Loan__c',

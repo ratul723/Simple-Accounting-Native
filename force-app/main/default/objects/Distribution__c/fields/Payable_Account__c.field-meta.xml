@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Payable_Account__c</fullName>
+    <deleteConstraint>Restrict</deleteConstraint>
+    <description>G17: Liability account for declared, unpaid distributions.</description>
+    <label>Payable Account</label>
+    <referenceTo>GL_Account__c</referenceTo>
+    <relationshipLabel>Distributions (Payable)</relationshipLabel>
+    <relationshipName>SAB_Distribution_Payable_Account</relationshipName>
+    <required>false</required>
+    <type>Lookup</type>
+</CustomField>

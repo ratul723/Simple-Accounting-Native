@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Accrued_Interest_Account__c</fullName>
+    <deleteConstraint>Restrict</deleteConstraint>
+    <description>G16: accrued interest payable (borrowing, Liability) or receivable (lending, Asset).</description>
+    <label>Accrued Interest Account</label>
+    <referenceTo>GL_Account__c</referenceTo>
+    <relationshipLabel>Loans (Accrued Interest)</relationshipLabel>
+    <relationshipName>SAB_Loan_Accrued_Interest_Account</relationshipName>
+    <required>false</required>
+    <type>Lookup</type>
+</CustomField>

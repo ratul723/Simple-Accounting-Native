@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <customPermissions>
+        <enabled>true</enabled>
+        <name>SAB_Approve_Equity</name>
+    </customPermissions>
+    <description>G17: approve and post equity transactions and distributions; never ones the user created. Requires Post Journal.</description>
+    <hasActivationRequired>false</hasActivationRequired>
+    <label>SAB Approve Equity Action</label>
+</PermissionSet>

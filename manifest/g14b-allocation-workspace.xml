@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>SABAllocationWorkspaceController</members>
+        <members>SABAllocationWorkspaceControllerTest</members>
+        <members>SABAllocationWorkspaceSecurityPolicy</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>SAB_View_Allocations</members>
+        <name>CustomPermission</name>
+    </types>
+    <types>
+        <members>sabAllocationWorkspace</members>
+        <name>LightningComponentBundle</name>
+    </types>
+    <types>
+        <members>SAB_Allocation_Workspace_User</members>
+        <name>PermissionSet</name>
+    </types>
+    <version>67.0</version>
+</Package>
