@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>To_Payable_Account__c</fullName>
+    <deleteConstraint>Restrict</deleteConstraint>
+    <description>G18: intercompany payable (Liability) in the To company.</description>
+    <label>To Payable Account</label>
+    <referenceTo>GL_Account__c</referenceTo>
+    <relationshipLabel>Intercompany (To Payable)</relationshipLabel>
+    <relationshipName>SAB_IC_To_Payable</relationshipName>
+    <required>false</required>
+    <type>Lookup</type>
+</CustomField>

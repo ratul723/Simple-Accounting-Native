@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>From_Receivable_Account__c</fullName>
+    <deleteConstraint>Restrict</deleteConstraint>
+    <description>G18: intercompany receivable (Asset) in the From company.</description>
+    <label>From Receivable Account</label>
+    <referenceTo>GL_Account__c</referenceTo>
+    <relationshipLabel>Intercompany (From Receivable)</relationshipLabel>
+    <relationshipName>SAB_IC_From_Receivable</relationshipName>
+    <required>false</required>
+    <type>Lookup</type>
+</CustomField>

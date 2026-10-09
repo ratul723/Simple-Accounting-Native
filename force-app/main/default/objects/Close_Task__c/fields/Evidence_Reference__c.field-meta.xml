@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Evidence_Reference__c</fullName>
+    <description>G19: link or reference to the evidence for a completed task. G19: maintained by the close task service.</description>
+    <label>Evidence Reference</label>
+    <length>255</length>
+    <required>false</required>
+    <type>Text</type>
+</CustomField>

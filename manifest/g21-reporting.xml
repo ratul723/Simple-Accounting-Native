@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>SABCashFlowService</members>
+        <members>SABManagementDashboardService</members>
+        <members>SABReportSupport</members>
+        <members>SABReportingServicesTest</members>
+        <members>SABReportingTestFixture</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>GL_Account__c.Cash_Flow_Category__c</members>
+        <name>CustomField</name>
+    </types>
+    <types>
+        <members>SAB_View_Management_Reports</members>
+        <name>CustomPermission</name>
+    </types>
+    <types>
+        <members>sabReportCentre</members>
+        <name>LightningComponentBundle</name>
+    </types>
+    <types>
+        <members>SAB_Report_Centre_User</members>
+        <name>PermissionSet</name>
+    </types>
+    <version>67.0</version>
+</Package>

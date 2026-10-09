@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Sequence__c</fullName>
+    <description>Order in the checklist.</description>
+    <externalId>false</externalId>
+    <fieldManageability>SubscriberControlled</fieldManageability>
+    <label>Sequence</label>
+    <precision>4</precision>
+    <scale>0</scale>
+    <unique>false</unique>
+    <required>true</required>
+    <type>Number</type>
+</CustomField>

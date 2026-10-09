@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Approved_By__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <description>G18: maintained by the consolidation service; changes only through it.</description>
+    <label>Approved By</label>
+    <referenceTo>User</referenceTo>
+    <relationshipLabel>Consolidation Runs Approved</relationshipLabel>
+    <relationshipName>SAB_Consolidation_Run_Approved_By</relationshipName>
+    <required>false</required>
+    <type>Lookup</type>
+</CustomField>

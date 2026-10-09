@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Evidence_Required__c</fullName>
+    <defaultValue>false</defaultValue>
+    <description>Completing the task needs an evidence reference.</description>
+    <externalId>false</externalId>
+    <fieldManageability>SubscriberControlled</fieldManageability>
+    <label>Evidence Required</label>
+    <type>Checkbox</type>
+</CustomField>

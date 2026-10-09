@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomPermission xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>G19: generate and assign month-end close checklists and reopen completed tasks.</description>
+    <isLicensed>false</isLicensed>
+    <label>SAB Manage Close Tasks</label>
+</CustomPermission>

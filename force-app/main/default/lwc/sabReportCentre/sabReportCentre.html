@@ -1,0 +1,114 @@
+<template>
+    <lightning-card title="Report Centre" icon-name="standard:report">
+        <div class="workspace">
+            <template lwc:if={hasCompany}>
+                <template lwc:if={isLoading}>
+                    <lightning-spinner alternative-text="Loading reports" size="medium"></lightning-spinner>
+                </template>
+                <template lwc:if={errorMessage}>
+                    <div class="error-banner" role="alert">{errorMessage}</div>
+                </template>
+                <lightning-tabset>
+                    <lightning-tab label="Dashboard" value="dashboard" onactive={handleTabActive}>
+                        <template lwc:if={isDashboardTab}>
+                            <div class="form-row">
+                                <lightning-input type="date" label="As of" value={asOfDate} onchange={handleAsOfChange}></lightning-input>
+                                <lightning-button class="refresh-dashboard" label="Refresh" icon-name="utility:refresh"
+                                    onclick={handleRefreshDashboard} disabled={isLoading}></lightning-button>
+                            </div>
+                            <template lwc:if={dashboard}>
+                                <div class="summary-grid">
+                                    <div class="metric-card emphasized"><span>Cash ({dashboard.currencyCode})</span><strong>
+                                        <lightning-formatted-number class="cash" value={dashboard.cashBalance} minimum-fraction-digits="2"></lightning-formatted-number></strong></div>
+                                    <div class="metric-card"><span>Receivables</span><strong>
+                                        <lightning-formatted-number value={dashboard.receivables} minimum-fraction-digits="2"></lightning-formatted-number></strong></div>
+                                    <div class="metric-card"><span>Payables</span><strong>
+                                        <lightning-formatted-number value={dashboard.payables} minimum-fraction-digits="2"></lightning-formatted-number></strong></div>
+                                    <div class="metric-card"><span>Net income, month to date</span><strong>
+                                        <lightning-formatted-number value={dashboard.netMonthToDate} minimum-fraction-digits="2"></lightning-formatted-number></strong></div>
+                                    <div class="metric-card"><span>Revenue, year to date</span><strong>
+                                        <lightning-formatted-number value={dashboard.revenueYearToDate} minimum-fraction-digits="2"></lightning-formatted-number></strong></div>
+                                    <div class="metric-card"><span>Expenses, year to date</span><strong>
+                                        <lightning-formatted-number value={dashboard.expenseYearToDate} minimum-fraction-digits="2"></lightning-formatted-number></strong></div>
+                                    <div class="metric-card"><span>Net income, year to date</span><strong>
+                                        <lightning-formatted-number class="net-ytd" value={dashboard.netYearToDate} minimum-fraction-digits="2"></lightning-formatted-number></strong></div>
+                                </div>
+                                <template lwc:if={hasBudget}>
+                                    <div class="panel budget-panel">
+                                        <h3>Budget, year to date</h3>
+                                        <p>Revenue budget <lightning-formatted-number value={dashboard.budgetRevenueYearToDate} minimum-fraction-digits="2"></lightning-formatted-number>
+                                            · Expense budget <lightning-formatted-number value={dashboard.budgetExpenseYearToDate} minimum-fraction-digits="2"></lightning-formatted-number></p>
+                                    </div>
+                                </template>
+                                <div class="panel">
+                                    <h3>Twelve-month trend</h3>
+                                    <template for:each={trendRows} for:item="p">
+                                        <div key={p.key} class="trend-row">
+                                            <span class="trend-label">{p.label}</span>
+                                            <div class="trend-bars">
+                                                <div class="bar revenue" style={p.revenueStyle}></div>
+                                                <div class="bar expense" style={p.expenseStyle}></div>
+                                            </div>
+                                        </div>
+                                    </template>
+                                    <lightning-datatable key-field="label" data={dashboard.trend} columns={trendColumns}
+                                        hide-checkbox-column></lightning-datatable>
+                                </div>
+                                <div class="panel">
+                                    <h3>Recent report runs</h3>
+                                    <lightning-datatable key-field="generatedAt" data={dashboard.recentRuns} columns={runColumns}
+                                        hide-checkbox-column></lightning-datatable>
+                                </div>
+                            </template>
+                        </template>
+                    </lightning-tab>
+
+                    <lightning-tab label="Cash Flow" value="cashflow" onactive={handleTabActive}>
+                        <template lwc:if={isCashFlowTab}>
+                            <div class="form-row">
+                                <lightning-input type="date" label="From" value={fromDate} data-field="fromDate" onchange={handleRangeChange}></lightning-input>
+                                <lightning-input type="date" label="To" value={toDate} data-field="toDate" onchange={handleRangeChange}></lightning-input>
+                                <lightning-button class="run-cash-flow" label="Run" variant="brand" onclick={handleRunCashFlow}
+                                    disabled={cashFlowDisabled}></lightning-button>
+                            </div>
+                            <template lwc:if={cashFlow}>
+                                <div class="panel">
+                                    <h3>Cash flow statement ({cashFlow.currencyCode}), direct method</h3>
+                                    <span class={reconciliationClass}>{reconciliationLabel}</span>
+                                    <p>Opening cash <lightning-formatted-number value={cashFlow.openingCash} minimum-fraction-digits="2"></lightning-formatted-number></p>
+                                    <template for:each={cashSections} for:item="s">
+                                        <div key={s.name} class="cash-section">
+                                            <h4>{s.name} activities: <lightning-formatted-number value={s.total} minimum-fraction-digits="2"></lightning-formatted-number></h4>
+                                            <template lwc:if={s.hasLines}>
+                                                <lightning-datatable key-field="accountCode" data={s.lines} columns={cashColumns}
+                                                    hide-checkbox-column></lightning-datatable>
+                                            </template>
+                                        </div>
+                                    </template>
+                                    <p>Net change <lightning-formatted-number value={cashFlow.netChange} minimum-fraction-digits="2"></lightning-formatted-number>
+                                        · Closing cash <lightning-formatted-number class="closing-cash" value={cashFlow.closingCash} minimum-fraction-digits="2"></lightning-formatted-number></p>
+                                </div>
+                            </template>
+                        </template>
+                    </lightning-tab>
+
+                    <lightning-tab label="Profit &amp; Loss" value="profitloss" onactive={handleTabActive}>
+                        <template lwc:if={isProfitLossTab}><c-sab-profit-loss-report></c-sab-profit-loss-report></template>
+                    </lightning-tab>
+                    <lightning-tab label="Balance Sheet" value="balancesheet" onactive={handleTabActive}>
+                        <template lwc:if={isBalanceSheetTab}><c-sab-balance-sheet-report></c-sab-balance-sheet-report></template>
+                    </lightning-tab>
+                    <lightning-tab label="Trial Balance" value="trialbalance" onactive={handleTabActive}>
+                        <template lwc:if={isTrialBalanceTab}><c-sab-trial-balance-report></c-sab-trial-balance-report></template>
+                    </lightning-tab>
+                    <lightning-tab label="General Ledger" value="generalledger" onactive={handleTabActive}>
+                        <template lwc:if={isGeneralLedgerTab}><c-sab-general-ledger-report></c-sab-general-ledger-report></template>
+                    </lightning-tab>
+                </lightning-tabset>
+            </template>
+            <template lwc:else>
+                <div class="empty-state">Select an Accounting Company from the SAB Company Context Selector.</div>
+            </template>
+        </div>
+    </lightning-card>
+</template>

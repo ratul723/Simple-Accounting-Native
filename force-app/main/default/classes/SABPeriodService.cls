@@ -177,6 +177,8 @@ public without sharing class SABPeriodService {
             Datetime performedAt = System.now();
 
             if (targetStatus == STATUS_CLOSED) {
+                // G19: a period with a month-end checklist closes only when every task is Complete.
+                SABCloseTaskService.assertReadyToClose(periodRecord.Id);
                 periodRecord.Status__c =
                     STATUS_CLOSED;
                 periodRecord.Closed_By__c =
