@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>67.0</apiVersion>
+    <isExposed>true</isExposed>
+    <masterLabel>SAB App Shell</masterLabel>
+    <description>Simple Accounting Books app shell: top bar, grouped sidebar, company context, search, theme, persona and the selected workspace.</description>
+    <capabilities>
+        <capability>lightning__dynamicComponent</capability>
+    </capabilities>
+    <targets>
+        <target>lightning__AppPage</target>
+    </targets>
+</LightningComponentBundle>

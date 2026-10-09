@@ -1,0 +1,146 @@
+<template>
+    <div class="app" style={appStyle} onclick={handleShellClick}>
+        <header class="topbar">
+            <button class="menu-btn" type="button" aria-label="Open navigation" onclick={handleMenuToggle}>
+                <c-sab-icon name="menu" size="22" stroke-width="2"></c-sab-icon>
+            </button>
+            <a class="brand" href="#" aria-label="Simple Accounting Books home" onclick={handleBrandClick}>
+                <span class="brand-mark">S</span>
+                <span class="brand-name">Simple Accounting Books<span>for Salesforce</span></span>
+            </a>
+            <div class="ctx">
+                <button class="ctx-btn company-btn" type="button" aria-haspopup="true" aria-expanded={companyExpanded}
+                    onclick={handleCompanyToggle}>
+                    <span class="company-name">{companyName}</span>
+                    <span class="sub">{companySub}</span>
+                    <c-sab-icon name="chevron" size="14" stroke-width="2"></c-sab-icon>
+                </button>
+                <span class="period-pill"><span class={periodDotClass}></span>{periodText}</span>
+            </div>
+            <div class="top-search" onclick={stopClick}>
+                <label>
+                    <c-sab-icon name="search" size="16" stroke-width="2"></c-sab-icon>
+                    <input class="search-input" type="search" placeholder="Search invoices, bills, journals, accounts"
+                        aria-label="Search" autocomplete="off" oninput={handleSearchInput} onkeydown={handleSearchKeydown} />
+                </label>
+            </div>
+            <div class="top-right">
+                <button class="icon-btn theme-btn" type="button" aria-label={themeLabel} title={themeLabel} onclick={handleThemeToggle}>
+                    <c-sab-icon name="moon" size="18" stroke-width="2"></c-sab-icon>
+                </button>
+                <button class="ctx-btn user-btn" type="button" aria-haspopup="true" aria-expanded={userExpanded}
+                    onclick={handleUserToggle}>
+                    <span class="avatar">{userInitials}</span>
+                    <span class="user-name">{persona.userName}<span class="sub persona">{persona.label}</span></span>
+                    <c-sab-icon name="chevron" size="14" stroke-width="2"></c-sab-icon>
+                </button>
+            </div>
+
+            <div class={companyPopClass} role="listbox" aria-label="Accounting company" onclick={stopClick}>
+                <div class="pop-head">Accounting company</div>
+                <template for:each={companyOptions} for:item="c">
+                    <button key={c.companyId} class={c.className} type="button" role="option" aria-selected={c.selected}
+                        data-id={c.companyId} onclick={handleCompanyPick}>
+                        <span class="avatar co">{c.badge}</span>
+                        <span><span class="t">{c.companyName}</span><span class="d">{c.sub}</span></span>
+                    </button>
+                </template>
+            </div>
+            <div class={userPopClass} onclick={stopClick}>
+                <div class="pop-head">Signed in as</div>
+                <div class="pop-item static">
+                    <span class="avatar">{userInitials}</span>
+                    <span><span class="t">{persona.userName}</span><span class="d">{persona.label}</span></span>
+                </div>
+                <div class="pop-head pop-foot">Buttons your role cannot use are disabled and explain why.</div>
+            </div>
+            <div class={searchPopClass} role="listbox" aria-label="Search results" onclick={stopClick}>
+                <template lwc:if={hasSearchResults}>
+                    <template for:each={searchResults} for:item="r">
+                        <button key={r.key} class="pop-item" type="button" role="option" data-key={r.key} onclick={handleResultClick}>
+                            <span class="res-ic"><c-sab-icon name={r.icon} size="16"></c-sab-icon></span>
+                            <span class="res-body"><span class="t">{r.title}</span><span class="d">{r.detail}</span></span>
+                        </button>
+                    </template>
+                </template>
+                <template lwc:else>
+                    <div class="pop-head empty-res">{searchEmptyText}</div>
+                </template>
+            </div>
+        </header>
+
+        <aside class={sidebarClass} aria-label="Workspaces">
+            <template for:each={navGroups} for:item="g">
+                <div key={g.name} class="nav-group">
+                    <h3>{g.name}</h3>
+                    <template for:each={g.items} for:item="w">
+                        <button key={w.id} class={w.className} type="button" aria-current={w.current} data-id={w.id}
+                            onclick={handleNavClick}>
+                            <c-sab-icon name={w.icon}></c-sab-icon>
+                            <span class="lbl">{w.label}</span>
+                        </button>
+                    </template>
+                </div>
+            </template>
+        </aside>
+
+        <main class="main" tabindex="-1" onsabnavigate={handleWorkspaceNavigate} onsabtoast={handleWorkspaceToast}>
+            <template lwc:if={errorMessage}>
+                <section class="panel">
+                    <div class="empty">
+                        <div class="ill"><c-sab-icon name="alert" size="30"></c-sab-icon></div>
+                        <h3>Something went wrong loading this workspace</h3>
+                        <p>{errorMessage}</p>
+                        <div class="row center"><button class="btn primary" type="button" onclick={handleRetry}>Try again</button></div>
+                    </div>
+                </section>
+            </template>
+            <template lwc:elseif={showSetupEmpty}>
+                <c-sab-workspace-header company-name={companyName} group={currentEntry.group} heading={currentEntry.label}
+                    optional-module={currentEntry.optional}></c-sab-workspace-header>
+                <section class="panel">
+                    <div class="empty">
+                        <div class="ill"><c-sab-icon name={currentEntry.icon} size="30"></c-sab-icon></div>
+                        <h3>{setupEmptyTitle}</h3>
+                        <p>{setupEmptyText}</p>
+                        <div class="row center">
+                            <template lwc:if={canContinueSetup}>
+                                <button class="btn primary" type="button" onclick={handleContinueSetup}>Continue setup</button>
+                            </template>
+                            <template lwc:if={firstActiveCompany}>
+                                <button class="btn" type="button" onclick={handleSwitchToActive}>{switchLabel}</button>
+                            </template>
+                        </div>
+                    </div>
+                </section>
+            </template>
+            <template lwc:elseif={showShellAware}>
+                <lwc:component class="workspace aware" lwc:is={workspaceCtor} company-id={awareCompanyId} company-name={awareCompanyName}
+                    currency-code={awareCurrency} setup-status={awareSetupStatus} persona={persona}
+                    caps={workspaceCaps} visible-workspaces={visibleList} record-id={recordId}
+                    period-key={awarePeriodKey}></lwc:component>
+            </template>
+            <template lwc:elseif={showLegacy}>
+                <c-sab-workspace-header company-name={companyName} group={currentEntry.group} heading={currentEntry.title}
+                    description={currentEntry.description} optional-module={currentEntry.optional}></c-sab-workspace-header>
+                <div class="legacy">
+                    <lwc:component class="workspace legacy-ws" lwc:is={workspaceCtor}></lwc:component>
+                </div>
+            </template>
+            <template lwc:elseif={showNothing}>
+                <section class="panel">
+                    <div class="empty">
+                        <div class="ill"><c-sab-icon name="lock" size="30"></c-sab-icon></div>
+                        <h3>No workspaces available</h3>
+                        <p>Ask your administrator for Simple Accounting Books access and an active company grant.</p>
+                    </div>
+                </section>
+            </template>
+            <template lwc:if={isLoading}>
+                <div class="loading" role="status">Loading</div>
+            </template>
+        </main>
+    </div>
+    <div class={scrimClass} onclick={handleScrimClick}></div>
+    <c-sab-toast></c-sab-toast>
+</template>

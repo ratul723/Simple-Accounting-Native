@@ -1,0 +1,10 @@
+:host {
+    display: inline-flex;
+    flex: none;
+    line-height: 0;
+}
+
+.icon {
+    display: block;
+    max-width: none;
+}

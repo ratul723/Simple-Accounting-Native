@@ -1,0 +1,9 @@
+<template>
+    <svg class="icon" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width={strokeWidth} stroke-linecap="round" stroke-linejoin="round" aria-hidden={isDecorative}
+        aria-label={label} role={role} focusable="false">
+        <template for:each={paths} for:item="path">
+            <path key={path.key} d={path.d}></path>
+        </template>
+    </svg>
+</template>

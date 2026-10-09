@@ -1,0 +1,27 @@
+<template>
+    <div class="chart">
+        <svg viewBox={viewBox} role="img" aria-label={label}>
+            <template for:each={gridlines} for:item="g">
+                <g key={g.key}>
+                    <line x1={g.x1} x2={g.x2} y1={g.y} y2={g.y} stroke="var(--line)"></line>
+                    <text x={g.tx} y={g.ty} text-anchor="end">{g.text}</text>
+                </g>
+            </template>
+            <template for:each={bars} for:item="group">
+                <g key={group.key}>
+                    <template for:each={group.rects} for:item="r">
+                        <rect key={r.key} x={r.x} y={r.y} width={r.width} height={r.height} rx="3" fill={r.fill}>
+                            <title>{r.title}</title>
+                        </rect>
+                    </template>
+                    <text x={group.lx} y={group.ly} text-anchor="middle">{group.label}</text>
+                </g>
+            </template>
+        </svg>
+    </div>
+    <div class="legend">
+        <template for:each={legend} for:item="l">
+            <span key={l.key}><i class="sw" style={l.style}></i>{l.name}</span>
+        </template>
+    </div>
+</template>

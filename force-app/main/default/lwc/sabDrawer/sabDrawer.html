@@ -1,0 +1,23 @@
+<template>
+    <div class={scrimClass} onclick={requestClose}></div>
+    <aside class={drawerClass} role="dialog" aria-modal="true" aria-labelledby="drawer-title" aria-hidden={ariaHidden}
+        onkeydown={handleKeydown}>
+        <div class="drawer-h">
+            <div class="drawer-t">
+                <h2 id="drawer-title">{heading}</h2>
+                <template lwc:if={subheading}>
+                    <div class="sub">{subheading}</div>
+                </template>
+            </div>
+            <button class="icon-btn close-btn" type="button" aria-label={closeLabel} onclick={requestClose}>
+                <c-sab-icon name="x"></c-sab-icon>
+            </button>
+        </div>
+        <div class="drawer-b">
+            <slot></slot>
+        </div>
+        <div class={footerClass}>
+            <slot name="footer" onslotchange={handleFooterSlot}></slot>
+        </div>
+    </aside>
+</template>

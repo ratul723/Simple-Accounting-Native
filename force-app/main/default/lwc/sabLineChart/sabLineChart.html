@@ -1,0 +1,27 @@
+<template>
+    <div class="chart">
+        <svg viewBox={viewBox} role="img" aria-label={label}>
+            <template for:each={gridlines} for:item="g">
+                <g key={g.key}>
+                    <line x1={g.x1} x2={g.x2} y1={g.y} y2={g.y} stroke="var(--line)"></line>
+                    <text x={g.tx} y={g.ty} text-anchor="end">{g.text}</text>
+                </g>
+            </template>
+            <template for:each={xLabels} for:item="l">
+                <text key={l.key} x={l.x} y={l.y} text-anchor="middle">{l.text}</text>
+            </template>
+            <template for:each={paths} for:item="p">
+                <g key={p.key}>
+                    <template lwc:if={p.hasArea}>
+                        <path d={p.areaD} fill={p.stroke} opacity=".10"></path>
+                    </template>
+                    <path d={p.d} fill="none" stroke={p.stroke} stroke-width={p.strokeWidth} stroke-dasharray={p.dash}
+                        stroke-linejoin="round" stroke-linecap="round"></path>
+                    <template lwc:if={p.hasDot}>
+                        <circle cx={p.cx} cy={p.cy} r="4" fill={p.stroke} stroke="var(--surface)" stroke-width="2"></circle>
+                    </template>
+                </g>
+            </template>
+        </svg>
+    </div>
+</template>

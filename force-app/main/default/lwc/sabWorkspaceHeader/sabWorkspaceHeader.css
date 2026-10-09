@@ -1,0 +1,51 @@
+@import 'c/sabStyles';
+
+.ws-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+}
+
+.ws-main {
+    min-width: 0;
+}
+
+.crumbs {
+    font-size: 12.5px;
+    color: var(--muted);
+    margin-bottom: 4px;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.ws-title {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: 32px;
+    line-height: 1.1;
+    margin: 0;
+    letter-spacing: -.2px;
+}
+
+.ws-desc {
+    color: var(--muted);
+    margin: 6px 0 0;
+    max-width: 70ch;
+}
+
+.ws-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 900px) {
+    .ws-title {
+        font-size: 26px;
+    }
+}

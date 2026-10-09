@@ -1,0 +1,183 @@
+<template>
+    <template lwc:if={errorMessage}>
+        <section class="panel">
+            <div class="empty">
+                <div class="ill"><c-sab-icon name="alert" size="30"></c-sab-icon></div>
+                <h3>Finance home could not be loaded</h3>
+                <p>{errorMessage}</p>
+                <div class="row center"><button class="btn primary" type="button" onclick={handleRetry}>Try again</button></div>
+            </div>
+        </section>
+    </template>
+    <template lwc:elseif={showLoadingPanel}>
+        <c-sab-workspace-header company-name={companyName} group="Overview" heading={heading}></c-sab-workspace-header>
+        <section class="panel"><div class="panel-b muted" role="status">Loading Finance home</div></section>
+    </template>
+    <template lwc:elseif={isSetup}>
+        <c-sab-workspace-header company-name={displayCompany} group="Overview" heading={displayCompany}
+            description="This company is still being set up. Finish the remaining steps to start posting.">
+            <template lwc:if={canContinueSetup}>
+                <button slot="actions" class="btn primary" type="button" onclick={handleContinueSetup}>Continue setup</button>
+            </template>
+        </c-sab-workspace-header>
+        <div class="grid g4">
+            <template for:each={setupCards} for:item="c">
+                <div key={c.key} class={c.className} onclick={handleSetupCard}>
+                    <div class="big">{c.big}</div>
+                    <div class="muted">{c.text}</div>
+                </div>
+            </template>
+        </div>
+    </template>
+    <template lwc:elseif={isActive}>
+        <c-sab-workspace-header company-name={displayCompany} group="Overview" heading={heading} description={description}>
+            <button slot="actions" class="btn new-journal" type="button" disabled={journalDisabled} title={journalTitle}
+                onclick={handleNewJournal}><c-sab-icon name="plus" size="16"></c-sab-icon>New journal</button>
+            <button slot="actions" class="btn primary new-invoice" type="button" disabled={invoiceDisabled} title={invoiceTitle}
+                onclick={handleNewInvoice}><c-sab-icon name="plus" size="16"></c-sab-icon>New invoice</button>
+        </c-sab-workspace-header>
+
+        <div class="figs">
+            <template for:each={figures} for:item="f">
+                <div key={f.key} class="fig">
+                    <div class="l">{f.label}</div>
+                    <div class={f.valueClass}>{f.value}<template lwc:if={f.hasUnit}><small>{f.unit}</small></template></div>
+                    <div class="s"><template lwc:if={f.sub.bold}><b class={f.sub.boldClass}>{f.sub.bold}</b></template>{f.sub.text}</div>
+                </div>
+            </template>
+        </div>
+
+        <div class="split">
+            <div class="stack">
+                <template lwc:if={hasCashTrend}>
+                    <section class="panel">
+                        <div class="panel-h"><div><h2>Cash position</h2><div class="sub">{cashSub}</div></div></div>
+                        <div class="panel-b">
+                            <c-sab-line-chart series={cashSeries} labels={cashLabels} area every="2" label="Cash balance trend"></c-sab-line-chart>
+                        </div>
+                    </section>
+                </template>
+                <template lwc:if={hasMonthly}>
+                    <section class="panel">
+                        <div class="panel-h"><div><h2>Income and expenses by month</h2><div class="sub">Posted ledger, fiscal year to date</div></div></div>
+                        <div class="panel-b">
+                            <c-sab-bar-chart groups={monthlyGroups} series={monthlySeries} label="Income and expenses"></c-sab-bar-chart>
+                        </div>
+                    </section>
+                </template>
+                <template lwc:if={showApprovals}>
+                    <section class="panel approvals-panel">
+                        <div class="panel-h"><div><h2>Approvals queue</h2>
+                            <div class="sub">Approvals are tied to the source version. Editing a document after approval sends it back here.</div></div></div>
+                        <div class="panel-b flush">
+                            <div class="tbl-wrap">
+                                <table class="tbl">
+                                    <thead><tr><th>Request</th><th>Source</th><th>Needs</th><th>Submitted by</th></tr></thead>
+                                    <tbody>
+                                        <template lwc:if={hasApprovals}>
+                                            <template for:each={approvalRows} for:item="a">
+                                                <tr key={a.recordId}>
+                                                    <td><span class="id">{a.name}</span><div class="small muted">{a.sourceType}</div></td>
+                                                    <td>{a.sourceKey}</td>
+                                                    <td>{a.needsText}</td>
+                                                    <td>{a.requestedBy}<div class="small muted">{a.requestedAtText}</div></td>
+                                                </tr>
+                                            </template>
+                                        </template>
+                                        <template lwc:else>
+                                            <tr><td colspan="4" class="muted empty-row">No approvals waiting. New requests appear here as soon as they are submitted.</td></tr>
+                                        </template>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </section>
+                </template>
+            </div>
+
+            <div class="stack">
+                <section class="panel">
+                    <div class="panel-h"><div><h2>Needs attention</h2></div></div>
+                    <div class="panel-b flush">
+                        <div class="list">
+                            <template lwc:if={hasAttention}>
+                                <template for:each={attentionItems} for:item="a">
+                                    <div key={a.key} class={a.rowClass} role={a.role} tabindex={a.tabIndex} data-workspace={a.workspace}
+                                        onclick={handleAttention} onkeydown={handleAttention}>
+                                        <span class={a.iconClass}><c-sab-icon name={a.icon}></c-sab-icon></span>
+                                        <div class="body"><div class="t">{a.title}</div><div class="d">{a.detail}</div></div>
+                                    </div>
+                                </template>
+                            </template>
+                            <template lwc:else>
+                                <div class="li"><span class="ic t-good"><c-sab-icon name="check"></c-sab-icon></span>
+                                    <div class="body"><div class="t">You are all caught up</div><div class="d">Nothing needs your attention right now.</div></div></div>
+                            </template>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="panel role-card">
+                    <div class="panel-h"><div><h2>{roleTitle}</h2></div></div>
+                    <div class="panel-b">
+                        <div class="small muted">{role.caption}</div>
+                        <template lwc:if={role.hasValue}>
+                            <div class="big role-value">{role.value}<template lwc:if={role.isMoney}> {role.unit}</template></div>
+                        </template>
+                        <template lwc:if={role.showMeter}>
+                            <div class="meter"><i style={role.meterStyle}></i></div>
+                        </template>
+                        <template lwc:if={role.hasItems}>
+                            <template for:each={role.items} for:item="i">
+                                <div key={i.recordId} class="row draft-row">
+                                    <span class="id">{i.name}</span><span class="muted small">{i.detail}</span><span class="spacer"></span>
+                                    <template lwc:if={i.canOpen}>
+                                        <button class="link" type="button" data-id={i.recordId} onclick={handleOpenDraft}>Open</button>
+                                    </template>
+                                </div>
+                            </template>
+                        </template>
+                        <template lwc:if={role.detail}>
+                            <div class="small muted role-detail">{role.detail}</div>
+                        </template>
+                        <template lwc:if={role.showAction}>
+                            <div class="row role-action"><button class="btn sm" type="button" onclick={handleRoleAction}>{role.actionLabel}</button></div>
+                        </template>
+                    </div>
+                </section>
+
+                <template lwc:if={showRecentPanel}>
+                    <section class="panel">
+                        <div class="panel-h"><div><h2>Recent postings</h2></div></div>
+                        <div class="panel-b flush">
+                            <div class="list">
+                                <template lwc:if={hasRecent}>
+                                    <template for:each={recentRows} for:item="r">
+                                        <div key={r.recordId} class={r.rowClass} role={r.role} tabindex={r.tabIndex} data-id={r.recordId}
+                                            onclick={handleRecent} onkeydown={handleRecent}>
+                                            <div class="body"><div class="t">{r.name} <span class="muted desc">{r.description}</span></div>
+                                                <div class="d">{r.meta}</div></div>
+                                            <span class={r.chip}><span class="dot"></span>{r.status}</span>
+                                        </div>
+                                    </template>
+                                </template>
+                                <template lwc:else>
+                                    <div class="li"><div class="body"><div class="d">Nothing posted yet.</div></div></div>
+                                </template>
+                            </div>
+                        </div>
+                    </section>
+                </template>
+            </div>
+        </div>
+    </template>
+    <template lwc:elseif={showNoCompany}>
+        <section class="panel">
+            <div class="empty">
+                <div class="ill"><c-sab-icon name="home" size="30"></c-sab-icon></div>
+                <h3>No accounting company yet</h3>
+                <p>Ask your administrator for an active grant to an Accounting Company to see Finance home.</p>
+            </div>
+        </section>
+    </template>
+</template>

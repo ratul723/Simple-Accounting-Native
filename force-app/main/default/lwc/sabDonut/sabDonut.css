@@ -1,0 +1,16 @@
+:host {
+    display: inline-block;
+    line-height: 0;
+}
+
+.cv {
+    font-family: var(--serif);
+    font-size: 22px;
+    fill: var(--text);
+}
+
+.cl {
+    font-family: var(--font);
+    font-size: 11px;
+    fill: var(--muted);
+}

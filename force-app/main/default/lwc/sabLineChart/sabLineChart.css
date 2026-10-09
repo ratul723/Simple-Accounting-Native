@@ -1,0 +1,15 @@
+:host {
+    display: block;
+}
+
+.chart svg {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+.chart text {
+    fill: var(--muted);
+    font-size: 11px;
+    font-family: var(--font);
+}

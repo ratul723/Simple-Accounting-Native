@@ -1,0 +1,110 @@
+@import 'c/sabStyles';
+
+:host {
+    display: contents;
+}
+
+.scrim {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 18, 28, .38);
+    z-index: 9080;
+    display: none;
+}
+
+.scrim.open {
+    display: block;
+}
+
+.drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(560px, 100%);
+    background: var(--surface);
+    color: var(--text);
+    z-index: 9090;
+    box-shadow: var(--shadow-pop);
+    transform: translateX(105%);
+    visibility: hidden;
+    transition: transform .28s ease, visibility 0s linear .28s;
+    display: flex;
+    flex-direction: column;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.drawer.open {
+    transform: none;
+    visibility: visible;
+    transition: transform .28s ease;
+}
+
+.drawer-h {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--line);
+}
+
+.drawer-t {
+    flex: 1;
+    min-width: 0;
+}
+
+.drawer-h h2 {
+    margin: 0;
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: 22px;
+}
+
+.sub {
+    font-size: 12.5px;
+    color: var(--muted);
+    margin-top: 4px;
+}
+
+.drawer-b {
+    padding: 18px 20px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.drawer-f {
+    padding: 14px 20px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+}
+
+.drawer-f.empty-f {
+    display: none;
+}
+
+.icon-btn {
+    background: none;
+    border: 0;
+    color: var(--muted);
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+}
+
+.icon-btn:hover {
+    background: var(--surface-2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .drawer,
+    .drawer.open {
+        transition: none;
+    }
+}

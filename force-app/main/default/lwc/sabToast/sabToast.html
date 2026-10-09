@@ -1,0 +1,10 @@
+<template>
+    <div class="toasts" aria-live="polite" role="status">
+        <template for:each={toasts} for:item="t">
+            <div key={t.id} class={t.className}>
+                <c-sab-icon name={t.icon} size="16"></c-sab-icon>
+                <span>{t.message}</span>
+            </div>
+        </template>
+    </div>
+</template>

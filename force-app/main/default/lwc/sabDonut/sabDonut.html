@@ -1,0 +1,11 @@
+<template>
+    <svg viewBox="0 0 180 180" width="180" height="180" role="img" aria-label={label}>
+        <template for:each={segments} for:item="s">
+            <path key={s.key} d={s.d} fill={s.fill} fill-rule="evenodd" stroke="var(--surface)" stroke-width="2">
+                <title>{s.title}</title>
+            </path>
+        </template>
+        <text x="90" y="86" text-anchor="middle" class="cv">{centerValue}</text>
+        <text x="90" y="106" text-anchor="middle" class="cl">{centerLabel}</text>
+    </svg>
+</template>

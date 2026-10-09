@@ -1,0 +1,21 @@
+<template>
+    <div class="ws-head">
+        <div class="ws-main">
+            <template lwc:if={showCrumbs}>
+                <div class="crumbs">
+                    <span>{companyName}</span>
+                    <template lwc:if={showSeparator}><span class="faint">/</span></template>
+                    <span>{group}</span>
+                    <template lwc:if={optionalModule}><span class="tag">Optional module</span></template>
+                </div>
+            </template>
+            <h1 class="ws-title">{heading}</h1>
+            <template lwc:if={description}>
+                <p class="ws-desc">{description}</p>
+            </template>
+        </div>
+        <div class="ws-actions">
+            <slot name="actions"></slot>
+        </div>
+    </div>
+</template>
