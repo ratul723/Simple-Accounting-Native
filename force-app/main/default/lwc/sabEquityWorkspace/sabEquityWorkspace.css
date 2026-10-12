@@ -1,0 +1,58 @@
+@import 'c/sabStyles';
+
+.panel-h .btn + .btn {
+    margin-left: 8px;
+}
+
+.class-seg {
+    margin-bottom: 14px;
+}
+
+.cap {
+    gap: 24px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.cap-table {
+    flex: 1;
+    min-width: 240px;
+}
+
+.holder {
+    gap: 8px;
+    flex-wrap: nowrap;
+}
+
+.act {
+    text-align: right;
+    white-space: nowrap;
+}
+
+.act .btn + .btn {
+    margin-left: 6px;
+}
+
+.pick {
+    margin-bottom: 12px;
+}
+
+.status-row {
+    margin-bottom: 12px;
+}
+
+.dist-actions {
+    margin-top: 14px;
+}
+
+.row.center {
+    justify-content: center;
+}
+
+.form {
+    gap: 12px 14px;
+}
+
+.form-error {
+    margin-bottom: 14px;
+}

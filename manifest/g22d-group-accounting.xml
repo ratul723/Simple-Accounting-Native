@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>SABAppShellController</members>
+        <members>SABGroupAccountingReadPolicy</members>
+        <members>SABGroupAccountingWorkspaceController</members>
+        <members>SABGroupAccountingWorkspaceCtrlTest</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>SAB_View_Group_Accounting</members>
+        <name>CustomPermission</name>
+    </types>
+    <types>
+        <members>sabAppShell</members>
+        <members>sabGroupAccountingWorkspace</members>
+        <name>LightningComponentBundle</name>
+    </types>
+    <types>
+        <members>SAB_Group_Accounting_Workspace_User</members>
+        <name>PermissionSet</name>
+    </types>
+    <version>67.0</version>
+</Package>

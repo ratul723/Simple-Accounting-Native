@@ -13,9 +13,18 @@ jest.mock('@salesforce/apex/SABCompanyContextController.getCompanyContext', () =
 jest.mock('@salesforce/apex/SABAppShellController.getShellContext', () => ({ default: jest.fn() }), { virtual: true });
 jest.mock('@salesforce/apex/SABAppShellController.search', () => ({ default: jest.fn() }), { virtual: true });
 jest.mock('@salesforce/apex/SABFinanceHomeController.getHome', () => ({ default: jest.fn() }), { virtual: true });
-jest.mock('c/sabJournalWorkspace', () => jest.requireActual('c/sabIcon'));
+jest.mock('c/sabJournalsWorkspace', () => jest.requireActual('c/sabFinanceHome'));
 jest.mock('c/sabAccountingPeriodWorkspace', () => jest.requireActual('c/sabIcon'));
-jest.mock('c/sabCompanySetupWizard', () => jest.requireActual('c/sabIcon'));
+jest.mock('c/sabSetupWorkspace', () => jest.requireActual('c/sabFinanceHome'));
+jest.mock('c/sabReportCentre', () => jest.requireActual('c/sabIcon'));
+jest.mock('@salesforce/apex/SABSetupRecordService.getSetupRecords', () => ({ default: jest.fn() }), { virtual: true });
+jest.mock('@salesforce/apex/SABSetupRecordService.canManageSetup', () => ({ default: jest.fn() }), { virtual: true });
+jest.mock('@salesforce/apex/SABSetupRecordService.createCompany', () => ({ default: jest.fn() }), { virtual: true });
+jest.mock('@salesforce/apex/SABSetupRecordService.saveCompany', () => ({ default: jest.fn() }), { virtual: true });
+jest.mock('@salesforce/apex/SABSetupRecordService.savePeriod', () => ({ default: jest.fn() }), { virtual: true });
+jest.mock('@salesforce/apex/SABSetupRecordService.saveAccount', () => ({ default: jest.fn() }), { virtual: true });
+jest.mock('@salesforce/apex/SABSetupRecordService.saveSequence', () => ({ default: jest.fn() }), { virtual: true });
+jest.mock('@salesforce/apex/SABSetupRecordService.saveFeature', () => ({ default: jest.fn() }), { virtual: true });
 
 const COMPANIES = [
     { companyId: 'a01000000000001AAA', companyName: 'Harbourline Trading', companyKey: 'HLT-AU', functionalCurrency: 'AUD', setupStatus: 'Active' },
@@ -25,7 +34,7 @@ const COMPANIES = [
 const SHELL = {
     userId: '005000000000001AAA',
     persona: { key: 'FINANCE_MANAGER', label: 'Finance Manager', userName: 'Alex Morgan', firstName: 'Alex', initials: 'AM' },
-    visibleWorkspaces: ['home', 'journal', 'close', 'setup', 'reports'],
+    visibleWorkspaces: ['home', 'journal', 'close', 'setup', 'payments'],
     hasPeriod: true,
     periodKey: 'FY27-P03',
     periodStart: '2026-09-01',
@@ -110,8 +119,7 @@ describe('c-sab-app-shell', () => {
         root.querySelector('.nav-item[data-id="journal"]').click();
         await settle();
         expect(root.querySelector('.nav-item[data-id="journal"]').getAttribute('aria-current')).toBe('page');
-        expect(root.querySelector('c-sab-workspace-header').heading).toBe('Journals');
-        expect(root.querySelector('.workspace.legacy-ws')).not.toBeNull();
+        expect(root.querySelector('.workspace.aware')).not.toBeNull();
 
         CurrentPageReference.emit({ type: 'standard__navItemPage', attributes: { apiName: 'SAB_Home' }, state: { c__ws: 'close' } });
         await settle();
@@ -119,9 +127,9 @@ describe('c-sab-app-shell', () => {
 
         root.querySelector('.nav-item[data-id="journal"]').click();
         await settle();
-        expect(root.querySelector('c-sab-workspace-header').heading).toBe('Journals');
+        expect(root.querySelector('.nav-item[data-id="journal"]').getAttribute('aria-current')).toBe('page');
 
-        CurrentPageReference.emit({ type: 'standard__navItemPage', attributes: { apiName: 'SAB_Home' }, state: { c__ws: 'reports' } });
+        CurrentPageReference.emit({ type: 'standard__navItemPage', attributes: { apiName: 'SAB_Home' }, state: { c__ws: 'payments' } });
         await settle();
         expect(root.querySelector('.workspace.aware')).not.toBeNull();
     });
@@ -160,7 +168,7 @@ describe('c-sab-app-shell', () => {
         expect(titles).toEqual(['JE-000318']);
         input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
         await settle();
-        expect(el.shadowRoot.querySelector('c-sab-workspace-header').heading).toBe('Journals');
+        expect(el.shadowRoot.querySelector('.nav-item[data-id="journal"]').getAttribute('aria-current')).toBe('page');
         expect(el.shadowRoot.querySelector('.search-pop').className).not.toContain('open');
     });
 
@@ -221,7 +229,8 @@ describe('c-sab-app-shell', () => {
         expect(publish.mock.calls[publish.mock.calls.length - 1][2]).toMatchObject({ companySwitched: true });
         root.querySelector('.empty .btn.primary').click();
         await settle();
-        expect(root.querySelector('c-sab-workspace-header').heading).toBe('Company setup');
+        expect(root.querySelector('.nav-item[data-id="setup"]').getAttribute('aria-current')).toBe('page');
+        expect(root.querySelector('.workspace.aware')).not.toBeNull();
         root.querySelector('.nav-item[data-id="close"]').click();
         await settle();
         const switchButton = Array.from(root.querySelectorAll('.empty .btn')).find((b) => b.textContent.startsWith('Switch to'));
@@ -274,6 +283,83 @@ describe('c-sab-app-shell', () => {
         el.shadowRoot.querySelector('.empty .btn').click();
         await settle();
         expect(el.shadowRoot.querySelector('.workspace.aware')).not.toBeNull();
+    });
+
+    it('treats a Validated company as ready', async () => {
+        getAccessibleCompanies.mockResolvedValue([{ ...COMPANIES[0], setupStatus: 'Validated' }]);
+        getCompanyContext.mockResolvedValue({ ...COMPANIES[0], setupStatus: 'Validated' });
+        const el = mount();
+        await settle();
+        expect(el.shadowRoot.querySelector('.period-pill').textContent).toBe('FY27-P03 Sep 2026, open');
+        el.shadowRoot.querySelector('.nav-item[data-id="journal"]').click();
+        await settle();
+        expect(el.shadowRoot.querySelector('.workspace.aware')).not.toBeNull();
+        expect(el.shadowRoot.querySelector('.company-pop .d').textContent).toBe('HLT-AU, AUD, validated');
+    });
+
+    it('opens the report centre and lists optional modules when permitted', async () => {
+        getShellContext.mockResolvedValue({ ...SHELL, visibleWorkspaces: ['home', 'reports', 'group', 'loans', 'equity'] });
+        const el = mount();
+        await settle();
+        const root = el.shadowRoot;
+        expect(Array.from(root.querySelectorAll('.nav-group h3')).map((h) => h.textContent)).toEqual(['Overview', 'Compliance & reporting', 'Optional modules']);
+        expect(Array.from(root.querySelectorAll('.nav-item .lbl')).map((l) => l.textContent)).toEqual(
+            ['Finance home', 'Report center', 'Capital & equity', 'Investments & loans', 'Group accounting']);
+        root.querySelector('.nav-item[data-id="reports"]').click();
+        await settle();
+        expect(root.querySelector('c-sab-workspace-header').heading).toBe('Report center');
+        expect(root.querySelector('.workspace.legacy-ws')).not.toBeNull();
+    });
+
+    it('creates a new accounting company from the switcher and opens its setup', async () => {
+        getShellContext.mockResolvedValue({ ...SHELL, canCreateCompany: true });
+        const NEW = { companyId: 'a01000000000009AAA', companyName: 'Harbourline Pacific', companyKey: 'HLT-PAC', functionalCurrency: 'AUD', setupStatus: 'In Progress' };
+        getCompanyContext.mockImplementation(({ companyId }) => Promise.resolve(companyId === NEW.companyId ? NEW : COMPANIES.find((c) => c.companyId === companyId)));
+        const el = mount();
+        await settle();
+        const root = el.shadowRoot;
+        root.querySelector('.company-btn').click();
+        await flush();
+        root.querySelector('.new-company').click();
+        await flush();
+        const editor = root.querySelector('c-sab-setup-records');
+        expect(editor.open).toBe(true);
+        expect(editor.kind).toBe('newCompany');
+        editor.dispatchEvent(new CustomEvent('saved', { detail: { recordId: NEW.companyId } }));
+        await settle();
+        expect(root.querySelector('.company-name').textContent).toBe('Harbourline Pacific');
+        expect(root.querySelector('.nav-item[data-id="setup"]').getAttribute('aria-current')).toBe('page');
+        expect(root.querySelector('.workspace.aware')).not.toBeNull();
+        expect(root.querySelector('c-sab-toast').shadowRoot.querySelector('.toast').textContent).toBe('Accounting company created. Finish its setup next.');
+        editor.dispatchEvent(new CustomEvent('saved', { detail: {} }));
+        editor.dispatchEvent(new CustomEvent('close'));
+        await flush();
+        expect(editor.open).toBe(false);
+    });
+
+    it('welcomes a user without companies who may create one', async () => {
+        getAccessibleCompanies.mockResolvedValue([]);
+        getShellContext.mockResolvedValue({ ...SHELL, visibleWorkspaces: ['home', 'setup'], hasPeriod: false, canCreateCompany: true });
+        const el = mount();
+        await settle();
+        expect(el.shadowRoot.querySelector('.empty h3').textContent).toBe('No accounting company yet');
+        el.shadowRoot.querySelector('.create-first').click();
+        await flush();
+        expect(el.shadowRoot.querySelector('c-sab-setup-records').open).toBe(true);
+    });
+
+    it('switches company and opens the new company form from a workspace', async () => {
+        getShellContext.mockResolvedValue({ ...SHELL, canCreateCompany: true });
+        const el = mount();
+        await settle();
+        const home = el.shadowRoot.querySelector('.workspace.aware');
+        home.dispatchEvent(new CustomEvent('sabswitchcompany', { detail: { companyId: COMPANIES[1].companyId }, bubbles: true, composed: true }));
+        await settle();
+        expect(el.shadowRoot.querySelector('.company-name').textContent).toBe('Harbourline NZ');
+        const current = el.shadowRoot.querySelector('.workspace.aware');
+        current.dispatchEvent(new CustomEvent('sabnewcompany', { bubbles: true, composed: true }));
+        await flush();
+        expect(el.shadowRoot.querySelector('c-sab-setup-records').open).toBe(true);
     });
 
     it('shows a missing period message', async () => {

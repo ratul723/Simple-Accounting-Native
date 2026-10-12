@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <classAccesses>
+        <apexClass>SABSetupRecordService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <customPermissions>
+        <enabled>true</enabled>
+        <name>SAB_Create_Accounting_Company</name>
+    </customPermissions>
+    <description>G22: create a new Accounting Company from the app switcher; the creator becomes its Finance Manager.</description>
+    <hasActivationRequired>false</hasActivationRequired>
+    <label>SAB Create Accounting Company Action</label>
+</PermissionSet>

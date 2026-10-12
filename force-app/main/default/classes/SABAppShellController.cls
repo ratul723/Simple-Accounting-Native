@@ -6,8 +6,9 @@
  * payments, GL accounts and fixed assets, limited to companies the user holds an active grant for.
  *
  * Workspace visibility = custom permission (or object access where no SAB_View_<Area> permission
- * exists yet) AND the company feature switch. Optional modules need an enabled Company_Feature__c
- * row; core features are hidden only when their row is explicitly disabled.
+ * exists yet) AND the company feature switch: a workspace tied to a feature is hidden when the
+ * company's Company_Feature__c row for that key is disabled. Optional modules are additionally gated
+ * by their own SAB_View_<Area> permission.
  *
  * The period pill reads Accounting_Period__c in user mode: SABPeriodService (shared, API 65.0) has
  * no read method for the period of a date and is deliberately left unchanged.
@@ -21,29 +22,29 @@ public with sharing class SABAppShellController {
     private static final String NO_COMPANY_ACCESS = 'You do not have active access to this Accounting Company.';
 
     private static final List<WorkspaceRule> RULES = new List<WorkspaceRule>{
-        new WorkspaceRule('home', 'SAB_View_Finance_Home', null, null, null, false),
-        new WorkspaceRule('journal', null, Journal_Entry__c.SObjectType, ACCESS_READ, null, false),
-        new WorkspaceRule('reversal', null, Journal_Entry__c.SObjectType, ACCESS_READ, null, false),
-        new WorkspaceRule('close', null, Accounting_Period__c.SObjectType, ACCESS_READ, null, false),
-        new WorkspaceRule('audit', null, Business_Action__c.SObjectType, ACCESS_READ, null, false),
-        new WorkspaceRule('sales', null, Invoice__c.SObjectType, ACCESS_READ, null, false),
-        new WorkspaceRule('purchases', 'SAB_View_Accounts_Payable_Workspace', null, null, null, false),
-        new WorkspaceRule('payments', null, Accounting_Payment__c.SObjectType, ACCESS_READ, null, false),
-        new WorkspaceRule('bank', null, Bank_Reconciliation__c.SObjectType, ACCESS_READ, null, false),
-        new WorkspaceRule('payroll', null, Payroll_Run__c.SObjectType, ACCESS_READ, 'PAYROLL', false),
-        new WorkspaceRule('assets', 'SAB_View_Fixed_Asset_Workspace', null, null, 'FIXED_ASSETS', false),
-        new WorkspaceRule('budgets', 'SAB_View_Budgets', null, null, 'BUDGETS', false),
-        new WorkspaceRule('projects', 'SAB_View_Project_Financials', null, null, 'PROJECTS', true),
-        new WorkspaceRule('tax', 'SAB_View_Tax_Returns', null, null, null, false),
-        new WorkspaceRule('reports', null, Report_Run__c.SObjectType, ACCESS_READ, null, false),
-        new WorkspaceRule('equity', 'SAB_View_Equity', null, null, 'EQUITY', true),
-        new WorkspaceRule('loans', 'SAB_View_Loans_Investments', null, null, 'LOANS_INVESTMENTS', true),
-        new WorkspaceRule('group', 'SAB_View_Group_Accounting', null, null, 'GROUP_ACCOUNTING', true),
-        new WorkspaceRule('approvals', 'SAB_View_Approvals_Close', null, null, null, false),
-        new WorkspaceRule('setup', null, Accounting_Company__c.SObjectType, ACCESS_EDIT, null, false),
-        new WorkspaceRule('coa', null, GL_Account__c.SObjectType, ACCESS_READ, null, false),
-        new WorkspaceRule('import', 'SAB_View_Imports', null, null, null, false),
-        new WorkspaceRule('config', null, Company_Feature__c.SObjectType, ACCESS_READ, null, false)
+        new WorkspaceRule('home', 'SAB_View_Finance_Home', null, null, null),
+        new WorkspaceRule('journal', null, Journal_Entry__c.SObjectType, ACCESS_READ, null),
+        new WorkspaceRule('reversal', null, Journal_Entry__c.SObjectType, ACCESS_READ, null),
+        new WorkspaceRule('close', null, Accounting_Period__c.SObjectType, ACCESS_READ, null),
+        new WorkspaceRule('audit', null, Business_Action__c.SObjectType, ACCESS_READ, null),
+        new WorkspaceRule('sales', null, Invoice__c.SObjectType, ACCESS_READ, null),
+        new WorkspaceRule('purchases', 'SAB_View_Accounts_Payable_Workspace', null, null, null),
+        new WorkspaceRule('payments', null, Accounting_Payment__c.SObjectType, ACCESS_READ, null),
+        new WorkspaceRule('bank', null, Bank_Reconciliation__c.SObjectType, ACCESS_READ, null),
+        new WorkspaceRule('payroll', null, Payroll_Run__c.SObjectType, ACCESS_READ, 'PAYROLL'),
+        new WorkspaceRule('assets', 'SAB_View_Fixed_Asset_Workspace', null, null, 'FIXED_ASSETS'),
+        new WorkspaceRule('budgets', 'SAB_View_Budgets', null, null, 'BUDGETS'),
+        new WorkspaceRule('projects', 'SAB_View_Project_Financials', null, null, 'PROJECTS'),
+        new WorkspaceRule('tax', 'SAB_View_Tax_Returns', null, null, null),
+        new WorkspaceRule('reports', 'SAB_View_Management_Reports', null, null, null),
+        new WorkspaceRule('equity', 'SAB_View_Equity', null, null, 'EQUITY'),
+        new WorkspaceRule('loans', 'SAB_View_Loans_Investments', null, null, 'LOANS_INVESTMENTS'),
+        new WorkspaceRule('group', 'SAB_View_Group_Accounting', null, null, 'GROUP_ACCOUNTING'),
+        new WorkspaceRule('approvals', 'SAB_View_Approvals_Close', null, null, null),
+        new WorkspaceRule('setup', null, Accounting_Company__c.SObjectType, ACCESS_EDIT, null),
+        new WorkspaceRule('coa', null, GL_Account__c.SObjectType, ACCESS_READ, null),
+        new WorkspaceRule('import', 'SAB_View_Imports', null, null, null),
+        new WorkspaceRule('config', null, Company_Feature__c.SObjectType, ACCESS_READ, null)
     };
 
     public class ShellContext {
@@ -56,6 +57,7 @@ public with sharing class SABAppShellController {
         @AuraEnabled public String periodStatus { get; set; }
         @AuraEnabled public Boolean canCreateJournal { get; set; }
         @AuraEnabled public Boolean canCreateInvoice { get; set; }
+        @AuraEnabled public Boolean canCreateCompany { get; set; }
     }
 
     public class SearchResult {
@@ -75,16 +77,13 @@ public with sharing class SABAppShellController {
         Schema.SObjectType objectType;
         String accessMode;
         String featureKey;
-        Boolean optionalModule;
 
-        WorkspaceRule(String id, String permission, Schema.SObjectType objectType, String accessMode,
-            String featureKey, Boolean optionalModule) {
+        WorkspaceRule(String id, String permission, Schema.SObjectType objectType, String accessMode, String featureKey) {
             this.id = id;
             this.permission = permission;
             this.objectType = objectType;
             this.accessMode = accessMode;
             this.featureKey = featureKey;
-            this.optionalModule = optionalModule;
         }
     }
 
@@ -99,6 +98,7 @@ public with sharing class SABAppShellController {
         context.visibleWorkspaces = visibleWorkspaces(companyId == null ? new Map<String, Boolean>() : featureStates(companyId), companyId != null);
         context.canCreateJournal = Schema.SObjectType.Journal_Entry__c.isCreateable();
         context.canCreateInvoice = Schema.SObjectType.Invoice__c.isCreateable();
+        context.canCreateCompany = SABPermissionService.hasPermission('SAB_Create_Accounting_Company');
         context.hasPeriod = false;
         if (companyId != null) {
             applyPeriod(context, companyId);
@@ -159,11 +159,7 @@ public with sharing class SABAppShellController {
         if (!hasCompany) {
             return false;
         }
-        Boolean enabled = features.get(rule.featureKey);
-        if (rule.optionalModule) {
-            return enabled == true;
-        }
-        return enabled != false;
+        return features.get(rule.featureKey) != false;
     }
 
     private static Map<String, Boolean> featureStates(Id companyId) {

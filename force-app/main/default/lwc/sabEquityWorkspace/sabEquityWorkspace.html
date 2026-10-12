@@ -1,0 +1,292 @@
+<template>
+    <c-sab-workspace-header company-name={companyName} group="Optional modules" heading="Capital & equity" optional-module
+        description="Share register, capital transactions, dividends and owner distributions.">
+        <button slot="actions" class="btn new-transaction" type="button" disabled={manageDisabled} title={manageReason}
+            onclick={handleNewTransaction}><c-sab-icon name="plus" size="16"></c-sab-icon>New transaction</button>
+        <button slot="actions" class="btn primary declare" type="button" disabled={manageDisabled} title={manageReason}
+            onclick={handleDeclare}><c-sab-icon name="plus" size="16"></c-sab-icon>Declare distribution</button>
+    </c-sab-workspace-header>
+
+    <template lwc:if={errorMessage}>
+        <section class="panel">
+            <div class="empty">
+                <div class="ill"><c-sab-icon name="alert" size="30"></c-sab-icon></div>
+                <h3>Capital &amp; equity could not be loaded</h3>
+                <p>{errorMessage}</p>
+                <div class="row center"><button class="btn primary" type="button" onclick={handleRetry}>Try again</button></div>
+            </div>
+        </section>
+    </template>
+    <template lwc:elseif={showLoading}>
+        <section class="panel"><div class="panel-b muted" role="status">Loading capital and equity</div></section>
+    </template>
+    <template lwc:elseif={data}>
+        <div class="figs">
+            <template for:each={figures} for:item="f">
+                <div key={f.key} class="fig">
+                    <div class="l">{f.label}</div>
+                    <div class="v">{f.value}<template lwc:if={f.hasUnit}><small>{f.unit}</small></template></div>
+                    <div class="s">{f.sub}</div>
+                </div>
+            </template>
+        </div>
+
+        <div class="split">
+            <div class="stack">
+                <section class="panel register">
+                    <div class="panel-h">
+                        <div><h2>Share register</h2><div class="sub">{registerSub}</div></div>
+                        <span class="spacer"></span>
+                        <button class="btn sm add-stakeholder" type="button" disabled={manageDisabled} title={manageReason}
+                            onclick={handleAddStakeholder}>Add stakeholder</button>
+                        <button class="btn sm add-class" type="button" disabled={manageDisabled} title={manageReason}
+                            onclick={handleAddClass}>Add class</button>
+                    </div>
+                    <div class="panel-b">
+                        <template lwc:if={hasManyClasses}>
+                            <div class="seg class-seg" role="group" aria-label="Share class">
+                                <template for:each={classTabs} for:item="c">
+                                    <button key={c.classId} class={c.className} type="button" aria-pressed={c.pressed} data-id={c.classId}
+                                        onclick={handleClassSelect}>{c.classCode}</button>
+                                </template>
+                            </div>
+                        </template>
+                        <template lwc:if={hasHoldings}>
+                            <div class="row cap">
+                                <c-sab-donut parts={donutParts} center-value={donutValue} center-label="shares" label="Ownership by holder"></c-sab-donut>
+                                <div class="cap-table">
+                                    <div class="tbl-wrap">
+                                        <table class="tbl">
+                                            <thead><tr><th>Holder</th><th class="n">Shares</th><th class="n">Holding</th></tr></thead>
+                                            <tbody>
+                                                <template for:each={holdingRows} for:item="h">
+                                                    <tr key={h.stakeholderId}>
+                                                        <td><span class="row holder"><i class="sw" style={h.swatch}></i>{h.stakeholderName}</span></td>
+                                                        <td class="n num">{h.unitsText}</td>
+                                                        <td class="n num">{h.percentText}</td>
+                                                    </tr>
+                                                </template>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                        <template lwc:else>
+                            <div class="muted">No shares issued yet. Record and approve an issue to build the register.</div>
+                        </template>
+                    </div>
+                </section>
+
+                <section class="panel">
+                    <div class="panel-h"><div><h2>Equity transactions</h2><div class="sub">Drafts are approved by a second user, which posts them</div></div></div>
+                    <div class="panel-b flush">
+                        <template lwc:if={hasTransactions}>
+                            <div class="tbl-wrap">
+                                <table class="tbl">
+                                    <thead>
+                                        <tr><th>Ref</th><th>Date</th><th>Type</th><th>Party</th><th class="n">Shares</th><th class="n">Value</th>
+                                            <th>Status</th><th><span class="sr">Actions</span></th></tr>
+                                    </thead>
+                                    <tbody>
+                                        <template for:each={transactionRows} for:item="t">
+                                            <tr key={t.transactionId}>
+                                                <td><span class="id">{t.name}</span></td>
+                                                <td>{t.dateText}</td>
+                                                <td>{t.transactionType}<div class="small muted">{t.className}</div></td>
+                                                <td>{t.party}</td>
+                                                <td class="n num">{t.unitsText}</td>
+                                                <td class="n num">{t.valueText}</td>
+                                                <td><span class={t.chip}><span class="dot"></span>{t.status}</span></td>
+                                                <td class="act">
+                                                    <template lwc:if={t.isDraft}>
+                                                        <button class="btn sm approve-tx" type="button" data-id={t.transactionId} disabled={t.approveDisabled}
+                                                            title={t.approveTitle} onclick={handleApproveTransaction}>Approve</button>
+                                                        <button class="btn ghost sm cancel-tx" type="button" data-id={t.transactionId} disabled={t.cancelDisabled}
+                                                            title={t.cancelTitle} onclick={handleCancelTransaction}>Cancel</button>
+                                                    </template>
+                                                </td>
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </template>
+                        <template lwc:else>
+                            <div class="panel-b muted">No equity transactions yet.</div>
+                        </template>
+                    </div>
+                </section>
+            </div>
+
+            <template lwc:if={showDistributionPanel}>
+                <section class="panel distribution">
+                    <template lwc:if={distribution}>
+                        <div class="panel-h"><div><h2>{distribution.title}</h2>
+                            <div class="sub">Shareholder loans are recorded under Investments &amp; loans, not equity</div></div></div>
+                        <div class="panel-b">
+                            <template lwc:if={hasManyDistributions}>
+                                <label class="field pick"><span>Distribution</span>
+                                    <select class="select dist-select" onchange={handleDistributionSelect}>
+                                        <template for:each={distributionOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template>
+                                    </select></label>
+                            </template>
+                            <div class="row status-row"><span class={distribution.chip}><span class="dot"></span>{distribution.status}</span>
+                                <span class="small muted">{distribution.dates}</span></div>
+                            <template lwc:if={distribution.hasLines}>
+                                <div class="tbl-wrap">
+                                    <table class="tbl">
+                                        <thead><tr><th>Holder</th><th class="n">Entitled</th><th class="n">Paid</th><th>State</th></tr></thead>
+                                        <tbody>
+                                            <template for:each={distribution.lines} for:item="l">
+                                                <tr key={l.lineId}>
+                                                    <td>{l.stakeholderName}</td>
+                                                    <td class="n num">{l.entitledText}</td>
+                                                    <td class="n num">{l.paidText}</td>
+                                                    <td><span class={l.chip}><span class="dot"></span>{l.state}</span></td>
+                                                </tr>
+                                            </template>
+                                        </tbody>
+                                        <tfoot><tr><td>Total</td><td class="n num">{distribution.totalText}</td><td class="n num">{distribution.paidTotalText}</td><td></td></tr></tfoot>
+                                    </table>
+                                </div>
+                            </template>
+                            <template lwc:else>
+                                <div class="muted">Entitlements are calculated from holdings at the record date when the distribution is approved.</div>
+                            </template>
+                            <hr class="sep" />
+                            <dl class="kv">
+                                <dt>Declaration posting</dt><dd>{distribution.declarationPosting}</dd>
+                                <dt>Settlement posting</dt><dd>{distribution.settlementPosting}</dd>
+                            </dl>
+                            <div class="row dist-actions">
+                                <template lwc:if={distribution.isDraft}>
+                                    <button class="btn primary sm approve-dist" type="button" disabled={distribution.approveDisabled}
+                                        title={distribution.approveTitle} onclick={handleApproveDistribution}>Approve and declare</button>
+                                    <button class="btn ghost sm cancel-dist" type="button" disabled={manageDisabled} title={manageReason}
+                                        onclick={handleCancelDistribution}>Cancel</button>
+                                </template>
+                                <template lwc:if={distribution.isOpen}>
+                                    <button class="btn primary sm pay" type="button" disabled={distribution.payDisabled} title={distribution.payTitle}
+                                        onclick={handlePayRemaining}>{distribution.payLabel}</button>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+                    <template lwc:else>
+                        <div class="panel-h"><div><h2>Distributions</h2></div></div>
+                        <div class="panel-b muted">No distributions yet. Declare a dividend or owner distribution to pay shareholders.</div>
+                    </template>
+                </section>
+            </template>
+        </div>
+    </template>
+
+    <c-sab-modal open={modalOpen} heading={modalHeading} subheading={modalSub} onclose={handleCloseModal}>
+        <template lwc:if={formError}>
+            <div class="banner t-bad form-error" role="alert"><c-sab-icon name="alert"></c-sab-icon><div>{formError}</div></div>
+        </template>
+        <template lwc:if={isStakeholderModal}>
+            <div class="grid g2 form">
+                <label class="field"><span>Name</span><input class="input" data-field="name" value={form.name} maxlength="80" oninput={handleField} /></label>
+                <label class="field"><span>Reference</span><input class="input" data-field="reference" value={form.reference} maxlength="80" oninput={handleField} /></label>
+                <label class="field"><span>Linked account (optional)</span>
+                    <select class="select" data-field="accountId" onchange={handleField}>
+                        <option value="">None</option>
+                        <template for:each={accountOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template>
+                    </select></label>
+            </div>
+        </template>
+        <template lwc:if={isClassModal}>
+            <div class="grid g2 form">
+                <label class="field"><span>Name</span><input class="input" data-field="name" value={form.name} oninput={handleField} /></label>
+                <label class="field"><span>Class code</span><input class="input" data-field="classCode" value={form.classCode} oninput={handleField} /></label>
+                <label class="field"><span>Par value</span><input class="input n" type="number" step="0.0001" data-field="parValue" value={form.parValue} oninput={handleField} /></label>
+                <label class="field"><span>Capital account</span>
+                    <select class="select" data-field="capitalAccountId" onchange={handleField}>
+                        <option value="">Select</option>
+                        <template for:each={capitalOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template>
+                    </select></label>
+                <label class="field"><span>Premium account</span>
+                    <select class="select" data-field="premiumAccountId" onchange={handleField}>
+                        <option value="">Select</option>
+                        <template for:each={premiumOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template>
+                    </select></label>
+            </div>
+        </template>
+        <template lwc:if={isTransactionModal}>
+            <div class="grid g2 form">
+                <label class="field"><span>Type</span>
+                    <select class="select" data-field="transactionType" onchange={handleField}>
+                        <template for:each={txTypeOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template>
+                    </select></label>
+                <label class="field"><span>Share class</span>
+                    <select class="select" data-field="classId" onchange={handleField}>
+                        <option value="">Select</option>
+                        <template for:each={classOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template>
+                    </select></label>
+                <label class="field"><span>Stakeholder</span>
+                    <select class="select" data-field="stakeholderId" onchange={handleField}>
+                        <option value="">Select</option>
+                        <template for:each={stakeholderOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template>
+                    </select></label>
+                <template lwc:if={isTransfer}>
+                    <label class="field"><span>Transfer to</span>
+                        <select class="select" data-field="toStakeholderId" onchange={handleField}>
+                            <option value="">Select</option>
+                            <template for:each={toStakeholderOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template>
+                        </select></label>
+                </template>
+                <label class="field"><span>Date</span><input class="input" type="date" data-field="transactionDate" value={form.transactionDate} oninput={handleField} /></label>
+                <template lwc:if={needsUnits}>
+                    <label class="field"><span>Shares</span><input class="input n" type="number" step="0.0001" data-field="units" value={form.units} oninput={handleField} /></label>
+                </template>
+                <template lwc:if={needsCash}>
+                    <label class="field"><span>Value</span><input class="input n" type="number" step="0.01" data-field="value" value={form.value} oninput={handleField} /></label>
+                    <label class="field"><span>Bank account</span>
+                        <select class="select" data-field="bankAccountId" onchange={handleField}>
+                            <option value="">Select</option>
+                            <template for:each={bankOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template>
+                        </select></label>
+                </template>
+            </div>
+        </template>
+        <template lwc:if={isDistributionModal}>
+            <div class="grid g2 form">
+                <label class="field"><span>Type</span>
+                    <select class="select" data-field="distributionType" onchange={handleField}>
+                        <template for:each={distTypeOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template>
+                    </select></label>
+                <label class="field"><span>Share class</span>
+                    <select class="select" data-field="classId" onchange={handleField}>
+                        <option value="">Select</option>
+                        <template for:each={classOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template>
+                    </select></label>
+                <label class="field"><span>Total amount</span><input class="input n" type="number" step="0.01" data-field="totalAmount" value={form.totalAmount} oninput={handleField} /></label>
+                <label class="field"><span>Declaration date</span><input class="input" type="date" data-field="declarationDate" value={form.declarationDate} oninput={handleField} /></label>
+                <label class="field"><span>Record date</span><input class="input" type="date" data-field="recordDate" value={form.recordDate} oninput={handleField} /></label>
+                <label class="field"><span>Payment due date</span><input class="input" type="date" data-field="paymentDueDate" value={form.paymentDueDate} oninput={handleField} /></label>
+                <label class="field"><span>Source equity account</span>
+                    <select class="select" data-field="sourceAccountId" onchange={handleField}>
+                        <option value="">Select</option>
+                        <template for:each={sourceOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template>
+                    </select></label>
+                <label class="field"><span>Payable account</span>
+                    <select class="select" data-field="payableAccountId" onchange={handleField}>
+                        <option value="">Select</option>
+                        <template for:each={payableOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template>
+                    </select></label>
+                <label class="field"><span>Bank account</span>
+                    <select class="select" data-field="bankAccountId" onchange={handleField}>
+                        <option value="">Select</option>
+                        <template for:each={bankOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template>
+                    </select></label>
+            </div>
+        </template>
+        <template lwc:if={isCancelModal}>
+            <label class="field"><span>Reason</span><textarea class="textarea" rows="3" data-field="reason" oninput={handleField}></textarea></label>
+        </template>
+        <button slot="footer" class="btn cancel" type="button" onclick={handleCloseModal}>Close</button>
+        <button slot="footer" class={saveClass} type="button" disabled={saving} onclick={handleSave}>{saveLabel}</button>
+    </c-sab-modal>
+</template>

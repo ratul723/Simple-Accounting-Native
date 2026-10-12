@@ -1,0 +1,295 @@
+<template>
+    <c-sab-workspace-header company-name={companyName} group="Optional modules" heading="Investments & loans" optional-module
+        description="Borrowings, shareholder loans, lending, investments and their accounting.">
+        <button slot="actions" class="btn new-loan" type="button" disabled={newLoanDisabled} title={newLoanTitle}
+            onclick={handleNewLoan}><c-sab-icon name="plus" size="16"></c-sab-icon>New loan</button>
+        <button slot="actions" class="btn primary new-investment" type="button" disabled={newInvestmentDisabled}
+            title={newInvestmentTitle} onclick={handleNewInvestment}><c-sab-icon name="plus" size="16"></c-sab-icon>New investment</button>
+    </c-sab-workspace-header>
+
+    <template lwc:if={errorMessage}>
+        <section class="panel">
+            <div class="empty">
+                <div class="ill"><c-sab-icon name="alert" size="30"></c-sab-icon></div>
+                <h3>Investments &amp; loans could not be loaded</h3>
+                <p>{errorMessage}</p>
+                <div class="row center"><button class="btn primary" type="button" onclick={handleRetry}>Try again</button></div>
+            </div>
+        </section>
+    </template>
+    <template lwc:elseif={showLoading}>
+        <section class="panel"><div class="panel-b muted" role="status">Loading investments and loans</div></section>
+    </template>
+    <template lwc:elseif={data}>
+        <div class="figs">
+            <template for:each={figures} for:item="f">
+                <div key={f.key} class="fig">
+                    <div class="l">{f.label}</div>
+                    <div class="v">{f.value}<small>{cur}</small></div>
+                    <div class="s">{f.sub}</div>
+                </div>
+            </template>
+        </div>
+
+        <div class="tabs" role="tablist">
+            <template for:each={tabs} for:item="t">
+                <button key={t.id} class={t.className} type="button" role="tab" aria-selected={t.selected} data-tab={t.id}
+                    onclick={handleTab}>{t.label}<span class="count">{t.count}</span></button>
+            </template>
+        </div>
+
+        <template lwc:if={isLoansTab}>
+            <template lwc:if={hasLoans}>
+                <div class="grid g2 cards">
+                    <template for:each={loanCards} for:item="l">
+                        <div key={l.loanId} class={l.className} role="button" tabindex="0" aria-pressed={l.pressed} data-id={l.loanId}
+                            onclick={handleSelectLoan} onkeydown={handleLoanKeydown}>
+                            <div class="row"><h4>{l.name}</h4><span class="spacer"></span><span class={l.chip}><span class="dot"></span>{l.status}</span><span class="tag">{l.loanType}</span></div>
+                            <div class="small muted">{l.meta}</div>
+                            <div class="row figures-row">
+                                <div><div class="small muted">Balance</div><div class="big">{l.balanceText}</div></div>
+                                <div><div class="small muted">Rate</div><div class="strong">{l.rateText}</div></div>
+                                <template lwc:if={l.hasNext}>
+                                    <div><div class="small muted">Next payment</div><div class="strong">{l.nextText}</div></div>
+                                </template>
+                            </div>
+                            <div class="repaid">
+                                <div class="meter"><i style={l.meterStyle}></i></div>
+                                <div class="small muted">{l.repaidText}</div>
+                            </div>
+                            <template lwc:if={l.isDraft}>
+                                <div class="row card-actions">
+                                    <button class="btn sm edit-loan" type="button" data-id={l.loanId} disabled={l.editDisabled} title={l.editTitle}
+                                        onclick={handleEditLoan}>Edit draft</button>
+                                    <button class="btn primary sm approve-loan" type="button" data-id={l.loanId} disabled={l.approveDisabled}
+                                        title={l.approveTitle} onclick={handleApprove}>Approve</button>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+                <section class="panel schedule-panel">
+                    <div class="panel-h"><div><h2>{scheduleTitle}</h2><div class="sub">{scheduleSub}</div></div></div>
+                    <div class="panel-b flush">
+                        <template lwc:if={hasSchedule}>
+                            <div class="tbl-wrap">
+                                <table class="tbl">
+                                    <thead>
+                                        <tr><th>Due date</th><th class="n">Payment</th><th class="n">Interest</th><th class="n">Principal</th>
+                                            <th class="n">Balance</th><th>Status</th><th><span class="sr">Action</span></th></tr>
+                                    </thead>
+                                    <tbody>
+                                        <template for:each={scheduleRows} for:item="r">
+                                            <tr key={r.lineId}>
+                                                <td>{r.dueText}</td>
+                                                <td class="n num">{r.paymentText}</td>
+                                                <td class="n num">{r.interestText}</td>
+                                                <td class="n num">{r.principalText}</td>
+                                                <td class="n num">{r.balanceText}</td>
+                                                <td><span class={r.chip}><span class="dot"></span>{r.status}</span></td>
+                                                <td class="act">
+                                                    <template lwc:if={r.hasAction}>
+                                                        <button class="btn sm line-action" type="button" data-id={r.lineId} data-action={r.action}
+                                                            disabled={r.actionDisabled} title={r.actionTitle} onclick={handleLineAction}>{r.actionLabel}</button>
+                                                    </template>
+                                                </td>
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </template>
+                        <template lwc:else>
+                            <div class="panel-b muted">{scheduleEmptyText}</div>
+                        </template>
+                    </div>
+                </section>
+            </template>
+            <template lwc:else>
+                <section class="panel">
+                    <div class="empty">
+                        <div class="ill"><c-sab-icon name="loan" size="30"></c-sab-icon></div>
+                        <h3>No loans yet</h3>
+                        <p>Record a borrowing, a shareholder loan or money lent. Approval generates the schedule and posts the drawdown.</p>
+                    </div>
+                </section>
+            </template>
+        </template>
+
+        <template lwc:else>
+            <template lwc:if={hasInvestments}>
+                <div class="grid g2 cards">
+                    <template for:each={investmentCards} for:item="v">
+                        <div key={v.investmentId} class="cardlet">
+                            <div class="row"><h4>{v.name}</h4><span class="spacer"></span><span class={v.chip}><span class="dot"></span>{v.status}</span><span class="tag">{v.classification}</span></div>
+                            <div class="small muted">{v.meta}</div>
+                            <div class="row figures-row">
+                                <div><div class="small muted">Carrying value</div><div class="big">{v.carryingText}</div></div>
+                                <div><div class="small muted">Cost</div><div class="strong">{v.costText}</div></div>
+                                <div><div class="small muted">Units</div><div class="strong">{v.quantityText}</div></div>
+                                <div><div class="small muted">Income this year</div><div class="strong">{v.incomeText}</div></div>
+                            </div>
+                            <template lwc:if={v.canRecord}>
+                                <div class="row card-actions">
+                                    <button class="btn sm record-tx" type="button" data-id={v.investmentId} disabled={v.recordDisabled}
+                                        title={v.recordTitle} onclick={handleRecordTransaction}>Record transaction</button>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+            </template>
+            <template lwc:else>
+                <section class="panel">
+                    <div class="empty">
+                        <div class="ill"><c-sab-icon name="loan" size="30"></c-sab-icon></div>
+                        <h3>No investments yet</h3>
+                        <p>Add a term deposit, fund or shareholding, then record its acquisition to post it to the ledger.</p>
+                    </div>
+                </section>
+            </template>
+            <section class="panel">
+                <div class="panel-h"><div><h2>Investment transactions</h2><div class="sub">Latest 50, newest first</div></div></div>
+                <div class="panel-b flush">
+                    <template lwc:if={hasTransactions}>
+                        <div class="tbl-wrap">
+                            <table class="tbl">
+                                <thead>
+                                    <tr><th>Date</th><th>Investment</th><th>Type</th><th class="n">Units</th><th class="n">Amount</th>
+                                        <th class="n">Gain or loss</th><th>Status</th></tr>
+                                </thead>
+                                <tbody>
+                                    <template for:each={transactionRows} for:item="t">
+                                        <tr key={t.transactionId}>
+                                            <td>{t.dateText}</td>
+                                            <td><span class="id">{t.investmentName}</span></td>
+                                            <td>{t.transactionType}</td>
+                                            <td class="n num">{t.quantityText}</td>
+                                            <td class="n num">{t.amountText}</td>
+                                            <td class="n num">{t.gainText}</td>
+                                            <td><span class={t.chip}><span class="dot"></span>{t.statusText}</span></td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </template>
+                    <template lwc:else>
+                        <div class="panel-b muted">No transactions recorded.</div>
+                    </template>
+                </div>
+            </section>
+        </template>
+    </template>
+
+    <c-sab-modal open={modalOpen} heading={modalHeading} subheading={modalSub} onclose={handleCloseModal}>
+        <template lwc:if={formError}>
+            <div class="banner t-bad form-error" role="alert"><c-sab-icon name="alert"></c-sab-icon><div>{formError}</div></div>
+        </template>
+        <template lwc:if={isLoanModal}>
+            <div class="grid g2 form">
+                <label class="field"><span>Name</span><input class="input" data-field="name" value={form.name} maxlength="80" oninput={handleField} /></label>
+                <label class="field"><span>Loan type</span>
+                    <select class="select" data-field="loanType" onchange={handleField}>
+                        <template for:each={loanTypeOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template>
+                    </select></label>
+                <label class="field"><span>Counterparty</span>
+                    <select class="select" data-field="counterpartyAccountId" onchange={handleField}>
+                        <option value="">Select</option>
+                        <template for:each={counterpartyOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template>
+                    </select></label>
+                <label class="field"><span>Principal</span><input class="input n" type="number" step="0.01" data-field="principal" value={form.principal} oninput={handleField} /></label>
+                <label class="field"><span>Annual rate %</span><input class="input n" type="number" step="0.0001" data-field="annualRatePercent" value={form.annualRatePercent} oninput={handleField} /></label>
+                <label class="field"><span>Start date</span><input class="input" type="date" data-field="startDate" value={form.startDate} oninput={handleField} /></label>
+                <label class="field"><span>Maturity date</span><input class="input" type="date" data-field="maturityDate" value={form.maturityDate} oninput={handleField} /></label>
+                <label class="field"><span>Repayment frequency</span>
+                    <select class="select" data-field="repaymentFrequency" onchange={handleField}>
+                        <template for:each={frequencyOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template>
+                    </select></label>
+                <label class="field"><span>Schedule method</span>
+                    <select class="select" data-field="scheduleMethod" onchange={handleField}>
+                        <template for:each={methodOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template>
+                    </select></label>
+                <label class="field"><span>Principal account</span>
+                    <select class="select" data-field="principalAccountId" onchange={handleField}>
+                        <option value="">Select</option>
+                        <template for:each={principalGlOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template>
+                    </select></label>
+                <label class="field"><span>Interest account</span>
+                    <select class="select" data-field="interestAccountId" onchange={handleField}>
+                        <option value="">Select</option>
+                        <template for:each={interestGlOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template>
+                    </select></label>
+                <label class="field"><span>Accrued interest account</span>
+                    <select class="select" data-field="accruedInterestAccountId" onchange={handleField}>
+                        <option value="">Select</option>
+                        <template for:each={accruedGlOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template>
+                    </select></label>
+                <label class="field"><span>Bank account</span>
+                    <select class="select" data-field="bankAccountId" onchange={handleField}>
+                        <option value="">Select</option>
+                        <template for:each={bankOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template>
+                    </select></label>
+            </div>
+        </template>
+        <template lwc:if={isInvestmentModal}>
+            <div class="grid g2 form">
+                <label class="field"><span>Name</span><input class="input" data-field="name" value={form.name} oninput={handleField} /></label>
+                <label class="field"><span>Instrument key</span><input class="input" data-field="instrumentKey" value={form.instrumentKey} oninput={handleField} /></label>
+                <label class="field"><span>Classification</span>
+                    <select class="select" data-field="classification" onchange={handleField}>
+                        <template for:each={classificationOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template>
+                    </select></label>
+                <label class="field"><span>Valuation policy</span>
+                    <select class="select" data-field="valuationPolicy" onchange={handleField}>
+                        <template for:each={policyOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template>
+                    </select></label>
+                <label class="field"><span>Counterparty (optional)</span>
+                    <select class="select" data-field="counterpartyAccountId" onchange={handleField}>
+                        <option value="">None</option>
+                        <template for:each={counterpartyOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template>
+                    </select></label>
+                <label class="field"><span>Investment account</span>
+                    <select class="select" data-field="investmentAccountId" onchange={handleField}>
+                        <option value="">Select</option>
+                        <template for:each={investmentGlOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template>
+                    </select></label>
+                <label class="field"><span>Income account</span>
+                    <select class="select" data-field="incomeAccountId" onchange={handleField}>
+                        <option value="">Select</option>
+                        <template for:each={incomeGlOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template>
+                    </select></label>
+                <label class="field"><span>Gain or loss account</span>
+                    <select class="select" data-field="gainLossAccountId" onchange={handleField}>
+                        <option value="">Select</option>
+                        <template for:each={gainLossGlOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template>
+                    </select></label>
+                <label class="field"><span>Fee account</span>
+                    <select class="select" data-field="feeAccountId" onchange={handleField}>
+                        <option value="">Select</option>
+                        <template for:each={feeGlOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template>
+                    </select></label>
+                <label class="field"><span>Bank account</span>
+                    <select class="select" data-field="bankAccountId" onchange={handleField}>
+                        <option value="">Select</option>
+                        <template for:each={bankOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template>
+                    </select></label>
+            </div>
+        </template>
+        <template lwc:if={isTransactionModal}>
+            <div class="grid g2 form">
+                <label class="field"><span>Type</span>
+                    <select class="select" data-field="transactionType" onchange={handleField}>
+                        <template for:each={txTypeOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template>
+                    </select></label>
+                <label class="field"><span>Date</span><input class="input" type="date" data-field="transactionDate" value={form.transactionDate} oninput={handleField} /></label>
+                <label class="field"><span>{amountLabel}</span><input class="input n" type="number" step="0.01" data-field="amount" value={form.amount} oninput={handleField} /></label>
+                <template lwc:if={needsQuantity}>
+                    <label class="field"><span>Units</span><input class="input n" type="number" step="0.0001" data-field="quantity" value={form.quantity} oninput={handleField} /></label>
+                </template>
+            </div>
+        </template>
+        <button slot="footer" class="btn cancel" type="button" onclick={handleCloseModal}>Cancel</button>
+        <button slot="footer" class="btn primary save" type="button" disabled={saving} onclick={handleSave}>{saveLabel}</button>
+    </c-sab-modal>
+</template>

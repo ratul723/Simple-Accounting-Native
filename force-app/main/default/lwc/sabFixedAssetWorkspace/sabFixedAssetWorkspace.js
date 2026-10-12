@@ -402,6 +402,16 @@ export default class SabFixedAssetWorkspace extends NavigationMixin(LightningEle
         return Boolean(this.companyId);
     }
 
+    /** Book key for the header; the header renders as soon as a company is set, before the dashboard loads. */
+    get bookKey() {
+        return this.dashboard?.bookKey || '';
+    }
+
+    /** Reconciliation summary of the selected asset; empty until the asset detail returns one. */
+    get reconciliation() {
+        return this.selectedAsset?.reconciliation || {};
+    }
+
     get hasDashboard() {
         return Boolean(this.dashboard);
     }

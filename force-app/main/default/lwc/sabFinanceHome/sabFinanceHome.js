@@ -316,6 +316,14 @@ export default class SabFinanceHome extends LightningElement {
         }));
     }
 
+    get canOpenInbox() {
+        return this.canGo('approvals');
+    }
+
+    handleOpenInbox() {
+        this.navigate('approvals');
+    }
+
     get hasApprovals() {
         return this.approvalRows.length > 0;
     }
@@ -368,7 +376,9 @@ export default class SabFinanceHome extends LightningElement {
     handleAttention(event) {
         const workspace = event.currentTarget.dataset.workspace;
         this.activate(event, () => {
-            if (workspace === 'home') {
+            if (workspace === 'home' && this.canGo('approvals')) {
+                this.navigate('approvals');
+            } else if (workspace === 'home') {
                 const panel = this.template.querySelector('.approvals-panel');
                 if (panel && typeof panel.scrollIntoView === 'function') {
                     panel.scrollIntoView({ behavior: 'smooth', block: 'start' });

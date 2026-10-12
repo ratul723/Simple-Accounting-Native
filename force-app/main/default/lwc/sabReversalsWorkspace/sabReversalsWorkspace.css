@@ -1,0 +1,32 @@
+@import 'c/sabStyles';
+
+.li.sel {
+    background: var(--accent-soft);
+    box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.li[role="button"]:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: -2px;
+}
+
+.posted {
+    margin-bottom: 12px;
+}
+
+.date-text {
+    margin-top: 6px;
+}
+
+.post-row {
+    justify-content: flex-end;
+    margin-top: 8px;
+}
+
+.sab-blocked {
+    margin-top: 10px;
+}
+
+.row.center {
+    justify-content: center;
+}

@@ -68,7 +68,9 @@
                 <template lwc:if={showApprovals}>
                     <section class="panel approvals-panel">
                         <div class="panel-h"><div><h2>Approvals queue</h2>
-                            <div class="sub">Approvals are tied to the source version. Editing a document after approval sends it back here.</div></div></div>
+                            <div class="sub">Approvals are tied to the source version. Editing a document after approval sends it back here.</div></div>
+                            <span class="spacer"></span>
+                            <template lwc:if={canOpenInbox}><button class="btn sm open-inbox" type="button" onclick={handleOpenInbox}>Open approvals inbox</button></template></div>
                         <div class="panel-b flush">
                             <div class="tbl-wrap">
                                 <table class="tbl">

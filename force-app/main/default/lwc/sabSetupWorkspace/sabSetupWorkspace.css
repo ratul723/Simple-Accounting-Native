@@ -1,0 +1,14 @@
+@import 'c/sabStyles';
+
+.step-detail {
+    margin-top: 2px;
+    color: var(--text);
+}
+
+.act {
+    text-align: right;
+}
+
+.row.center {
+    justify-content: center;
+}

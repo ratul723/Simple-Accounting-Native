@@ -19,11 +19,12 @@ private class SABAppShellControllerTest {
         System.assertEquals(SABPersonaService.BOOKKEEPER, context.persona.key, 'Post journal permission gives Bookkeeper.');
         System.assert(context.visibleWorkspaces.contains('home'), 'SAB_App_User grants Finance home.');
         System.assert(context.visibleWorkspaces.contains('journal'), 'Journal access shows Journals.');
-        System.assert(!context.visibleWorkspaces.contains('projects'), 'Optional modules need an enabled feature.');
+        System.assert(!context.visibleWorkspaces.contains('projects'), 'Optional modules need their view permission.');
         System.assert(context.hasPeriod, 'The current month period is found.');
         System.assertEquals('Open', context.periodStatus, 'Period status is returned.');
         System.assertEquals(Date.today().toStartOfMonth(), context.periodStart, 'Period start is returned.');
         System.assertNotEquals(null, context.userId, 'User id keys the theme preference.');
+        System.assert(!context.canCreateCompany, 'Creating companies needs its own permission.');
     }
 
     @IsTest
@@ -47,6 +48,8 @@ private class SABAppShellControllerTest {
         List<String> enabled = SABAppShellController.visibleWorkspaces(new Map<String, Boolean>{ 'PAYROLL' => true }, true);
         System.assertEquals(enabled.contains('payroll'), Schema.SObjectType.Payroll_Run__c.isAccessible(),
             'An enabled core feature follows object access.');
+        List<String> disabled = SABAppShellController.visibleWorkspaces(new Map<String, Boolean>{ 'PAYROLL' => false }, true);
+        System.assert(!disabled.contains('payroll'), 'A disabled feature hides its workspace.');
     }
 
     @IsTest
@@ -84,14 +87,14 @@ private class SABAppShellControllerTest {
     static void searchReturnsAccessibleRecords() {
         Id companyId = SABAppShellTestFixture.companyId(SABAppShellTestFixture.ACTIVE_KEY);
         GL_Account__c account = [SELECT Id FROM GL_Account__c WHERE Company__c = :companyId AND Account_Code__c = '1000' WITH SYSTEM_MODE];
-        Journal_Entry__c journal = [SELECT Id FROM Journal_Entry__c WHERE Company__c = :companyId WITH SYSTEM_MODE LIMIT 1];
-        Test.setFixedSearchResults(new List<Id>{ account.Id, journal.Id });
         List<SABAppShellController.SearchResult> results;
-        Test.startTest();
         System.runAs(SABAppShellTestFixture.fixtureUser()) {
+            Journal_Entry__c journal = SABAppShellTestFixture.seedDraftJournal();
+            Test.setFixedSearchResults(new List<Id>{ account.Id, journal.Id });
+            Test.startTest();
             results = SABAppShellController.search('Operating');
+            Test.stopTest();
         }
-        Test.stopTest();
         Set<String> kinds = new Set<String>();
         for (SABAppShellController.SearchResult row : results) {
             kinds.add(row.kind);

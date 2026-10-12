@@ -1,0 +1,79 @@
+<template>
+    <c-sab-modal open={open} heading={heading} subheading={subheading} onclose={handleClose}>
+        <template lwc:if={listError}>
+            <div class="banner t-bad" role="alert"><c-sab-icon name="alert"></c-sab-icon><div>{listError}</div></div>
+        </template>
+        <template lwc:elseif={isList}>
+            <template lwc:if={hasRows}>
+                <div class="tbl-wrap">
+                    <table class="tbl">
+                        <thead>
+                            <tr>
+                                <template for:each={columns} for:item="c"><th key={c.key}>{c.label}</th></template>
+                                <th><span class="sr">Actions</span></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template for:each={tableRows} for:item="r">
+                                <tr key={r.id}>
+                                    <template for:each={r.cells} for:item="cell"><td key={cell.key}>{cell.text}</td></template>
+                                    <td class="act"><button class="btn ghost sm edit" type="button" data-id={r.id} disabled={r.editDisabled}
+                                        title={r.editTitle} onclick={handleEdit}>Edit</button></td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </template>
+            <template lwc:else>
+                <div class="muted empty-list">{emptyText}</div>
+            </template>
+        </template>
+        <template lwc:else>
+            <template lwc:if={formError}>
+                <div class="banner t-bad form-error" role="alert"><c-sab-icon name="alert"></c-sab-icon><div>{formError}</div></div>
+            </template>
+            <div class="grid g2 form">
+                <template for:each={fields} for:item="f">
+                    <div key={f.key} class="cell">
+                        <template lwc:if={f.isCheckbox}>
+                            <label class="check"><input type="checkbox" data-field={f.name} checked={f.checked} disabled={f.disabled}
+                                onchange={handleInput} />{f.label}</label>
+                        </template>
+                        <template lwc:else>
+                            <label class="field"><span>{f.label}</span>
+                                <template lwc:if={f.isSelect}>
+                                    <select class="select" data-field={f.name} disabled={f.disabled} onchange={handleInput}>
+                                        <template lwc:if={f.showBlank}><option value="">None</option></template>
+                                        <template for:each={f.options} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template>
+                                    </select>
+                                </template>
+                                <template lwc:elseif={f.isDate}>
+                                    <input class="input" type="date" data-field={f.name} value={f.value} disabled={f.disabled} oninput={handleInput} />
+                                </template>
+                                <template lwc:elseif={f.isNumber}>
+                                    <input class="input n" type="number" data-field={f.name} value={f.value} disabled={f.disabled} oninput={handleInput} />
+                                </template>
+                                <template lwc:else>
+                                    <input class="input" type="text" data-field={f.name} value={f.value} disabled={f.disabled} oninput={handleInput} />
+                                </template>
+                            </label>
+                            <template lwc:if={f.hint}><div class="hint">{f.hint}</div></template>
+                        </template>
+                    </div>
+                </template>
+            </div>
+        </template>
+        <template lwc:if={showNew}>
+            <button slot="footer" class="btn primary new" type="button" disabled={manageDisabled} title={manageReason} onclick={handleNew}>
+                <c-sab-icon name="plus" size="16"></c-sab-icon>New</button>
+        </template>
+        <template lwc:if={showBack}>
+            <button slot="footer" class="btn back" type="button" onclick={handleBack}>Back to list</button>
+        </template>
+        <button slot="footer" class="btn close" type="button" onclick={handleClose}>Close</button>
+        <template lwc:if={showSave}>
+            <button slot="footer" class="btn primary save" type="button" disabled={saveDisabled} title={manageReason} onclick={handleSave}>Save</button>
+        </template>
+    </c-sab-modal>
+</template>

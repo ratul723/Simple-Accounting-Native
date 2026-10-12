@@ -1,0 +1,116 @@
+<template>
+    <c-sab-workspace-header company-name={companyName} group="Ledger" heading="Journal reversals"
+        description="Reverse posted journals with a required reason and a linked, auditable history."></c-sab-workspace-header>
+
+    <template lwc:if={errorMessage}>
+        <section class="panel">
+            <div class="empty">
+                <div class="ill"><c-sab-icon name="alert" size="30"></c-sab-icon></div>
+                <h3>Journal reversals could not be loaded</h3>
+                <p>{errorMessage}</p>
+                <div class="row center"><button class="btn primary" type="button" onclick={handleRetry}>Try again</button></div>
+            </div>
+        </section>
+    </template>
+    <template lwc:elseif={showLoading}>
+        <section class="panel"><div class="panel-b muted" role="status">Loading journals</div></section>
+    </template>
+    <template lwc:elseif={browse}>
+        <div class="split-l">
+            <div class="stack">
+                <section class="panel sab-eligible">
+                    <div class="panel-h"><div><h2>Posted journals</h2><div class="sub">Subledger journals are reversed from their source document</div></div></div>
+                    <div class="panel-b flush">
+                        <div class="list">
+                            <template lwc:if={hasEligible}>
+                                <template for:each={eligibleRows} for:item="j">
+                                    <div key={j.journalId} class={j.className} role="button" tabindex="0" aria-current={j.current} data-id={j.journalId}
+                                        onclick={handlePick} onkeydown={handlePick}>
+                                        <div class="body"><div class="t">{j.name}</div><div class="d">{j.description}</div></div>
+                                        <span class="num">{j.totalText}</span>
+                                    </div>
+                                </template>
+                            </template>
+                            <template lwc:else><div class="li muted">No posted manual, opening or allocation journals.</div></template>
+                        </div>
+                    </div>
+                </section>
+                <section class="panel sab-history">
+                    <div class="panel-h"><div><h2>Reversal history</h2></div></div>
+                    <div class="panel-b flush">
+                        <div class="list">
+                            <template lwc:if={hasHistory}>
+                                <template for:each={historyRows} for:item="h">
+                                    <div key={h.journalId} class="li"><span class="ic t-warn"><c-sab-icon name="reverse"></c-sab-icon></span>
+                                        <div class="body"><div class="t">{h.title}</div><div class="d">{h.detail}</div></div></div>
+                                </template>
+                            </template>
+                            <template lwc:else><div class="li muted">No reversals yet.</div></template>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <template lwc:if={detailError}>
+                <section class="panel"><div class="panel-b"><div class="banner t-bad" role="alert"><c-sab-icon name="alert"></c-sab-icon><div>{detailError}</div></div></div></section>
+            </template>
+            <template lwc:elseif={hasSelection}>
+                <section class="panel sab-reverse-panel">
+                    <div class="panel-h"><div><h2>{panelTitle}</h2><div class="sub">The original stays in the ledger. A new reversal journal mirrors every line.</div></div></div>
+                    <div class="panel-b">
+                        <div class="small muted posted">{postedText}</div>
+                        <div class="grid g2">
+                            <section class="panel inner">
+                                <div class="panel-h"><div><h2>Original</h2></div></div>
+                                <div class="panel-b flush"><div class="tbl-wrap"><table class="tbl sab-original">
+                                    <thead><tr><th>Account</th><th class="n">Debit</th><th class="n">Credit</th></tr></thead>
+                                    <tbody><template for:each={originalRows} for:item="l"><tr key={l.key}><td><span class="id">{l.code}</span> {l.name}</td>
+                                        <td class="n num">{l.debitText}</td><td class="n num">{l.creditText}</td></tr></template></tbody>
+                                </table></div></div>
+                            </section>
+                            <section class="panel inner">
+                                <div class="panel-h"><div><h2>Reversal preview</h2></div></div>
+                                <div class="panel-b flush"><div class="tbl-wrap"><table class="tbl sab-preview">
+                                    <thead><tr><th>Account</th><th class="n">Debit</th><th class="n">Credit</th></tr></thead>
+                                    <tbody><template for:each={originalRows} for:item="l"><tr key={l.key}><td><span class="id">{l.code}</span> {l.name}</td>
+                                        <td class="n num">{l.reversalDebitText}</td><td class="n num">{l.reversalCreditText}</td></tr></template></tbody>
+                                </table></div></div>
+                            </section>
+                        </div>
+                        <hr class="sep" />
+                        <div class="grid g2">
+                            <div class="field"><span>Reversal date</span>
+                                <div class="seg sab-date-choice" role="group" aria-label="Reversal date">
+                                    <template for:each={dateButtons} for:item="b">
+                                        <button key={b.id} class={b.className} type="button" aria-pressed={b.pressed} disabled={b.disabled} data-id={b.id} onclick={handleDate}>{b.label}</button>
+                                    </template>
+                                </div>
+                                <div class="small muted date-text">{dateText}</div>
+                            </div>
+                            <label class="field"><span>Reason (required, kept in audit history)</span>
+                                <textarea class="textarea sab-reason" placeholder="Explain why this journal is being reversed" oninput={handleReason}></textarea></label>
+                        </div>
+                        <template lwc:if={blocked}>
+                            <div class="banner t-bad sab-blocked"><c-sab-icon name="alert"></c-sab-icon><div><b>{blockedTitle}</b>
+                                <div class="small">Pick a date in an open period, or reopen the period from Period close.</div></div></div>
+                        </template>
+                        <div class="row post-row">
+                            <span class="hint">{reasonHint}</span>
+                            <button class="btn primary sab-post-reversal" type="button" disabled={postDisabled} title={postTitle} onclick={handlePost}>
+                                <c-sab-icon name="reverse" size="16"></c-sab-icon>Post reversal</button>
+                        </div>
+                    </div>
+                </section>
+            </template>
+            <template lwc:else>
+                <section class="panel">
+                    <div class="empty">
+                        <div class="ill"><c-sab-icon name="reverse" size="30"></c-sab-icon></div>
+                        <h3>Choose a posted journal</h3>
+                        <p>Select a manual or allocation journal on the left to preview its reversal.</p>
+                    </div>
+                </section>
+            </template>
+        </div>
+    </template>
+</template>

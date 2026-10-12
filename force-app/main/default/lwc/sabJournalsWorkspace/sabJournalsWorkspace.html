@@ -1,0 +1,219 @@
+<template>
+    <c-sab-workspace-header company-name={companyName} group="Ledger" heading="Journals"
+        description="Create and edit draft journals, check they balance, preview the posting and post. Posted journals are locked.">
+        <button slot="actions" class="btn primary sab-new-journal" type="button" disabled={newDisabled} title={newTitle} onclick={handleNew}>
+            <c-sab-icon name="plus" size="16"></c-sab-icon>New journal</button>
+    </c-sab-workspace-header>
+
+    <template lwc:if={errorMessage}>
+        <section class="panel">
+            <div class="empty">
+                <div class="ill"><c-sab-icon name="alert" size="30"></c-sab-icon></div>
+                <h3>Journals could not be loaded</h3>
+                <p>{errorMessage}</p>
+                <div class="row center"><button class="btn primary" type="button" onclick={handleRetry}>Try again</button></div>
+            </div>
+        </section>
+    </template>
+    <template lwc:elseif={showLoading}>
+        <section class="panel"><div class="panel-b muted" role="status">Loading journals</div></section>
+    </template>
+    <template lwc:elseif={browse}>
+        <div class="split-l">
+            <section class="panel sab-journal-list">
+                <div class="panel-h">
+                    <div class="seg" role="group" aria-label="Journal status">
+                        <template for:each={filterButtons} for:item="f">
+                            <button key={f.id} class={f.className} type="button" aria-pressed={f.pressed} data-id={f.id} onclick={handleFilter}>{f.label}</button>
+                        </template>
+                    </div>
+                </div>
+                <div class="list">
+                    <template lwc:if={hasListRows}>
+                        <template for:each={listRows} for:item="j">
+                            <div key={j.journalId} class={j.className} role="button" tabindex="0" aria-current={j.current} data-id={j.journalId}
+                                onclick={handleOpen} onkeydown={handleOpen}>
+                                <div class="body"><div class="t">{j.name}</div><div class="d">{j.description}</div><div class="d">{j.meta}</div></div>
+                                <div class="right"><span class={j.chip}><span class="dot"></span>{j.status}</span><div class="small muted total">{j.totalText}</div></div>
+                            </div>
+                        </template>
+                    </template>
+                    <template lwc:else>
+                        <div class="li muted">No journals match this filter.</div>
+                    </template>
+                </div>
+            </section>
+
+            <div class="sab-editor">
+                <template lwc:if={detailError}>
+                    <section class="panel"><div class="panel-b"><div class="banner t-bad" role="alert"><c-sab-icon name="alert"></c-sab-icon><div>{detailError}</div></div></div></section>
+                </template>
+                <template lwc:elseif={journal}>
+                    <section class="panel">
+                        <div class="panel-h">
+                            <div><h2 class="je-title">{journal.name} <span class={headerChip}><span class="dot"></span>{journal.status}</span></h2>
+                                <div class="sub">{editorSub}</div></div>
+                            <span class="spacer"></span>
+                            <div class="row">
+                                <template lwc:if={editable}>
+                                    <button class="btn ghost sab-save-draft" type="button" disabled={saveDisabled} title={saveTitle} onclick={handleSave}>Save draft</button>
+                                    <button class="btn sab-preview" type="button" onclick={handlePreview}><c-sab-icon name="eye" size="16"></c-sab-icon>Posting preview</button>
+                                    <button class="btn primary sab-post" type="button" disabled={postDisabled} title={postTitle} onclick={handlePost}>Post journal</button>
+                                </template>
+                                <template lwc:if={showReverse}>
+                                    <button class="btn sab-reverse" type="button" disabled={reverseDisabled} title={reverseTitle} onclick={handleReverse}>
+                                        <c-sab-icon name="reverse" size="16"></c-sab-icon>Reverse this journal</button>
+                                </template>
+                            </div>
+                        </div>
+                        <template lwc:if={lockBanner}>
+                            <div class="pad-top"><div class={lockBanner.className}><c-sab-icon name={lockBanner.icon}></c-sab-icon>
+                                <div><b>{lockBanner.title}</b><div class="small">{lockBanner.text}</div></div></div></div>
+                        </template>
+                        <template lwc:if={readOnlyDraft}>
+                            <div class="pad-top"><div class="banner t-info"><c-sab-icon name="info"></c-sab-icon>
+                                <div><b>Read only for your role</b><div class="small">{personaLabel} users can view drafts but not edit them.</div></div></div></div>
+                        </template>
+
+                        <template lwc:if={editable}>
+                            <div class="grid g4 je-head">
+                                <label class="field"><span>Accounting date</span>
+                                    <input class="input sab-date" type="date" data-field="accountingDate" value={journal.accountingDate} oninput={handleHeader} /></label>
+                                <div class="field"><span>Period</span><div class="ro sab-period">
+                                    <template lwc:if={periodView}>{periodView.key} <span class={periodView.chip}><span class="dot"></span>{periodView.status}</span></template>
+                                    <template lwc:else>&#8212;</template></div></div>
+                                <div class="field"><span>Entry type</span><div class="ro">{journal.entryType}</div></div>
+                                <div class="field"><span>Currency</span><div class="ro">{cur} (functional)</div></div>
+                                <label class="field wide"><span>Description</span>
+                                    <input class="input sab-description" data-field="description" value={journal.description} oninput={handleHeader} /></label>
+                            </div>
+                        </template>
+                        <template lwc:else>
+                            <div class="je-head">
+                                <dl class="kv">
+                                    <template for:each={postedFacts} for:item="f"><dt key={f.key}>{f.label}</dt><dd key={f.valueKey}>{f.value}</dd></template>
+                                </dl>
+                            </div>
+                        </template>
+
+                        <div class="tbl-wrap">
+                            <table class="tbl egrid">
+                                <thead><tr><th class="c">#</th><th>GL account</th><th>Description</th><th>Department</th><th>Cost center</th>
+                                    <th class="n">Debit</th><th class="n">Credit</th><th><span class="sr">Remove</span></th></tr></thead>
+                                <tbody>
+                                    <template for:each={lineRows} for:item="l">
+                                        <tr key={l.key}>
+                                            <td class="lnno">{l.number}</td>
+                                            <template lwc:if={editable}>
+                                                <td class={l.glClass}>
+                                                    <select class="select" data-index={l.index} data-field="glAccountId" aria-label={l.glLabel} onchange={handleLine}>
+                                                        <option value="">Choose account</option>
+                                                        <template for:each={l.accountOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template>
+                                                    </select></td>
+                                                <td class="desc"><input class="input" data-index={l.index} data-field="explanation" value={l.explanation} aria-label={l.descLabel} oninput={handleLine} /></td>
+                                                <td><select class="select" data-index={l.index} data-field="departmentId" aria-label={l.deptLabel} onchange={handleLine}>
+                                                    <option value="">&#8212;</option>
+                                                    <template for:each={l.departmentOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template>
+                                                </select></td>
+                                                <td><select class="select" data-index={l.index} data-field="costCenterId" aria-label={l.ccLabel} onchange={handleLine}>
+                                                    <option value="">&#8212;</option>
+                                                    <template for:each={l.costCenterOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template>
+                                                </select></td>
+                                                <td class={l.debitClass}><input class="input n" inputmode="decimal" data-index={l.index} data-field="debit" value={l.debit} aria-label={l.debitLabel} oninput={handleLine} /></td>
+                                                <td class="amt"><input class="input n" inputmode="decimal" data-index={l.index} data-field="credit" value={l.credit} aria-label={l.creditLabel} oninput={handleLine} /></td>
+                                                <td><button class="icon-btn sab-remove-line" type="button" data-index={l.index} aria-label={l.removeLabel} onclick={handleRemoveLine}>
+                                                    <c-sab-icon name="x" size="14"></c-sab-icon></button></td>
+                                            </template>
+                                            <template lwc:else>
+                                                <td><span class="id">{l.accountCode}</span> {l.accountName}</td>
+                                                <td>{l.explanation}</td>
+                                                <td>{l.departmentName}</td>
+                                                <td>{l.costCenterName}</td>
+                                                <td class="n num">{l.debitText}</td>
+                                                <td class="n num">{l.creditText}</td>
+                                                <td></td>
+                                            </template>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                        <template lwc:if={editable}>
+                            <div class="add-row"><button class="btn sm ghost sab-add-line" type="button" onclick={handleAddLine}><c-sab-icon name="plus" size="14"></c-sab-icon>Add line</button>
+                                <span class="hint">{lineCountText}</span></div>
+                        </template>
+                        <div class="balance">
+                            <div class="side"><div class="l">Total debits</div><div class="v">{summary.debitText}</div></div>
+                            <div class="scale" aria-live="polite"><div class="beam" style={summary.beamStyle}></div><div class="state" style={summary.stateStyle}>{summary.stateText}</div></div>
+                            <div class="side cr"><div class="l">Total credits</div><div class="v">{summary.creditText}</div></div>
+                        </div>
+                    </section>
+                    <template lwc:if={isDraft}>
+                        <section class="panel validation">
+                            <div class="panel-h"><div><h2>Validation</h2></div></div>
+                            <div class="panel-b"><div class="issues">
+                                <template for:each={issues} for:item="x">
+                                    <div key={x.key} class={x.className}><c-sab-icon name={x.icon} size="16"></c-sab-icon><span>{x.message}</span></div>
+                                </template>
+                            </div></div>
+                        </section>
+                    </template>
+                </template>
+                <template lwc:else>
+                    <section class="panel">
+                        <div class="empty">
+                            <div class="ill"><c-sab-icon name="journal" size="30"></c-sab-icon></div>
+                            <h3>No journals yet</h3>
+                            <p>Create a journal to record entries that do not come from a subledger.</p>
+                        </div>
+                    </section>
+                </template>
+            </div>
+        </div>
+    </template>
+
+    <c-sab-modal open={previewOpen} heading={previewHeading} subheading={previewSub} onclose={handleClosePreview}>
+        <template lwc:if={previewOpen}>
+            <template lwc:if={preview.ok}>
+                <div class="banner t-good"><c-sab-icon name="check"></c-sab-icon><div><b>Ready to post</b>
+                    <div class="small">Posting creates an accounting event keyed to this journal. Posting it twice has no extra effect.</div></div></div>
+            </template>
+            <template lwc:else>
+                <div class="banner t-bad sab-preview-blocked"><c-sab-icon name="alert"></c-sab-icon><div><b>This journal cannot be posted yet</b>
+                    <template for:each={preview.blocking} for:item="b"><div key={b.key} class="small">{b.message}</div></template></div></div>
+            </template>
+            <div class="tbl-wrap preview-table">
+                <table class="tbl">
+                    <thead><tr><th>Account</th><th>Department</th><th class="n">Debit</th><th class="n">Credit</th></tr></thead>
+                    <tbody>
+                        <template lwc:if={preview.hasLines}>
+                            <template for:each={preview.lines} for:item="l">
+                                <tr key={l.key}>
+                                    <td><template lwc:if={l.hasAccount}><span class="id">{l.code}</span> {l.accountName}</template>
+                                        <template lwc:else><span class="down">No account</span></template></td>
+                                    <td>{l.department}</td><td class="n num">{l.debitText}</td><td class="n num">{l.creditText}</td>
+                                </tr>
+                            </template>
+                        </template>
+                        <template lwc:else>
+                            <tr><td colspan="4" class="muted">No lines with amounts</td></tr>
+                        </template>
+                    </tbody>
+                    <tfoot><tr><td>Total</td><td></td><td class="n num">{preview.debitText}</td><td class="n num">{preview.creditText}</td></tr></tfoot>
+                </table>
+            </div>
+            <dl class="kv preview-facts">
+                <dt>Period</dt><dd>{preview.periodText}</dd>
+                <dt>Ledger effect</dt><dd>Posted lines become the general ledger. Drafts never affect balances.</dd>
+                <dt>After posting</dt><dd>The journal is locked. Corrections use a reversal.</dd>
+            </dl>
+            <template lwc:if={preview.hasWarnings}>
+                <div class="issues preview-warnings">
+                    <template for:each={preview.warnings} for:item="w"><div key={w.key} class={w.className}><c-sab-icon name="info" size="16"></c-sab-icon><span>{w.message}</span></div></template>
+                </div>
+            </template>
+        </template>
+        <button slot="footer" class="btn ghost sab-keep-editing" type="button" onclick={handleClosePreview}>Keep editing</button>
+        <button slot="footer" class="btn primary sab-preview-post" type="button" disabled={postDisabled} title={postTitle} onclick={handlePost}>Post journal</button>
+    </c-sab-modal>
+</template>

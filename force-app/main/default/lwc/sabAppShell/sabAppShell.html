@@ -45,6 +45,12 @@
                         <span><span class="t">{c.companyName}</span><span class="d">{c.sub}</span></span>
                     </button>
                 </template>
+                <template lwc:if={canCreateCompany}>
+                    <button class="pop-item new-company" type="button" onclick={handleNewCompany}>
+                        <span class="avatar co add"><c-sab-icon name="plus" size="14" stroke-width="2"></c-sab-icon></span>
+                        <span><span class="t">New accounting company</span><span class="d">Create it, then set up its foundation</span></span>
+                    </button>
+                </template>
             </div>
             <div class={userPopClass} onclick={stopClick}>
                 <div class="pop-head">Signed in as</div>
@@ -84,7 +90,8 @@
             </template>
         </aside>
 
-        <main class="main" tabindex="-1" onsabnavigate={handleWorkspaceNavigate} onsabtoast={handleWorkspaceToast}>
+        <main class="main" tabindex="-1" onsabnavigate={handleWorkspaceNavigate} onsabtoast={handleWorkspaceToast}
+            onsabswitchcompany={handleWorkspaceSwitchCompany} onsabnewcompany={handleNewCompany}>
             <template lwc:if={errorMessage}>
                 <section class="panel">
                     <div class="empty">
@@ -92,6 +99,19 @@
                         <h3>Something went wrong loading this workspace</h3>
                         <p>{errorMessage}</p>
                         <div class="row center"><button class="btn primary" type="button" onclick={handleRetry}>Try again</button></div>
+                    </div>
+                </section>
+            </template>
+            <template lwc:elseif={showCreateFirstCompany}>
+                <c-sab-workspace-header group="Overview" heading="Welcome to Simple Accounting Books"
+                    description="Create your first accounting company, then set up its periods, chart of accounts and numbering."></c-sab-workspace-header>
+                <section class="panel">
+                    <div class="empty">
+                        <div class="ill"><c-sab-icon name="setup" size="30"></c-sab-icon></div>
+                        <h3>No accounting company yet</h3>
+                        <p>You become the finance manager of the company you create.</p>
+                        <div class="row center"><button class="btn primary create-first" type="button" onclick={handleNewCompany}>
+                            <c-sab-icon name="plus" size="16"></c-sab-icon>New accounting company</button></div>
                     </div>
                 </section>
             </template>
@@ -133,6 +153,7 @@
                         <div class="ill"><c-sab-icon name="lock" size="30"></c-sab-icon></div>
                         <h3>No workspaces available</h3>
                         <p>Ask your administrator for Simple Accounting Books access and an active company grant.</p>
+
                     </div>
                 </section>
             </template>
@@ -142,5 +163,6 @@
         </main>
     </div>
     <div class={scrimClass} onclick={handleScrimClick}></div>
+    <c-sab-setup-records kind="newCompany" open={newCompanyOpen} onclose={handleNewCompanyClose} onsaved={handleNewCompanySaved}></c-sab-setup-records>
     <c-sab-toast></c-sab-toast>
 </template>

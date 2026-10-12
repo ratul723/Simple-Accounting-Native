@@ -13,6 +13,8 @@ public with sharing class SABFinanceHomeService {
 
     private static final List<String> LEDGER_STATUSES = new List<String>{ 'Posted', 'Reversed' };
     private static final String STATUS_PENDING = 'Pending';
+    // SABCompanySetupService treats Validated and Active as ready for posting.
+    private static final Set<String> READY_STATUSES = new Set<String>{ 'Validated', 'Active' };
     private static final Integer TREND_WEEKS = 12;
     private static final Integer PAYABLES_WINDOW_DAYS = 14;
 
@@ -172,7 +174,7 @@ public with sharing class SABFinanceHomeService {
         data.companyName = company.Name__c;
         data.currencyCode = company.Functional_Currency__c;
         data.setupStatus = company.Setup_Status__c;
-        data.companyActive = company.Setup_Status__c == 'Active';
+        data.companyActive = READY_STATUSES.contains(company.Setup_Status__c);
     }
 
     private static void loadPeriods(HomeContext ctx, HomeData data) {

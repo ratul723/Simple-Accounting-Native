@@ -1,0 +1,174 @@
+<template>
+    <c-sab-workspace-header company-name={companyName} group="Ledger" heading="Approvals & close"
+        description="Decisions waiting on you, requests you submitted, and the month-end close checklist that gates period close.">
+        <template lwc:if={canGoClose}>
+            <button slot="actions" class="btn open-close" type="button" onclick={handleOpenPeriodClose}>Open period close</button>
+        </template>
+    </c-sab-workspace-header>
+
+    <template lwc:if={errorMessage}>
+        <section class="panel">
+            <div class="empty">
+                <div class="ill"><c-sab-icon name="alert" size="30"></c-sab-icon></div>
+                <h3>Approvals and close could not be loaded</h3>
+                <p>{errorMessage}</p>
+                <div class="row center"><button class="btn primary" type="button" onclick={handleRetry}>Try again</button></div>
+            </div>
+        </section>
+    </template>
+    <template lwc:elseif={showLoading}>
+        <section class="panel"><div class="panel-b muted" role="status">Loading approvals and close</div></section>
+    </template>
+    <template lwc:elseif={data}>
+        <div class="tabs" role="tablist">
+            <template for:each={tabs} for:item="t">
+                <button key={t.id} class={t.className} type="button" role="tab" aria-selected={t.selected} data-tab={t.id}
+                    onclick={handleTab}>{t.label}<template lwc:if={t.hasCount}><span class="count">{t.count}</span></template></button>
+            </template>
+        </div>
+
+        <template lwc:if={isInboxTab}>
+            <section class="panel inbox">
+                <div class="panel-h"><div><h2>Waiting for your decision</h2>
+                    <div class="sub">Approvals are tied to the source version. Editing a document after approval sends it back here.</div></div></div>
+                <div class="panel-b flush">
+                    <template lwc:if={hasInbox}>
+                        <div class="tbl-wrap">
+                            <table class="tbl">
+                                <thead><tr><th>Request</th><th>Source</th><th>Step</th><th>Requested by</th><th><span class="sr">Actions</span></th></tr></thead>
+                                <tbody>
+                                    <template for:each={inboxRows} for:item="r">
+                                        <tr key={r.approvalStepId}>
+                                            <td><span class="id">{r.name}</span></td>
+                                            <td>{r.sourceBusinessKey}<div class="small muted">{r.sourceLabel}</div></td>
+                                            <td>{r.stepText}</td>
+                                            <td>{r.requestedByName}<div class="small muted">{r.requestedText}</div></td>
+                                            <td class="act">
+                                                <button class="btn primary sm approve" type="button" data-id={r.approvalStepId} disabled={r.disabled}
+                                                    title={r.title} onclick={handleApprove}>Approve</button>
+                                                <button class="btn sm reject" type="button" data-id={r.approvalStepId} disabled={r.disabled}
+                                                    title={r.title} onclick={handleReject}>Reject</button>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </template>
+                    <template lwc:else>
+                        <div class="empty small-empty">
+                            <div class="ill"><c-sab-icon name="check" size="26"></c-sab-icon></div>
+                            <h3>Nothing waiting for you</h3>
+                            <p>New requests assigned to you appear here as soon as they are submitted.</p>
+                        </div>
+                    </template>
+                </div>
+            </section>
+
+            <section class="panel mine">
+                <div class="panel-h"><div><h2>Submitted by you</h2><div class="sub">Pending requests you can still cancel</div></div></div>
+                <div class="panel-b flush">
+                    <template lwc:if={hasRequests}>
+                        <div class="tbl-wrap">
+                            <table class="tbl">
+                                <thead><tr><th>Request</th><th>Source</th><th>Next approver</th><th>Submitted</th><th>Status</th><th><span class="sr">Actions</span></th></tr></thead>
+                                <tbody>
+                                    <template for:each={requestRows} for:item="r">
+                                        <tr key={r.approvalRequestId}>
+                                            <td><span class="id">{r.name}</span></td>
+                                            <td>{r.sourceBusinessKey}<div class="small muted">{r.sourceLabel}</div></td>
+                                            <td>{r.nextApprover}</td>
+                                            <td>{r.requestedText}</td>
+                                            <td><span class={r.chip}><span class="dot"></span>{r.status}</span></td>
+                                            <td class="act"><button class="btn ghost sm cancel-request" type="button" data-id={r.approvalRequestId}
+                                                disabled={r.disabled} title={r.title} onclick={handleCancelRequest}>Cancel</button></td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </template>
+                    <template lwc:else>
+                        <div class="panel-b muted">You have no pending requests in this company.</div>
+                    </template>
+                </div>
+            </section>
+        </template>
+
+        <template lwc:else>
+            <template lwc:if={hasPeriods}>
+                <section class="panel close">
+                    <div class="panel-h">
+                        <div><h2>Close checklist</h2><div class="sub">Tasks come from the close templates; re-running adds only missing tasks</div></div>
+                        <span class="spacer"></span>
+                        <label class="field period-pick"><span class="sr">Accounting period</span>
+                            <select class="select period-select" onchange={handlePeriodChange}>
+                                <template for:each={periodOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template>
+                            </select></label>
+                        <button class="btn sm generate" type="button" disabled={generateDisabled} title={generateTitle} onclick={handleGenerate}>{generateLabel}</button>
+                    </div>
+                    <div class="panel-b">
+                        <template lwc:if={checklistError}>
+                            <div class="banner t-bad" role="alert"><c-sab-icon name="alert"></c-sab-icon><div>{checklistError}</div></div>
+                        </template>
+                        <template lwc:elseif={hasChecklist}>
+                            <div class={summary.bannerClass}><c-sab-icon name={summary.bannerIcon}></c-sab-icon>
+                                <div><b>{summary.bannerTitle}</b><div class="small">{summary.bannerText}</div></div></div>
+                            <div class="progress">
+                                <div class="meter"><i style={summary.meterStyle}></i></div>
+                                <div class="small muted">{summary.text}</div>
+                            </div>
+                        </template>
+                        <template lwc:else>
+                            <div class="muted">No checklist for this period. Generate one to gate the period close.</div>
+                        </template>
+                    </div>
+                    <template lwc:if={hasChecklist}>
+                        <div class="tbl-wrap">
+                            <table class="tbl tasks">
+                                <thead><tr><th>Task</th><th>Assignee</th><th>Due</th><th>Status</th><th>Note</th><th><span class="sr">Actions</span></th></tr></thead>
+                                <tbody>
+                                    <template for:each={taskRows} for:item="t">
+                                        <tr key={t.taskId}>
+                                            <td><span class="strong">{t.name}</span><div class="small muted">{t.evidenceText}</div></td>
+                                            <td>
+                                                <template lwc:if={t.canAssign}>
+                                                    <select class="select assign" data-id={t.taskId} aria-label="Assignee" onchange={handleAssign}>
+                                                        <option value="">Unassigned</option>
+                                                        <template for:each={t.assigneeOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template>
+                                                    </select>
+                                                </template>
+                                                <template lwc:else>{t.assigneeText}</template>
+                                            </td>
+                                            <td>{t.dueText}</td>
+                                            <td><span class={t.chip}><span class="dot"></span>{t.status}</span></td>
+                                            <td class="small">{t.note}</td>
+                                            <td class="act">
+                                                <template for:each={t.actions} for:item="a">
+                                                    <button key={a.key} class={a.className} type="button" data-id={t.taskId} data-status={a.status}
+                                                        disabled={a.disabled} onclick={handleTaskAction}>{a.label}</button>
+                                                </template>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </template>
+                </section>
+            </template>
+            <template lwc:else>
+                <section class="panel"><div class="panel-b muted">This company has no accounting periods around today yet.</div></section>
+            </template>
+        </template>
+    </template>
+
+    <c-sab-modal open={modalOpen} heading={modalHeading} subheading={modalSub} onclose={handleCloseModal}>
+        <template lwc:if={formError}>
+            <div class="banner t-bad form-error" role="alert"><c-sab-icon name="alert"></c-sab-icon><div>{formError}</div></div>
+        </template>
+        <label class="field"><span>{modalLabel}</span><textarea class="textarea" rows="3" oninput={handleText}></textarea></label>
+        <button slot="footer" class="btn cancel" type="button" onclick={handleCloseModal}>Close</button>
+        <button slot="footer" class={saveClass} type="button" disabled={saving} onclick={handleSave}>{saveLabel}</button>
+    </c-sab-modal>
+</template>

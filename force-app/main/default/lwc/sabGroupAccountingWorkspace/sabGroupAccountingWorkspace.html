@@ -1,0 +1,258 @@
+<template>
+    <c-sab-workspace-header company-name={companyName} group="Optional modules" heading="Group accounting" optional-module
+        description="Intercompany charges between your companies, consolidation groups, eliminations and the consolidated trial balance.">
+        <button slot="actions" class="btn record-ic" type="button" disabled={icDisabled} title={icReason}
+            onclick={handleRecordIntercompany}><c-sab-icon name="plus" size="16"></c-sab-icon>Record Intercompany Transaction</button>
+        <button slot="actions" class="btn primary calculate" type="button" disabled={calculateDisabled} title={calculateReason}
+            onclick={handleCalculate}><c-sab-icon name="refresh" size="16"></c-sab-icon>Calculate consolidation</button>
+    </c-sab-workspace-header>
+
+    <template lwc:if={errorMessage}>
+        <section class="panel">
+            <div class="empty">
+                <div class="ill"><c-sab-icon name="alert" size="30"></c-sab-icon></div>
+                <h3>Group accounting could not be loaded</h3>
+                <p>{errorMessage}</p>
+                <div class="row center"><button class="btn primary" type="button" onclick={handleRetry}>Try again</button></div>
+            </div>
+        </section>
+    </template>
+    <template lwc:elseif={showLoading}>
+        <section class="panel"><div class="panel-b muted" role="status">Loading group accounting</div></section>
+    </template>
+    <template lwc:elseif={data}>
+        <div class="figs">
+            <template for:each={figures} for:item="f">
+                <div key={f.key} class="fig">
+                    <div class="l">{f.label}</div>
+                    <div class="v">{f.value}<template lwc:if={f.hasUnit}><small>{f.unit}</small></template></div>
+                    <div class="s">{f.sub}</div>
+                </div>
+            </template>
+        </div>
+
+        <div class="tabs" role="tablist">
+            <template for:each={tabs} for:item="t">
+                <button key={t.id} class={t.className} type="button" role="tab" aria-selected={t.selected} data-tab={t.id}
+                    onclick={handleTab}>{t.label}<span class="count">{t.count}</span></button>
+            </template>
+        </div>
+
+        <template lwc:if={isIntercompanyTab}>
+            <section class="panel">
+                <div class="panel-h"><div><h2>Intercompany transactions</h2>
+                    <div class="sub">Each transaction posts a receivable in the charging company and a payable in the charged company</div></div></div>
+                <div class="panel-b flush">
+                    <template lwc:if={hasTransactions}>
+                        <div class="tbl-wrap">
+                            <table class="tbl">
+                                <thead>
+                                    <tr><th>Ref</th><th>Date</th><th>From</th><th>To</th><th>Description</th><th>Side</th><th class="n">Amount</th><th>State</th></tr>
+                                </thead>
+                                <tbody>
+                                    <template for:each={transactionRows} for:item="t">
+                                        <tr key={t.transactionId}>
+                                            <td><span class="id">{t.name}</span></td>
+                                            <td>{t.dateText}</td>
+                                            <td>{t.fromCompany}</td>
+                                            <td>{t.toCompany}</td>
+                                            <td>{t.description}</td>
+                                            <td><span class="tag">{t.direction}</span></td>
+                                            <td class="n num">{t.amountText}<span class="ccy">{t.currencyCode}</span></td>
+                                            <td><span class={t.chip}><span class="dot"></span>{t.state}</span></td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </template>
+                    <template lwc:else>
+                        <div class="panel-b muted">No intercompany transactions for this company.</div>
+                    </template>
+                </div>
+            </section>
+        </template>
+
+        <template lwc:else>
+            <template lwc:if={showConsolidation}>
+                <div class="row cons-actions">
+                    <span class="spacer"></span>
+                    <button class="btn sm new-group" type="button" disabled={manageDisabled} title={manageReason} onclick={handleNewGroup}>New group</button>
+                </div>
+                <template lwc:if={hasGroups}>
+                    <template for:each={groupPanels} for:item="g">
+                        <section key={g.groupId} class="panel group-panel">
+                            <div class="panel-h">
+                                <div><h2>{g.name}</h2><div class="sub">{g.meta}</div></div>
+                                <span class="spacer"></span>
+                                <span class={g.chip}><span class="dot"></span>{g.statusText}</span>
+                                <button class="btn sm add-member" type="button" data-id={g.groupId} disabled={manageDisabled}
+                                    title={manageReason} onclick={handleAddMember}>Add member</button>
+                            </div>
+                            <div class="panel-b flush">
+                                <div class="tbl-wrap">
+                                    <table class="tbl members">
+                                        <thead><tr><th>Member</th><th>Control</th><th class="n">Ownership</th><th>From</th><th>To</th><th>Mapping</th></tr></thead>
+                                        <tbody>
+                                            <template for:each={g.memberRows} for:item="m">
+                                                <tr key={m.memberId}>
+                                                    <td>{m.companyName}</td><td>{m.controlType}</td><td class="n num">{m.ownershipText}</td>
+                                                    <td>{m.fromText}</td><td>{m.toText}</td><td>{m.mappingVersion}</td>
+                                                </tr>
+                                            </template>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <h3 class="runs-title">Runs</h3>
+                                <template lwc:if={g.hasRuns}>
+                                    <div class="tbl-wrap">
+                                        <table class="tbl runs">
+                                            <thead><tr><th>Run</th><th>As of</th><th>Status</th><th class="n">Eliminations</th><th>Calculated</th><th><span class="sr">Actions</span></th></tr></thead>
+                                            <tbody>
+                                                <template for:each={g.runRows} for:item="r">
+                                                    <tr key={r.runId}>
+                                                        <td><span class="id">{r.name}</span></td>
+                                                        <td>{r.asOfText}</td>
+                                                        <td><span class={r.chip}><span class="dot"></span>{r.status}</span></td>
+                                                        <td class="n num">{r.eliminationCount}</td>
+                                                        <td>{r.calculatedText}</td>
+                                                        <td class="act">
+                                                            <button class="btn ghost sm view-tb" type="button" data-id={r.runId} onclick={handleTrialBalance}>Trial balance</button>
+                                                            <template lwc:if={r.canApprove}>
+                                                                <button class="btn sm approve-run" type="button" data-id={r.runId} disabled={r.transitionDisabled}
+                                                                    title={r.transitionTitle} onclick={handleApproveRun}>Approve</button>
+                                                            </template>
+                                                            <template lwc:if={r.canPublish}>
+                                                                <button class="btn primary sm publish-run" type="button" data-id={r.runId} disabled={r.transitionDisabled}
+                                                                    title={r.transitionTitle} onclick={handlePublishRun}>Publish</button>
+                                                            </template>
+                                                        </td>
+                                                    </tr>
+                                                </template>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </template>
+                                <template lwc:else>
+                                    <div class="panel-b muted">No runs yet. Calculate a consolidation to create one.</div>
+                                </template>
+                            </div>
+                        </section>
+                    </template>
+                </template>
+                <template lwc:else>
+                    <section class="panel">
+                        <div class="empty">
+                            <div class="ill"><c-sab-icon name="link" size="30"></c-sab-icon></div>
+                            <h3>This company is not in a consolidation group</h3>
+                            <p>Create a group, add this company and its subsidiaries as members, then calculate a consolidation.</p>
+                        </div>
+                    </section>
+                </template>
+            </template>
+            <template lwc:else>
+                <section class="panel"><div class="panel-b muted">Consolidation is not available for your access.</div></section>
+            </template>
+        </template>
+    </template>
+
+    <c-sab-drawer open={trialBalanceOpen} heading={tbHeading} subheading={tbSub} onclose={handleCloseTrialBalance}>
+        <template lwc:if={tb}>
+            <template lwc:if={tb.stale}>
+                <div class="banner t-warn stale" role="alert"><c-sab-icon name="alert"></c-sab-icon>
+                    <div><b>Ledgers changed since this run</b><div class="small">Calculate a new run before approving or publishing.</div></div></div>
+            </template>
+            <dl class="kv">
+                <dt>Consolidated</dt><dd>{tb.companiesText}</dd>
+                <template lwc:if={tb.hasExcluded}><dt>Excluded</dt><dd>{tb.excludedText}</dd></template>
+            </dl>
+            <div class="tbl-wrap tb">
+                <table class="tbl">
+                    <thead><tr><th>Account</th><th class="n">Members</th><th class="n">Eliminations</th><th class="n">Consolidated</th></tr></thead>
+                    <tbody>
+                        <template for:each={tb.rows} for:item="r">
+                            <tr key={r.key}>
+                                <td><span class="id">{r.accountCode}</span> {r.accountName}</td>
+                                <td class="n num">{r.memberText}</td><td class="n num">{r.eliminationText}</td><td class="n num">{r.consolidatedText}</td>
+                            </tr>
+                        </template>
+                    </tbody>
+                    <tfoot><tr><td>Total</td><td class="n num">{tb.memberTotal}</td><td class="n num">{tb.eliminationTotal}</td><td class="n num">{tb.consolidatedTotal}</td></tr></tfoot>
+                </table>
+            </div>
+        </template>
+    </c-sab-drawer>
+
+    <c-sab-modal open={modalOpen} heading={modalHeading} subheading={modalSub} onclose={handleCloseModal}>
+        <template lwc:if={formError}>
+            <div class="banner t-bad form-error" role="alert"><c-sab-icon name="alert"></c-sab-icon><div>{formError}</div></div>
+        </template>
+        <template lwc:if={isIntercompanyModal}>
+            <div class="grid g2 form">
+                <label class="field"><span>Charge to company</span>
+                    <select class="select" data-field="toCompanyId" onchange={handleField}>
+                        <option value="">Select</option>
+                        <template for:each={counterpartyOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template>
+                    </select></label>
+                <label class="field"><span>Date</span><input class="input" type="date" data-field="transactionDate" value={form.transactionDate} oninput={handleField} /></label>
+                <label class="field"><span>Amount</span><input class="input n" type="number" step="0.01" data-field="amount" value={form.amount} oninput={handleField} /></label>
+                <label class="field"><span>Description</span><input class="input" data-field="description" value={form.description} oninput={handleField} /></label>
+                <label class="field"><span>Our intercompany receivable</span>
+                    <select class="select" data-field="fromReceivableAccountId" onchange={handleField}>
+                        <option value="">Select</option>
+                        <template for:each={receivableOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template>
+                    </select></label>
+                <label class="field"><span>Our counter account</span>
+                    <select class="select" data-field="fromCounterAccountId" onchange={handleField}>
+                        <option value="">Select</option>
+                        <template for:each={fromCounterOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template>
+                    </select></label>
+                <label class="field"><span>Their intercompany payable</span>
+                    <select class="select" data-field="toPayableAccountId" onchange={handleField}>
+                        <option value="">Select</option>
+                        <template for:each={payableOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template>
+                    </select></label>
+                <label class="field"><span>Their counter account</span>
+                    <select class="select" data-field="toCounterAccountId" onchange={handleField}>
+                        <option value="">Select</option>
+                        <template for:each={toCounterOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template>
+                    </select></label>
+            </div>
+        </template>
+        <template lwc:if={isGroupModal}>
+            <div class="grid g2 form">
+                <label class="field"><span>Name</span><input class="input" data-field="name" value={form.name} oninput={handleField} /></label>
+                <label class="field"><span>Presentation currency</span><input class="input" data-field="presentationCurrency" value={form.presentationCurrency} maxlength="3" oninput={handleField} /></label>
+                <label class="field"><span>Policy version</span><input class="input" data-field="policyVersion" value={form.policyVersion} oninput={handleField} /></label>
+            </div>
+        </template>
+        <template lwc:if={isMemberModal}>
+            <div class="grid g2 form">
+                <label class="field"><span>Company</span>
+                    <select class="select" data-field="companyId" onchange={handleField}>
+                        <option value="">Select</option>
+                        <template for:each={memberCompanyOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template>
+                    </select></label>
+                <label class="field"><span>Control type</span>
+                    <select class="select" data-field="controlType" onchange={handleField}>
+                        <template for:each={controlTypeOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template>
+                    </select></label>
+                <label class="field"><span>Ownership %</span><input class="input n" type="number" step="0.01" data-field="ownershipPercent" value={form.ownershipPercent} oninput={handleField} /></label>
+                <label class="field"><span>Mapping version</span><input class="input" data-field="mappingVersion" value={form.mappingVersion} oninput={handleField} /></label>
+                <label class="field"><span>Effective from</span><input class="input" type="date" data-field="effectiveFrom" value={form.effectiveFrom} oninput={handleField} /></label>
+                <label class="field"><span>Effective to (optional)</span><input class="input" type="date" data-field="effectiveTo" value={form.effectiveTo} oninput={handleField} /></label>
+            </div>
+        </template>
+        <template lwc:if={isCalculateModal}>
+            <div class="grid g2 form">
+                <label class="field"><span>Group</span>
+                    <select class="select" data-field="groupId" onchange={handleField}>
+                        <template for:each={groupOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template>
+                    </select></label>
+                <label class="field"><span>As of</span><input class="input" type="date" data-field="asOfDate" value={form.asOfDate} oninput={handleField} /></label>
+            </div>
+        </template>
+        <button slot="footer" class="btn cancel" type="button" onclick={handleCloseModal}>Cancel</button>
+        <button slot="footer" class="btn primary save" type="button" disabled={saving} onclick={handleSave}>{saveLabel}</button>
+    </c-sab-modal>
+</template>

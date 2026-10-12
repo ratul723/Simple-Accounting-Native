@@ -1,0 +1,56 @@
+@import 'c/sabStyles';
+
+.cons-actions {
+    margin-bottom: 12px;
+}
+
+.group-panel {
+    margin-bottom: 16px;
+}
+
+.panel-h .btn,
+.panel-h .chip {
+    margin-left: 8px;
+}
+
+.runs-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    padding: 14px 16px 6px;
+}
+
+.act {
+    text-align: right;
+    white-space: nowrap;
+}
+
+.act .btn + .btn {
+    margin-left: 6px;
+}
+
+.ccy {
+    margin-left: 4px;
+    font-size: 11px;
+    color: var(--muted);
+}
+
+.stale {
+    margin-bottom: 14px;
+}
+
+.tb {
+    margin-top: 12px;
+}
+
+.row.center {
+    justify-content: center;
+}
+
+.form {
+    gap: 12px 14px;
+}
+
+.form-error {
+    margin-bottom: 14px;
+}

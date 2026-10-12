@@ -1,0 +1,29 @@
+@import 'c/sabStyles';
+
+.form {
+    gap: 12px 14px;
+}
+
+.form-error {
+    margin-bottom: 14px;
+}
+
+.check {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding-top: 22px;
+    font-weight: 500;
+}
+
+.hint {
+    margin-top: 4px;
+}
+
+.act {
+    text-align: right;
+}
+
+.empty-list {
+    padding: 18px 0;
+}

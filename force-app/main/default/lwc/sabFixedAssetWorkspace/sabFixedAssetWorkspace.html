@@ -29,7 +29,7 @@
                             Functional Currency:
                             {functionalCurrency}
                             · Book:
-                            {dashboard.bookKey}
+                            {bookKey}
                         </p>
                     </div>
 
@@ -172,7 +172,7 @@
 
                             <div class={reconciliationStatusClass}>
                                 Reconciliation:
-                                {selectedAsset.reconciliation.status}
+                                {reconciliation.status}
                             </div>
                         </div>
 
@@ -265,49 +265,49 @@
                                     <div class="metric-card">
                                         <span>Cost</span>
                                         <strong>
-                                            {selectedAsset.reconciliation.cost}
+                                            {reconciliation.cost}
                                         </strong>
                                     </div>
                                     <div class="metric-card">
                                         <span>Posted Depreciation</span>
                                         <strong>
-                                            {selectedAsset.reconciliation.postedDepreciation}
+                                            {reconciliation.postedDepreciation}
                                         </strong>
                                     </div>
                                     <div class="metric-card">
                                         <span>Posted Impairment</span>
                                         <strong>
-                                            {selectedAsset.reconciliation.postedImpairment}
+                                            {reconciliation.postedImpairment}
                                         </strong>
                                     </div>
                                     <div class="metric-card">
                                         <span>Disposal Amount</span>
                                         <strong>
-                                            {selectedAsset.reconciliation.disposalAmount}
+                                            {reconciliation.disposalAmount}
                                         </strong>
                                     </div>
                                     <div class="metric-card emphasized">
                                         <span>Net Book Value</span>
                                         <strong>
-                                            {selectedAsset.reconciliation.netBookValue}
+                                            {reconciliation.netBookValue}
                                         </strong>
                                     </div>
                                     <div class="metric-card">
                                         <span>Future Planned Depreciation</span>
                                         <strong>
-                                            {selectedAsset.reconciliation.futurePlannedDepreciation}
+                                            {reconciliation.futurePlannedDepreciation}
                                         </strong>
                                     </div>
                                     <div class="metric-card">
                                         <span>Overdue Planned Lines</span>
                                         <strong>
-                                            {selectedAsset.reconciliation.overduePlannedCount}
+                                            {reconciliation.overduePlannedCount}
                                         </strong>
                                     </div>
                                     <div class="metric-card">
                                         <span>Duplicate Movement Keys</span>
                                         <strong>
-                                            {selectedAsset.reconciliation.duplicateMovementKeyCount}
+                                            {reconciliation.duplicateMovementKeyCount}
                                         </strong>
                                     </div>
                                 </div>

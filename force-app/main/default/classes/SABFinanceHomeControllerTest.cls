@@ -11,11 +11,12 @@ private class SABFinanceHomeControllerTest {
     static void activeCompanyHomeShowsFiguresAndAttention() {
         Id companyId = SABAppShellTestFixture.companyId(SABAppShellTestFixture.ACTIVE_KEY);
         SABFinanceHomeService.HomeData data;
-        Test.startTest();
         System.runAs(SABAppShellTestFixture.fixtureUser()) {
+            SABAppShellTestFixture.seedDraftJournal();
+            Test.startTest();
             data = SABFinanceHomeController.getHome(companyId);
+            Test.stopTest();
         }
-        Test.stopTest();
         System.assert(data.companyActive, 'Fixture company is active.');
         System.assertEquals('AUD', data.currencyCode, 'Functional currency is returned.');
         System.assert(data.cash.available, 'Bank accounts are readable.');
@@ -37,9 +38,9 @@ private class SABFinanceHomeControllerTest {
     @IsTest
     static void postedJournalMovesCashAndProfit() {
         Id companyId = SABAppShellTestFixture.companyId(SABAppShellTestFixture.ACTIVE_KEY);
-        Journal_Entry__c journal = [SELECT Id, Company__c, Entry_Type__c FROM Journal_Entry__c WHERE Company__c = :companyId WITH SYSTEM_MODE LIMIT 1];
         SABFinanceHomeService.HomeData data;
         System.runAs(SABAppShellTestFixture.fixtureUser()) {
+            Journal_Entry__c journal = SABAppShellTestFixture.seedDraftJournal();
             SABTestGovernor.startTest();
             SABPostingService.postDraftJournal(postingRequest(journal));
             SABTestGovernor.requireHeadroom(45, 'load Finance home after posting');
@@ -55,17 +56,33 @@ private class SABFinanceHomeControllerTest {
 
     @IsTest
     static void setupCompanyReturnsSetupSummary() {
-        Id companyId = SABAppShellTestFixture.companyId(SABAppShellTestFixture.SETUP_KEY);
+        User user = SABAppShellTestFixture.fixtureUser();
         SABFinanceHomeService.HomeData data;
-        Test.startTest();
-        System.runAs(SABAppShellTestFixture.fixtureUser()) {
+        System.runAs(user) {
+            Id companyId = SABAppShellTestFixture.seedSetupCompany(user.Id);
+            Test.startTest();
             data = SABFinanceHomeController.getHome(companyId);
+            Test.stopTest();
         }
-        Test.stopTest();
         System.assert(!data.companyActive, 'Company is still in setup.');
         System.assertNotEquals(null, data.setup, 'Setup summary is returned.');
         System.assertEquals(0, data.setup.accountCount, 'No accounts yet.');
         System.assertEquals(null, data.cash, 'Figures are not built for companies in setup.');
+    }
+
+    @IsTest
+    static void validatedCompanyIsReady() {
+        Id companyId = SABAppShellTestFixture.companyId(SABAppShellTestFixture.ACTIVE_KEY);
+        update as system new Accounting_Company__c(Id = companyId, Setup_Status__c = 'Validated');
+        SABFinanceHomeService.HomeData data;
+        System.runAs(SABAppShellTestFixture.fixtureUser()) {
+            Test.startTest();
+            data = SABFinanceHomeController.getHome(companyId);
+            Test.stopTest();
+        }
+        System.assert(data.companyActive, 'Validated companies get the full Finance home.');
+        System.assertEquals(null, data.setup, 'No setup summary for a ready company.');
+        System.assertNotEquals(null, data.cash, 'Figures are built.');
     }
 
     @IsTest

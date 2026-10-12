@@ -1,0 +1,66 @@
+@import 'c/sabStyles';
+
+.steps {
+    margin-bottom: 14px;
+}
+
+.job-actions {
+    margin-top: 12px;
+}
+
+.rows {
+    margin-top: 16px;
+}
+
+.err {
+    margin-top: 3px;
+}
+
+.download-link {
+    display: none;
+}
+
+.drop {
+    display: block;
+    margin-top: 14px;
+    border-style: dashed;
+    text-align: center;
+    padding: 26px;
+    cursor: pointer;
+}
+
+.drop:focus-within {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+}
+
+.drop .file {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+}
+
+.drop-ic {
+    color: var(--accent);
+    display: flex;
+    justify-content: center;
+    margin-bottom: 6px;
+}
+
+.hint-line {
+    margin-top: 12px;
+}
+
+.form-error {
+    margin-bottom: 14px;
+}
+
+.row.center {
+    justify-content: center;
+}
+
+tr.click:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: -2px;
+}

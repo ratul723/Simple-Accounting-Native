@@ -1,0 +1,44 @@
+@import 'c/sabStyles';
+
+.mine,
+.inbox {
+    margin-bottom: 16px;
+}
+
+.act {
+    text-align: right;
+    white-space: nowrap;
+}
+
+.act .btn + .btn {
+    margin-left: 6px;
+}
+
+.period-pick {
+    margin: 0 8px;
+    min-width: 220px;
+}
+
+.progress {
+    margin-top: 12px;
+}
+
+.progress .small {
+    margin-top: 4px;
+}
+
+.assign {
+    min-width: 160px;
+}
+
+.small-empty {
+    padding: 28px 16px;
+}
+
+.row.center {
+    justify-content: center;
+}
+
+.form-error {
+    margin-bottom: 14px;
+}

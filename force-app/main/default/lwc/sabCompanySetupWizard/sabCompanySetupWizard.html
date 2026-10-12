@@ -259,5 +259,12 @@
                 </template>
             </template>
         </div>
+        <c-sab-setup-records
+            company-id={companyId}
+            kind={setupKind}
+            open={setupOpen}
+            onclose={handleSetupClose}
+            onsaved={handleSetupSaved}
+        ></c-sab-setup-records>
     </lightning-card>
 </template>

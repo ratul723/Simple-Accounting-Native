@@ -1,0 +1,50 @@
+@import 'c/sabStyles';
+
+.cards {
+    margin-bottom: 16px;
+}
+
+.cardlet[role="button"]:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+}
+
+.cardlet .row h4 {
+    min-width: 0;
+}
+
+.figures-row {
+    margin-top: 12px;
+    align-items: flex-end;
+    gap: 24px;
+}
+
+.repaid {
+    margin-top: 12px;
+}
+
+.repaid .small {
+    margin-top: 4px;
+}
+
+.card-actions {
+    margin-top: 12px;
+    justify-content: flex-end;
+}
+
+.act {
+    text-align: right;
+    white-space: nowrap;
+}
+
+.row.center {
+    justify-content: center;
+}
+
+.form {
+    gap: 12px 14px;
+}
+
+.form-error {
+    margin-bottom: 14px;
+}

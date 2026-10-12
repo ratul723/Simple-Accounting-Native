@@ -1,0 +1,211 @@
+<template>
+    <c-sab-workspace-header company-name={companyName} group="Administration" heading="Import & integration center"
+        description="Stage files, validate, preview, commit and retry, and follow every outbound integration request.">
+        <button slot="actions" class="btn primary new-import" type="button" disabled={newDisabled} title={manageReason}
+            onclick={handleNewImport}><c-sab-icon name="import" size="16"></c-sab-icon>New import</button>
+    </c-sab-workspace-header>
+
+    <template lwc:if={errorMessage}>
+        <section class="panel">
+            <div class="empty">
+                <div class="ill"><c-sab-icon name="alert" size="30"></c-sab-icon></div>
+                <h3>The import center could not be loaded</h3>
+                <p>{errorMessage}</p>
+                <div class="row center"><button class="btn primary" type="button" onclick={handleRetry}>Try again</button></div>
+            </div>
+        </section>
+    </template>
+    <template lwc:elseif={showLoading}>
+        <section class="panel"><div class="panel-b muted" role="status">Loading imports</div></section>
+    </template>
+    <template lwc:elseif={data}>
+        <div class="tabs" role="tablist">
+            <template for:each={tabs} for:item="t">
+                <button key={t.id} class={t.className} type="button" role="tab" aria-selected={t.selected} data-tab={t.id}
+                    onclick={handleTab}>{t.label}<span class="count">{t.count}</span></button>
+            </template>
+        </div>
+
+        <template lwc:if={isJobsTab}>
+            <template lwc:if={hasJobs}>
+                <div class="split">
+                    <section class="panel jobs">
+                        <div class="panel-b flush">
+                            <div class="tbl-wrap">
+                                <table class="tbl">
+                                    <thead><tr><th>Import</th><th>Type</th><th class="n">Rows</th><th class="n">Errors</th><th>Status</th></tr></thead>
+                                    <tbody>
+                                        <template for:each={jobRows} for:item="j">
+                                            <tr key={j.importJobId} class={j.rowClass} tabindex="0" aria-selected={j.current} data-id={j.importJobId}
+                                                onclick={handleSelectJob} onkeydown={handleSelectJob}>
+                                                <td><span class="id">{j.name}</span><div class="small muted">{j.requestedText}</div></td>
+                                                <td>{j.importType}</td>
+                                                <td class="n num">{j.rowCount}</td>
+                                                <td class="n num"><template lwc:if={j.hasErrors}><span class="down strong">{j.errorCount}</span></template>
+                                                    <template lwc:else>0</template></td>
+                                                <td><span class={j.chip}><span class="dot"></span>{j.status}</span></td>
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </section>
+                    <template lwc:if={job}>
+                        <section class="panel detail">
+                            <div class="panel-h"><div><h2>{job.name}</h2><div class="sub">{job.importType}</div></div></div>
+                            <div class="panel-b">
+                                <div class="hsteps steps">
+                                    <template for:each={job.steps} for:item="s">
+                                        <div key={s.key} class={s.className}><span class="n"><template lwc:if={s.done}><c-sab-icon name="check" size="12"></c-sab-icon></template>
+                                            <template lwc:else>{s.number}</template></span>{s.label}</div>
+                                    </template>
+                                </div>
+                                <dl class="kv">
+                                    <dt>Type</dt><dd>{job.importType}</dd>
+                                    <dt>Uploaded by</dt><dd>{job.byText}</dd>
+                                    <dt>Valid rows</dt><dd>{job.validText}</dd>
+                                    <dt>Status</dt><dd><span class={job.chip}><span class="dot"></span>{job.status}</span></dd>
+                                </dl>
+                                <template lwc:if={job.hasErrors}>
+                                    <hr class="sep" />
+                                    <div class="banner t-bad"><c-sab-icon name="alert"></c-sab-icon>
+                                        <div><b>{job.errorTitle}</b><div class="small">Fix them in the file and upload again, or commit the valid rows now and retry the rest later.</div></div></div>
+                                </template>
+                                <div class="row job-actions">
+                                    <template lwc:if={job.showCommit}>
+                                        <button class="btn primary sm commit" type="button" disabled={job.commitDisabled} title={job.commitTitle}
+                                            onclick={handleCommit}>{job.commitLabel}</button>
+                                    </template>
+                                    <template lwc:if={job.showValidate}>
+                                        <button class="btn sm validate" type="button" disabled={job.validateDisabled} onclick={handleValidate}>Run validation</button>
+                                    </template>
+                                    <template lwc:if={job.hasErrors}>
+                                        <button class="btn sm download" type="button" onclick={handleDownloadErrors}>
+                                            <c-sab-icon name="down" size="16"></c-sab-icon>Download error file</button>
+                                    </template>
+                                </div>
+                            </div>
+                        </section>
+                    </template>
+                </div>
+
+                <template lwc:if={showRows}>
+                    <section class="panel rows">
+                        <div class="panel-h">
+                            <div><h2>{rowsTitle}</h2><div class="sub">Errors first; values as parsed from the file</div></div>
+                            <span class="spacer"></span>
+                            <div class="seg" role="group" aria-label="Rows to show">
+                                <template for:each={filterButtons} for:item="b">
+                                    <button key={b.id} class={b.className} type="button" aria-pressed={b.pressed} data-id={b.id} onclick={handleFilter}>{b.label}</button>
+                                </template>
+                            </div>
+                        </div>
+                        <div class="panel-b flush">
+                            <template lwc:if={rowsError}>
+                                <div class="panel-b"><div class="banner t-bad" role="alert"><c-sab-icon name="alert"></c-sab-icon><div>{rowsError}</div></div></div>
+                            </template>
+                            <template lwc:elseif={hasRowViews}>
+                                <div class="tbl-wrap">
+                                    <table class="tbl">
+                                        <thead><tr><th class="n">Row</th><th>Values</th><th>Status</th><th>Message</th></tr></thead>
+                                        <tbody>
+                                            <template for:each={rowViews} for:item="r">
+                                                <tr key={r.rowId}>
+                                                    <td class="n num">{r.rowNumber}</td>
+                                                    <td class="small">{r.values}</td>
+                                                    <td><span class={r.chip}><span class="dot"></span>{r.status}</span></td>
+                                                    <td class="small">{r.message}</td>
+                                                </tr>
+                                            </template>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </template>
+                            <template lwc:else>
+                                <div class="panel-b muted">{rowsEmptyText}</div>
+                            </template>
+                        </div>
+                    </section>
+                </template>
+            </template>
+            <template lwc:else>
+                <section class="panel">
+                    <div class="empty">
+                        <div class="ill"><c-sab-icon name="import" size="30"></c-sab-icon></div>
+                        <h3>No imports yet</h3>
+                        <p>Stage a chart of accounts, journal entries or opening balances. Nothing changes in the ledger until you commit.</p>
+                    </div>
+                </section>
+            </template>
+        </template>
+
+        <template lwc:else>
+            <section class="panel outbox">
+                <div class="panel-h"><div><h2>Integration outbox</h2>
+                    <div class="sub">Outbound calls are recorded first and retried with the same idempotency key. A Salesforce commit never assumes the provider succeeded.</div></div></div>
+                <div class="panel-b flush">
+                    <template lwc:if={hasRequests}>
+                        <div class="tbl-wrap">
+                            <table class="tbl">
+                                <thead><tr><th>Request</th><th>Target</th><th>Direction</th><th class="n">Attempts</th><th>Next attempt</th><th>State</th></tr></thead>
+                                <tbody>
+                                    <template for:each={requestRows} for:item="r">
+                                        <tr key={r.requestId}>
+                                            <td><span class="id">{r.operation}</span><div class="small muted">{r.responseReference}</div></td>
+                                            <td>{r.provider}</td>
+                                            <td>{r.direction}</td>
+                                            <td class="n num">{r.attemptsText}</td>
+                                            <td>{r.nextText}</td>
+                                            <td><span class={r.chip}><span class="dot"></span>{r.state}</span>
+                                                <template lwc:if={r.errorCode}><div class="small down err">{r.errorCode}</div></template></td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </template>
+                    <template lwc:else>
+                        <div class="panel-b muted">No integration requests for this company.</div>
+                    </template>
+                </div>
+            </section>
+        </template>
+    </template>
+    <a class="download-link" aria-hidden="true" tabindex="-1"></a>
+
+    <c-sab-modal open={modalOpen} heading="New import" subheading="Stage a file, validate every row, preview, then commit" onclose={handleCloseModal}>
+        <div class="hsteps steps">
+            <template for:each={modalSteps} for:item="s">
+                <div key={s.key} class={s.className}><span class="n"><template lwc:if={s.done}><c-sab-icon name="check" size="12"></c-sab-icon></template>
+                    <template lwc:else>{s.number}</template></span>{s.label}</div>
+            </template>
+        </div>
+        <template lwc:if={formError}>
+            <div class="banner t-bad form-error" role="alert"><c-sab-icon name="alert"></c-sab-icon><div>{formError}</div></div>
+        </template>
+        <div class="grid g2">
+            <label class="field"><span>Import type</span>
+                <select class="select import-type" onchange={handleType}>
+                    <template for:each={importTypeOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template>
+                </select></label>
+            <label class="field"><span>Company</span><input class="input" value={companyName} disabled /></label>
+        </div>
+        <label class="cardlet drop">
+            <input class="file" type="file" accept=".csv,text/csv" onchange={handleFile} />
+            <div class="drop-ic"><c-sab-icon name="import" size="26"></c-sab-icon></div>
+            <template lwc:if={hasFile}>
+                <div class="strong">{form.fileName}</div>
+                <div class="small muted">{fileText}</div>
+            </template>
+            <template lwc:else>
+                <div class="strong">Choose a CSV file</div>
+                <div class="small muted">Up to 2,000 rows and 500,000 characters</div>
+            </template>
+        </label>
+        <p class="small muted hint-line">{columnsHint}</p>
+        <p class="small muted">Files are staged first. Nothing changes in the ledger until you commit, and staging the same file again returns the same import.</p>
+        <button slot="footer" class="btn ghost cancel" type="button" onclick={handleCloseModal}>Cancel</button>
+        <button slot="footer" class="btn primary stage-import" type="button" disabled={stageDisabled} onclick={handleStage}>Stage and validate</button>
+    </c-sab-modal>
+</template>

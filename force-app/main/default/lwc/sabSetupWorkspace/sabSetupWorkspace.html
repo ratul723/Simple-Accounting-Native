@@ -1,0 +1,130 @@
+<template>
+    <c-sab-workspace-header company-name={companyName} group="Administration" heading="Company setup"
+        description="Company profile, functional currency, fiscal calendar, periods, defaults and document numbering.">
+        <button slot="actions" class="btn validate" type="button" onclick={handleValidate}><c-sab-icon name="check" size="16"></c-sab-icon>Validate setup</button>
+        <template lwc:if={showContinue}>
+            <button slot="actions" class="btn primary continue" type="button" onclick={handleContinue}>Continue setup</button>
+        </template>
+    </c-sab-workspace-header>
+
+    <template lwc:if={errorMessage}>
+        <section class="panel">
+            <div class="empty">
+                <div class="ill"><c-sab-icon name="alert" size="30"></c-sab-icon></div>
+                <h3>Company setup could not be loaded</h3>
+                <p>{errorMessage}</p>
+                <div class="row center"><button class="btn primary" type="button" onclick={handleRetry}>Try again</button></div>
+            </div>
+        </section>
+    </template>
+    <template lwc:elseif={showLoading}>
+        <section class="panel"><div class="panel-b muted" role="status">Loading company setup</div></section>
+    </template>
+    <template lwc:elseif={state}>
+        <div class="tabs" role="tablist">
+            <template for:each={tabs} for:item="t">
+                <button key={t.id} class={t.className} type="button" role="tab" aria-selected={t.selected} data-tab={t.id} onclick={handleTab}>{t.label}</button>
+            </template>
+        </div>
+
+        <template lwc:if={isCompanyTab}>
+            <div class="split-l">
+                <section class="panel progress">
+                    <div class="panel-h"><div><h2>Setup progress</h2><div class="sub">{progressSub}</div></div></div>
+                    <div class="panel-b">
+                        <div class="steps">
+                            <template for:each={steps} for:item="s">
+                                <div key={s.key} class={s.className}>
+                                    <span class="n"><template lwc:if={s.done}><c-sab-icon name="check" size="13"></c-sab-icon></template>
+                                        <template lwc:else>{s.number}</template></span>
+                                    <div><div class="t">{s.title}</div><div class="small muted">{s.text}</div><div class="small step-detail">{s.detail}</div></div>
+                                    <template lwc:if={s.isNow}><span class="chip t-info"><span class="dot"></span>In progress</span></template>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </section>
+                <div class="stack">
+                    <div class={readiness.className}><c-sab-icon name={readiness.icon}></c-sab-icon>
+                        <div><b>{readiness.title}</b><div class="small">{readiness.text}</div></div></div>
+                    <section class="panel profile">
+                        <div class="panel-h"><div><h2>Company profile</h2></div><span class="spacer"></span>
+                            <button class="btn sm edit-profile" type="button" onclick={handleEditProfile}>Edit</button></div>
+                        <div class="panel-b">
+                            <div class="grid g2">
+                                <template for:each={profile} for:item="p">
+                                    <div key={p.key} class="field"><span>{p.label}</span><div class="ro">{p.value}</div></div>
+                                </template>
+                                <div class="field"><span>Setup status</span><div class="ro"><span class={statusChip}><span class="dot"></span>{state.setupStatus}</span></div></div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </template>
+
+        <template lwc:elseif={isCompaniesTab}>
+            <section class="panel companies">
+                <div class="panel-h"><div><h2>Accounting companies</h2><div class="sub">Companies you hold an active grant for</div></div><span class="spacer"></span>
+                    <button class="btn primary sm add-company" type="button" disabled={addCompanyDisabled} title={addCompanyTitle} onclick={handleAddCompany}>
+                        <c-sab-icon name="plus" size="16"></c-sab-icon>Add company</button></div>
+                <div class="panel-b flush">
+                    <div class="tbl-wrap">
+                        <table class="tbl">
+                            <thead><tr><th>Company</th><th>Functional currency</th><th>Setup status</th><th><span class="sr">Actions</span></th></tr></thead>
+                            <tbody>
+                                <template for:each={companyRows} for:item="c">
+                                    <tr key={c.companyId}>
+                                        <td><span class="strong">{c.companyName}</span><div class="small muted">{c.companyKey}</div></td>
+                                        <td>{c.functionalCurrency}</td>
+                                        <td><span class={c.chip}><span class="dot"></span>{c.setupStatus}</span></td>
+                                        <td class="act"><template lwc:if={c.isCurrent}><span class="tag">Current</span></template>
+                                            <template lwc:else><button class="btn sm switch" type="button" data-id={c.companyId} onclick={handleSwitch}>Switch</button></template></td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </template>
+
+        <template lwc:else>
+            <section class="panel records">
+                <div class="panel-h"><div><h2>{recordPanel.title}</h2><div class="sub">{recordPanel.sub}</div></div><span class="spacer"></span>
+                    <button class="btn sm manage" type="button" data-kind={recordPanel.kind} onclick={handleManage}>{recordPanel.action}</button></div>
+                <div class="panel-b flush">
+                    <template lwc:if={recordsError}>
+                        <div class="panel-b"><div class="banner t-bad" role="alert"><c-sab-icon name="alert"></c-sab-icon><div>{recordsError}</div></div></div>
+                    </template>
+                    <template lwc:elseif={recordPanel.hasRows}>
+                        <div class="tbl-wrap">
+                            <table class="tbl">
+                                <thead><tr><template for:each={recordPanel.columns} for:item="c"><th key={c.key}>{c.label}</th></template></tr></thead>
+                                <tbody>
+                                    <template for:each={recordPanel.rows} for:item="r">
+                                        <tr key={r.key}>
+                                            <template for:each={r.cells} for:item="cell">
+                                                <td key={cell.key}>
+                                                    <template lwc:if={cell.isChip}><span class={cell.chip}><span class="dot"></span>{cell.text}</span></template>
+                                                    <template lwc:elseif={cell.isId}><span class="id">{cell.text}</span></template>
+                                                    <template lwc:elseif={cell.isTag}><span class="tag">{cell.text}</span></template>
+                                                    <template lwc:else>{cell.text}</template>
+                                                </td>
+                                            </template>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </template>
+                    <template lwc:else>
+                        <div class="panel-b muted">{recordPanel.emptyText}</div>
+                    </template>
+                </div>
+            </section>
+        </template>
+    </template>
+
+    <c-sab-setup-records company-id={companyId} kind={editorKind} open={editorOpen} onclose={handleEditorClose} onsaved={handleEditorSaved}></c-sab-setup-records>
+</template>

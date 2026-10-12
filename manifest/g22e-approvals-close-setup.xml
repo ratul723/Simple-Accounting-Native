@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>SABAppShellController</members>
+        <members>SABAppShellControllerTest</members>
+        <members>SABApprovalsCloseReadPolicy</members>
+        <members>SABApprovalsCloseWorkspaceController</members>
+        <members>SABApprovalsCloseWorkspaceCtrlTest</members>
+        <members>SABSetupRecordService</members>
+        <members>SABSetupRecordServiceTest</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>SAB_Create_Accounting_Company</members>
+        <members>SAB_Manage_Company_Setup</members>
+        <members>SAB_View_Approvals_Close</members>
+        <name>CustomPermission</name>
+    </types>
+    <types>
+        <members>sabAppShell</members>
+        <members>sabApprovalsWorkspace</members>
+        <members>sabCompanySetupWizard</members>
+        <members>sabFinanceHome</members>
+        <members>sabSetupRecords</members>
+        <name>LightningComponentBundle</name>
+    </types>
+    <types>
+        <members>SAB_Approvals_Close_Workspace_User</members>
+        <members>SAB_Create_Accounting_Company_Action</members>
+        <members>SAB_Manage_Company_Setup_Action</members>
+        <name>PermissionSet</name>
+    </types>
+    <version>67.0</version>
+</Package>

@@ -18,6 +18,9 @@ const STATE_RECORD = 'c__id';
 const SEARCH_DELAY_MS = 250;
 const SEARCH_MIN_LENGTH = 2;
 const SEARCH_MAX_RESULTS = 8;
+// SABCompanySetupService treats Validated and Active as ready for posting.
+const READY_STATUSES = ['Validated', 'Active'];
+const isReady = (status) => READY_STATUSES.includes(status);
 
 function reduceError(error) {
     if (!error) {
@@ -80,6 +83,7 @@ export default class SabAppShell extends NavigationMixin(LightningElement) {
     searchSequence = 0;
     searchTimer;
     fontsLoaded = false;
+    newCompanyOpen = false;
 
     @wire(CurrentPageReference)
     handlePageReference(pageRef) {
@@ -272,7 +276,7 @@ export default class SabAppShell extends NavigationMixin(LightningElement) {
     }
 
     get companyActive() {
-        return Boolean(this.company && this.company.setupStatus === 'Active');
+        return Boolean(this.company && isReady(this.company.setupStatus));
     }
 
     get periodText() {
@@ -307,7 +311,7 @@ export default class SabAppShell extends NavigationMixin(LightningElement) {
             ...c,
             className: c.companyId === selected ? 'pop-item sel' : 'pop-item',
             badge: (c.companyKey || c.companyName || '').slice(0, 2).toUpperCase(),
-            sub: `${c.companyKey}, ${c.functionalCurrency}, ${c.setupStatus === 'Active' ? 'active' : 'setup in progress'}`,
+            sub: `${c.companyKey}, ${c.functionalCurrency}, ${isReady(c.setupStatus) ? c.setupStatus.toLowerCase() : 'setup in progress'}`,
             selected: c.companyId === selected ? 'true' : 'false'
         }));
     }
@@ -361,7 +365,7 @@ export default class SabAppShell extends NavigationMixin(LightningElement) {
     }
 
     get firstActiveCompany() {
-        return this.companies.find((c) => c.setupStatus === 'Active' && (!this.company || c.companyId !== this.company.companyId));
+        return this.companies.find((c) => isReady(c.setupStatus) && (!this.company || c.companyId !== this.company.companyId));
     }
 
     get switchLabel() {
@@ -391,7 +395,8 @@ export default class SabAppShell extends NavigationMixin(LightningElement) {
     get workspaceCaps() {
         return {
             canCreateJournal: Boolean(this.shell && this.shell.canCreateJournal),
-            canCreateInvoice: Boolean(this.shell && this.shell.canCreateInvoice)
+            canCreateInvoice: Boolean(this.shell && this.shell.canCreateInvoice),
+            canCreateCompany: Boolean(this.shell && this.shell.canCreateCompany)
         };
     }
 
@@ -496,6 +501,46 @@ export default class SabAppShell extends NavigationMixin(LightningElement) {
         await this.switchCompany(companyId);
     }
 
+    get canCreateCompany() {
+        return Boolean(this.shell && this.shell.canCreateCompany);
+    }
+
+    get showCreateFirstCompany() {
+        return !this.isLoading && !this.hasCompany && this.canCreateCompany;
+    }
+
+    handleNewCompany() {
+        this.closePopovers();
+        this.newCompanyOpen = true;
+    }
+
+    handleNewCompanyClose() {
+        this.newCompanyOpen = false;
+    }
+
+    async handleNewCompanySaved(event) {
+        const companyId = event.detail && event.detail.recordId;
+        this.newCompanyOpen = false;
+        if (!companyId) {
+            return;
+        }
+        this.toast('Accounting company created. Finish its setup next.');
+        try {
+            const context = await getCompanyContext({ companyId });
+            if (context && !this.companies.some((c) => c.companyId === context.companyId)) {
+                this.companies = [...this.companies, context];
+            }
+            this.isLoading = true;
+            this.loadedWorkspaceId = undefined;
+            await this.selectCompany(companyId, true);
+            this.navigateTo('setup');
+        } catch (error) {
+            this.errorMessage = reduceError(error);
+        } finally {
+            this.isLoading = false;
+        }
+    }
+
     async handleSwitchToActive() {
         if (this.firstActiveCompany) {
             await this.switchCompany(this.firstActiveCompany.companyId);
@@ -548,6 +593,11 @@ export default class SabAppShell extends NavigationMixin(LightningElement) {
         event.stopPropagation();
         const detail = event.detail || {};
         this.navigateTo(detail.workspace, detail.recordId);
+    }
+
+    async handleWorkspaceSwitchCompany(event) {
+        event.stopPropagation();
+        await this.switchCompany(event.detail && event.detail.companyId);
     }
 
     handleWorkspaceToast(event) {

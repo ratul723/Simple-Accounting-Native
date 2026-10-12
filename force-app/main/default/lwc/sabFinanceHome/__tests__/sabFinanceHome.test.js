@@ -106,6 +106,17 @@ describe('c-sab-finance-home', () => {
         ]);
     });
 
+    it('opens the approvals inbox when it is available', async () => {
+        getHome.mockResolvedValue(ACTIVE);
+        const el = mount({ companyId: 'a01000000000001AAA', visibleWorkspaces: ['home', 'approvals'] });
+        await flush();
+        const handler = jest.fn();
+        el.addEventListener('sabnavigate', handler);
+        el.shadowRoot.querySelector('.li.click').click();
+        el.shadowRoot.querySelector('.open-inbox').click();
+        expect(handler.mock.calls.map((c) => c[0].detail.workspace)).toEqual(['approvals', 'approvals']);
+    });
+
     it('shows unavailable figures and empty lists', async () => {
         getHome.mockResolvedValue({
             ...ACTIVE, hasPeriod: false, cash: { available: false }, receivables: { available: true, amount: 0, count: 0 },

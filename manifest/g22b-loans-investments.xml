@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>SABLoansInvestmentsReadPolicy</members>
+        <members>SABLoansInvestmentsWorkspaceController</members>
+        <members>SABLoansInvestmentsWorkspaceCtrlTest</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>SAB_View_Loans_Investments</members>
+        <name>CustomPermission</name>
+    </types>
+    <types>
+        <members>sabAppShell</members>
+        <members>sabLoansWorkspace</members>
+        <name>LightningComponentBundle</name>
+    </types>
+    <types>
+        <members>SAB_Loans_Investments_Workspace_User</members>
+        <name>PermissionSet</name>
+    </types>
+    <version>67.0</version>
+</Package>

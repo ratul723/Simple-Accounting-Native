@@ -16,11 +16,21 @@ import getSetupState
 const STORAGE_KEY =
     'sabSelectedAccountingCompanyId';
 
+const SETUP_KINDS = {
+    Accounting_Company__c: 'company',
+    Accounting_Period__c: 'period',
+    GL_Account__c: 'account',
+    Document_Sequence__c: 'sequence',
+    Company_Feature__c: 'feature'
+};
+
 export default class SabCompanySetupWizard
     extends NavigationMixin(LightningElement) {
 
     companyId;
     state;
+    setupKind = 'company';
+    setupOpen = false;
     isLoading = false;
     errorMessage;
     subscription;
@@ -152,45 +162,25 @@ export default class SabCompanySetupWizard
     }
 
     handleOpenRecord(event) {
-        const recordId =
-            event.currentTarget.dataset.recordId;
-
-        const objectApiName =
-            event.currentTarget.dataset.objectApi;
-
-        this[
-            NavigationMixin.Navigate
-        ]({
-            type:
-                'standard__recordPage',
-            attributes: {
-                recordId,
-                objectApiName,
-                actionName:
-                    'view'
-            }
-        });
+        this.openSetup(event.currentTarget.dataset.objectApi);
     }
 
     handleOpenObject(event) {
-        const objectApiName =
-            event.currentTarget.dataset.objectApi;
+        this.openSetup(event.currentTarget.dataset.objectApi);
+    }
 
-        this[
-            NavigationMixin.Navigate
-        ]({
-            type:
-                'standard__objectPage',
-            attributes: {
-                objectApiName,
-                actionName:
-                    'list'
-            },
-            state: {
-                filterName:
-                    'Recent'
-            }
-        });
+    /** Opens the in-app setup editor instead of leaving for the standard record or list page. */
+    openSetup(objectApiName) {
+        this.setupKind = SETUP_KINDS[objectApiName] || 'company';
+        this.setupOpen = true;
+    }
+
+    handleSetupClose() {
+        this.setupOpen = false;
+    }
+
+    async handleSetupSaved() {
+        await this.loadState();
     }
 
     reduceError(error) {

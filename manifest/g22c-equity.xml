@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>SABEquityReadPolicy</members>
+        <members>SABEquityWorkspaceController</members>
+        <members>SABEquityWorkspaceControllerTest</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>SAB_View_Equity</members>
+        <name>CustomPermission</name>
+    </types>
+    <types>
+        <members>sabAppShell</members>
+        <members>sabEquityWorkspace</members>
+        <name>LightningComponentBundle</name>
+    </types>
+    <types>
+        <members>SAB_Equity_Workspace_User</members>
+        <name>PermissionSet</name>
+    </types>
+    <version>67.0</version>
+</Package>
