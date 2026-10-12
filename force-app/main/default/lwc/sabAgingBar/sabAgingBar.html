@@ -1,0 +1,10 @@
+<template>
+    <div class="stackbar" role="img" aria-label="Aging">
+        <template for:each={segments} for:item="s"><i key={s.key} style={s.style} title={s.title}></i></template>
+    </div>
+    <div class="buckets">
+        <template for:each={legend} for:item="b">
+            <div key={b.key}><div class="small muted row label"><i class="sw" style={b.swatch}></i>{b.label}</div><div class="strong num value">{b.text}</div></div>
+        </template>
+    </div>
+</template>

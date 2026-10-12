@@ -1,0 +1,21 @@
+@import 'c/sabStyles';
+
+.filters {
+    margin-bottom: 14px;
+}
+
+.sab-query {
+    max-width: 280px;
+}
+
+.sab-download {
+    display: none;
+}
+
+.note {
+    padding: 10px 18px 14px;
+}
+
+.row.center {
+    justify-content: center;
+}

@@ -1,0 +1,72 @@
+<template>
+    <c-sab-workspace-header company-name={companyName} group="Ledger" heading="Audit & action history"
+        description="Every posting, reversal, approval, settlement and period action, with who did it, when and why.">
+        <button slot="actions" class="btn sab-export" type="button" disabled={exportDisabled} onclick={handleExport}>
+            <c-sab-icon name="down" size="16"></c-sab-icon>Export log</button>
+    </c-sab-workspace-header>
+
+    <template lwc:if={errorMessage}>
+        <section class="panel">
+            <div class="empty">
+                <div class="ill"><c-sab-icon name="alert" size="30"></c-sab-icon></div>
+                <h3>Audit history could not be loaded</h3>
+                <p>{errorMessage}</p>
+                <div class="row center"><button class="btn primary" type="button" onclick={handleRetry}>Try again</button></div>
+            </div>
+        </section>
+    </template>
+    <template lwc:elseif={showLoading}>
+        <section class="panel"><div class="panel-b muted" role="status">Loading audit history</div></section>
+    </template>
+    <template lwc:elseif={data}>
+        <div class="row filters">
+            <div class="seg" role="group" aria-label="Event kind">
+                <template for:each={kindButtons} for:item="k">
+                    <button key={k.id} class={k.className} type="button" aria-pressed={k.pressed} data-id={k.id} onclick={handleKind}>{k.label}</button>
+                </template>
+            </div>
+            <span class="spacer"></span>
+            <input class="input sab-query" placeholder="Filter by user, key or text" aria-label="Filter audit history" oninput={handleQuery} />
+        </div>
+        <div class="split">
+            <section class="panel">
+                <div class="tl">
+                    <template lwc:if={hasEvents}>
+                        <template for:each={filtered} for:item="e">
+                            <div key={e.key} class="tl-item">
+                                <div class="tl-time">{e.dateText}<br />{e.timeText}</div>
+                                <div class="tl-rail"><span class={e.dotClass}><c-sab-icon name={e.icon} size="13"></c-sab-icon></span></div>
+                                <div class="tl-body">
+                                    <div class="t">{e.title}</div>
+                                    <div class="d">{e.detail}</div>
+                                    <div class="tl-meta"><span class="tag">{e.kind}</span>
+                                        <span class="person"><span class="avatar sm">{e.initials}</span>{e.actor}</span>
+                                        <span class="small faint">{e.requestKey}</span></div>
+                                </div>
+                            </div>
+                        </template>
+                    </template>
+                    <template lwc:else>
+                        <div class="empty"><h3>No matching events</h3><p>Try another filter or clear the search.</p></div>
+                    </template>
+                </div>
+            </section>
+            <section class="panel sab-counts">
+                <div class="panel-h"><div><h2>By event type</h2><div class="sub">History cannot be edited or deleted</div></div></div>
+                <div class="panel-b flush">
+                    <div class="tbl-wrap">
+                        <table class="tbl">
+                            <thead><tr><th>Event type</th><th class="n">Count</th></tr></thead>
+                            <tbody>
+                                <template for:each={counts} for:item="c"><tr key={c.key}><td>{c.label}</td><td class="n num">{c.count}</td></tr></template>
+                            </tbody>
+                            <tfoot><tr><td>Total</td><td class="n num">{total}</td></tr></tfoot>
+                        </table>
+                    </div>
+                    <p class="small muted note">Shows the latest 100 records of each source: business actions, period actions, journals and accounting events.</p>
+                </div>
+            </section>
+        </div>
+    </template>
+    <a class="sab-download" aria-hidden="true" tabindex="-1"></a>
+</template>

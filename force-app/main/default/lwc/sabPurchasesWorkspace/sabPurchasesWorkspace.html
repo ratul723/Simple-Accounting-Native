@@ -1,0 +1,134 @@
+<template>
+    <c-sab-workspace-header company-name={companyName} group="Money in & out" heading="Purchases & payables"
+        description="Supplier bills and credits, approvals and payment scheduling."></c-sab-workspace-header>
+
+    <template lwc:if={errorMessage}>
+        <section class="panel"><div class="empty"><div class="ill"><c-sab-icon name="alert" size="30"></c-sab-icon></div>
+            <h3>Purchases could not be loaded</h3><p>{errorMessage}</p>
+            <div class="row center"><button class="btn primary" type="button" onclick={handleRetry}>Try again</button></div></div></section>
+    </template>
+    <template lwc:elseif={showLoading}>
+        <section class="panel"><div class="panel-b muted" role="status">Loading purchases</div></section>
+    </template>
+    <template lwc:elseif={data}>
+        <div class="figs">
+            <template for:each={figures} for:item="f">
+                <div key={f.key} class="fig"><div class="l">{f.label}</div>
+                    <div class="v">{f.value}<template lwc:if={f.hasUnit}><small>{f.unit}</small></template></div>
+                    <div class="s"><template lwc:if={f.hasBold}><b class="down">{f.bold}</b></template>{f.subText}</div></div>
+            </template>
+        </div>
+        <section class="panel aging">
+            <div class="panel-h"><div><h2>Payables aging</h2><div class="sub">Posted bills after supplier payments and credits</div></div></div>
+            <div class="panel-b"><c-sab-aging-bar buckets={buckets}></c-sab-aging-bar></div>
+        </section>
+
+        <div class="tabs" role="tablist">
+            <template for:each={tabs} for:item="t">
+                <button key={t.id} class={t.className} type="button" role="tab" aria-selected={t.selected} data-tab={t.id} onclick={handleTab}>{t.label}
+                    <template lwc:if={t.hasCount}><span class="count">{t.count}</span></template></button>
+            </template>
+        </div>
+
+        <template lwc:if={isBills}>
+            <section class="panel"><div class="panel-b flush">
+                <template lwc:if={hasBills}>
+                    <div class="tbl-wrap"><table class="tbl sab-bills">
+                        <thead><tr><th>Bill</th><th>Supplier</th><th>Bill date</th><th>Due</th><th class="n">Total</th><th class="n">Balance</th><th>Approval</th><th>Status</th></tr></thead>
+                        <tbody>
+                            <template for:each={billRows} for:item="b">
+                                <tr key={b.billId} class="click" tabindex="0" data-id={b.billId} onclick={handleRow} onkeydown={handleRow}>
+                                    <td><span class="id">{b.billNumber}</span></td><td>{b.supplierName}<div class="small muted">Ref {b.vendorReference}</div></td>
+                                    <td>{b.dateText}</td><td>{b.dueText}</td><td class="n num">{b.totalText}</td><td class="n num">{b.balanceText}</td>
+                                    <td><span class="small">{b.approvalText}</span></td><td><span class={b.chip}><span class="dot"></span>{b.state}</span></td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table></div>
+                </template>
+                <template lwc:else><div class="panel-b muted">No supplier bills yet.</div></template>
+            </div></section>
+        </template>
+        <template lwc:elseif={isSchedule}>
+            <template lwc:if={hasSchedule}>
+                <div class="grid g2">
+                    <template for:each={scheduleGroups} for:item="g">
+                        <section key={g.name} class="panel sab-schedule">
+                            <div class="panel-h"><div><h2>{g.name}</h2></div></div>
+                            <div class="panel-b flush"><div class="tbl-wrap"><table class="tbl">
+                                <thead><tr><th>Bill</th><th>Due</th><th class="n">Amount</th></tr></thead>
+                                <tbody><template for:each={g.rows} for:item="b"><tr key={b.billId} class="click" tabindex="0" data-id={b.billId} onclick={handleRow} onkeydown={handleRow}>
+                                    <td><span class="id">{b.billNumber}</span><div class="small muted">{b.supplierName}</div></td><td>{b.dueText}</td><td class="n num">{b.amountText}</td></tr></template></tbody>
+                                <tfoot><tr><td>Total</td><td></td><td class="n num">{g.totalText}</td></tr></tfoot>
+                            </table></div></div>
+                        </section>
+                    </template>
+                </div>
+            </template>
+            <template lwc:else><section class="panel"><div class="panel-b muted">No posted bills are waiting for payment.</div></section></template>
+        </template>
+        <template lwc:else>
+            <section class="panel"><div class="panel-b flush">
+                <template lwc:if={hasSuppliers}>
+                    <div class="tbl-wrap"><table class="tbl sab-suppliers">
+                        <thead><tr><th>Supplier</th><th>Terms</th><th>Pays by</th><th class="n">Open bills</th><th class="n">Balance owed</th></tr></thead>
+                        <tbody><template for:each={supplierRows} for:item="s"><tr key={s.partyProfileId}>
+                            <td><span class="strong">{s.name}</span><div class="small muted">{s.taxRegistration}</div></td><td>{s.paymentTerm}</td><td>{s.paymentMethod}</td>
+                            <td class="n num">{s.openText}</td><td class="n num">{s.owedText}</td></tr></template></tbody>
+                    </table></div>
+                </template>
+                <template lwc:else><div class="panel-b muted">No supplier profiles yet.</div></template>
+            </div></section>
+        </template>
+    </template>
+
+    <c-sab-drawer open={drawerOpen} heading={drawerHeading} subheading={drawerSub} onclose={handleCloseDrawer}>
+        <template lwc:if={drawerOpen}>
+            <div class="hsteps steps">
+                <template for:each={view.steps} for:item="s">
+                    <div key={s.key} class={s.className}><span class="n"><template lwc:if={s.done}><c-sab-icon name="check" size="12"></c-sab-icon></template>
+                        <template lwc:else>{s.number}</template></span>{s.label}</div>
+                </template>
+            </div>
+            <template lwc:if={view.cancelled}><div class="banner t-neutral steps"><c-sab-icon name="info"></c-sab-icon><div><b>Cancelled</b></div></div></template>
+            <template lwc:if={view.overdue}><div class="banner t-bad steps"><c-sab-icon name="alert"></c-sab-icon><div><b>Overdue</b><div class="small">{view.overdueText}</div></div></div></template>
+            <template lwc:if={detailError}><div class="banner t-bad">{detailError}</div></template>
+            <template lwc:if={view.hasLines}>
+                <div class="tbl-wrap"><table class="tbl sab-lines">
+                    <thead><tr><th>Line</th><th>Account</th><th class="n">Qty</th><th class="n">Price</th><th>Tax</th><th class="n">Net</th></tr></thead>
+                    <tbody><template for:each={view.lines} for:item="l"><tr key={l.key}><td>{l.description}</td><td class="small">{l.account}</td>
+                        <td class="n num">{l.qtyText}</td><td class="n num">{l.priceText}</td><td><span class="tag">{l.taxCode}</span></td><td class="n num">{l.netText}</td></tr></template></tbody>
+                </table></div>
+            </template>
+            <dl class="kv facts"><template for:each={view.facts} for:item="f"><dt key={f.key}>{f.label}</dt><dd key={f.valueKey}>{f.value}</dd></template></dl>
+            <h3 class="section">Payments</h3>
+            <template lwc:if={view.hasAllocations}>
+                <div class="tbl-wrap"><table class="tbl sab-allocations">
+                    <thead><tr><th>Payment</th><th>Date</th><th class="n">Amount</th></tr></thead>
+                    <tbody><template for:each={view.allocations} for:item="a"><tr key={a.key}><td>{a.documentNumber}</td><td>{a.dateText}</td><td class="n num">{a.amountText}</td></tr></template></tbody>
+                </table></div>
+            </template>
+            <template lwc:else><p class="muted small">No payments allocated yet.</p></template>
+        </template>
+        <template lwc:if={drawerOpen}>
+            <template lwc:if={view.isDraft}>
+                <button slot="footer" class="btn ghost sab-cancel-bill" type="button" disabled={view.editDisabled} title={view.editTitle} onclick={handleCancel}>Cancel bill</button>
+                <button slot="footer" class="btn primary sab-submit-bill" type="button" disabled={view.editDisabled} title={view.editTitle} onclick={handleSubmit}>Submit for approval</button>
+            </template>
+            <template lwc:if={view.isSubmitted}>
+                <button slot="footer" class="btn ghost sab-return-bill" type="button" disabled={view.editDisabled} title={view.editTitle} onclick={handleReturn}>Return to draft</button>
+                <button slot="footer" class="btn primary sab-approve-bill" type="button" disabled={view.approveDisabled} title={view.approveTitle} onclick={handleApprove}>Approve</button>
+            </template>
+            <template lwc:if={view.isApproved}>
+                <button slot="footer" class="btn primary sab-post-bill" type="button" disabled={view.postDisabled} title={view.postTitle} onclick={handlePost}>Post bill</button>
+            </template>
+        </template>
+    </c-sab-drawer>
+
+    <c-sab-modal open={reasonOpen} heading={reasonHeading} subheading="A reason is required and kept in the audit history." onclose={handleCloseReason}>
+        <template lwc:if={reasonError}><div class="banner t-bad form-error" role="alert"><c-sab-icon name="alert"></c-sab-icon><div>{reasonError}</div></div></template>
+        <label class="field"><span>Reason</span><textarea class="textarea sab-reason" rows="3" oninput={handleReasonInput}></textarea></label>
+        <button slot="footer" class="btn ghost sab-reason-close" type="button" onclick={handleCloseReason}>Close</button>
+        <button slot="footer" class="btn danger sab-reason-save" type="button" disabled={busy} onclick={handleReasonSave}>{reasonSaveLabel}</button>
+    </c-sab-modal>
+</template>

@@ -1,0 +1,27 @@
+@import 'c/sabStyles';
+
+.stackbar {
+    background: var(--surface-2);
+}
+
+.buckets {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.label {
+    gap: 6px;
+}
+
+.value {
+    text-align: left;
+    margin-top: 2px;
+}
+
+@media (max-width: 560px) {
+    .buckets {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}

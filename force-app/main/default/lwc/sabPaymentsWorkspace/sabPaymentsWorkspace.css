@@ -1,0 +1,40 @@
+@import 'c/sabStyles';
+
+.failed-banner {
+    margin-bottom: 16px;
+    align-items: center;
+}
+
+.steps {
+    margin-bottom: 14px;
+}
+
+.facts {
+    margin: 12px 0 18px;
+}
+
+.section {
+    font-size: 14px;
+    margin: 0 0 8px;
+}
+
+.allocate-title {
+    margin-top: 18px;
+}
+
+td.amt {
+    width: 130px;
+}
+
+.form-error {
+    margin-bottom: 14px;
+}
+
+tr.click:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: -2px;
+}
+
+.row.center {
+    justify-content: center;
+}

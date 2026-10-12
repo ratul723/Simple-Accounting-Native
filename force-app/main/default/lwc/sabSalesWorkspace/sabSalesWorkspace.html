@@ -1,0 +1,157 @@
+<template>
+    <c-sab-workspace-header company-name={companyName} group="Money in & out" heading="Sales & receivables"
+        description="Invoices, credit notes, customers, receipts and what is still owed."></c-sab-workspace-header>
+
+    <template lwc:if={errorMessage}>
+        <section class="panel"><div class="empty"><div class="ill"><c-sab-icon name="alert" size="30"></c-sab-icon></div>
+            <h3>Sales could not be loaded</h3><p>{errorMessage}</p>
+            <div class="row center"><button class="btn primary" type="button" onclick={handleRetry}>Try again</button></div></div></section>
+    </template>
+    <template lwc:elseif={showLoading}>
+        <section class="panel"><div class="panel-b muted" role="status">Loading sales</div></section>
+    </template>
+    <template lwc:elseif={data}>
+        <div class="figs">
+            <template for:each={figures} for:item="f">
+                <div key={f.key} class="fig"><div class="l">{f.label}</div>
+                    <div class="v">{f.value}<template lwc:if={f.hasUnit}><small>{f.unit}</small></template></div>
+                    <div class="s"><template lwc:if={f.hasBold}><b class="down">{f.bold}</b>{f.text}</template><template lwc:else>{f.sub}</template></div></div>
+            </template>
+        </div>
+
+        <template lwc:if={data.agingAvailable}>
+            <section class="panel aging">
+                <div class="panel-h"><div><h2>Receivables aging</h2><div class="sub">{agingSub}</div></div><span class="spacer"></span>
+                    <template lwc:if={canOpenReports}><button class="btn sm sab-open-reports" type="button" onclick={handleOpenReports}>Open aging report</button></template></div>
+                <div class="panel-b"><c-sab-aging-bar buckets={data.buckets}></c-sab-aging-bar></div>
+            </section>
+        </template>
+
+        <div class="tabs" role="tablist">
+            <template for:each={tabs} for:item="t">
+                <button key={t.id} class={t.className} type="button" role="tab" aria-selected={t.selected} data-tab={t.id} onclick={handleTab}>{t.label}
+                    <template lwc:if={t.hasCount}><span class="count">{t.count}</span></template></button>
+            </template>
+        </div>
+
+        <template lwc:if={isInvoices}>
+            <section class="panel"><div class="panel-b flush">
+                <template lwc:if={hasInvoices}>
+                    <div class="tbl-wrap"><table class="tbl sab-invoices">
+                        <thead><tr><th>Invoice</th><th>Customer</th><th>Issued</th><th>Due</th><th class="n">Total</th><th class="n">Paid &amp; credited</th><th class="n">Balance</th><th>Status</th></tr></thead>
+                        <tbody>
+                            <template for:each={invoiceRows} for:item="i">
+                                <tr key={i.documentId} class="click" tabindex="0" data-id={i.documentId} onclick={handleRow} onkeydown={handleRow}>
+                                    <td><span class="id">{i.documentNumber}</span></td><td>{i.partyName}</td><td>{i.issuedText}</td>
+                                    <td>{i.dueText}<template lwc:if={i.lateText}><div class="small down">{i.lateText}</div></template></td>
+                                    <td class="n num">{i.totalText}</td><td class="n num">{i.paidText}</td><td class="n num">{i.balanceText}</td>
+                                    <td><span class={i.chip}><span class="dot"></span>{i.state}</span></td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table></div>
+                </template>
+                <template lwc:else><div class="panel-b muted">No invoices yet.</div></template>
+            </div></section>
+        </template>
+        <template lwc:elseif={isCredits}>
+            <section class="panel">
+                <div class="panel-h"><div><div class="sub">Credit notes post Dr Revenue / Cr AR and are applied to invoices with effective-dated credit applications</div></div></div>
+                <div class="panel-b flush">
+                    <template lwc:if={hasCredits}>
+                        <div class="tbl-wrap"><table class="tbl sab-credits">
+                            <thead><tr><th>Credit note</th><th>Customer</th><th>Date</th><th>Against</th><th class="n">Amount</th><th>Status</th></tr></thead>
+                            <tbody>
+                                <template for:each={creditRows} for:item="c">
+                                    <tr key={c.documentId} class="click" tabindex="0" data-id={c.documentId} onclick={handleRow} onkeydown={handleRow}>
+                                        <td><span class="id">{c.documentNumber}</span></td><td>{c.partyName}</td><td>{c.dateText}</td><td>{c.originalNumber}</td>
+                                        <td class="n num">{c.amountText}</td><td><span class={c.chip}><span class="dot"></span>{c.status}</span></td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table></div>
+                    </template>
+                    <template lwc:else><div class="panel-b muted">No credit notes yet.</div></template>
+                </div>
+            </section>
+        </template>
+        <template lwc:elseif={isCustomers}>
+            <section class="panel">
+                <div class="panel-h"><div><div class="sub">Salesforce Accounts with a customer accounting profile</div></div></div>
+                <div class="panel-b flush">
+                    <template lwc:if={hasCustomers}>
+                        <div class="tbl-wrap"><table class="tbl sab-customers">
+                            <thead><tr><th>Customer</th><th>Terms</th><th class="n">Credit limit</th><th class="n">Outstanding</th><th>Used</th></tr></thead>
+                            <tbody>
+                                <template for:each={customerRows} for:item="c">
+                                    <tr key={c.partyProfileId}>
+                                        <td><span class="strong">{c.name}</span><div class="small muted">{c.taxRegistration}</div></td><td>{c.paymentTerm}</td>
+                                        <td class="n num">{c.limitText}</td><td class="n num">{c.outstandingText}</td>
+                                        <td><template lwc:if={c.hasUsed}><div class="used"><div class={c.meterClass}><i style={c.meterStyle}></i></div>
+                                            <div class="small muted">{c.usedText}</div></div></template></td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table></div>
+                    </template>
+                    <template lwc:else><div class="panel-b muted">No customer profiles yet.</div></template>
+                </div>
+            </section>
+        </template>
+        <template lwc:else>
+            <section class="panel"><div class="panel-b flush">
+                <template lwc:if={hasReceipts}>
+                    <div class="tbl-wrap"><table class="tbl sab-receipts">
+                        <thead><tr><th>Payment</th><th>Party</th><th>Value date</th><th>Bank</th><th>Method</th><th class="n">Amount</th><th class="n">Allocated</th><th>State</th></tr></thead>
+                        <tbody>
+                            <template for:each={receiptRows} for:item="p">
+                                <tr key={p.paymentId}>
+                                    <td><span class="id">{p.paymentNumber}</span><div class="small muted">{p.direction}</div></td><td>{p.partyName}</td><td>{p.dateText}</td>
+                                    <td>{p.bankName}</td><td>{p.method}</td><td class="n num">{p.amountText} <span class="small muted">{p.currencyCode}</span></td>
+                                    <td class="n"><span class={p.allocatedClass}>{p.allocatedText}</span></td><td><span class={p.chip}><span class="dot"></span>{p.state}</span></td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table></div>
+                </template>
+                <template lwc:else><div class="panel-b muted">No receipts yet.</div></template>
+            </div></section>
+        </template>
+    </template>
+
+    <c-sab-drawer open={drawerOpen} heading={drawerHeading} subheading={drawerSub} onclose={handleCloseDrawer}>
+        <template lwc:if={drawerOpen}>
+            <div class="hsteps steps">
+                <template for:each={view.steps} for:item="s">
+                    <div key={s.key} class={s.className}><span class="n"><template lwc:if={s.done}><c-sab-icon name="check" size="12"></c-sab-icon></template>
+                        <template lwc:else>{s.number}</template></span>{s.label}</div>
+                </template>
+            </div>
+            <template lwc:if={view.overdue}>
+                <div class="banner t-bad overdue"><c-sab-icon name="alert"></c-sab-icon><div><b>{view.overdueTitle}</b><div class="small">{view.overdueText}</div></div></div>
+            </template>
+            <template lwc:if={detailError}><div class="banner t-bad">{detailError}</div></template>
+            <template lwc:if={view.hasLines}>
+                <div class="tbl-wrap"><table class="tbl sab-lines">
+                    <thead><tr><th>Line</th><th>Account</th><th class="n">Qty</th><th class="n">Price</th><th>Tax</th><th class="n">Net</th></tr></thead>
+                    <tbody><template for:each={view.lines} for:item="l"><tr key={l.key}><td>{l.description}</td><td class="small">{l.account}</td>
+                        <td class="n num">{l.qtyText}</td><td class="n num">{l.priceText}</td><td><span class="tag">{l.taxCode}</span></td><td class="n num">{l.netText}</td></tr></template></tbody>
+                </table></div>
+            </template>
+            <dl class="kv facts"><template for:each={view.facts} for:item="f"><dt key={f.key}>{f.label}</dt><dd key={f.valueKey}>{f.value}</dd></template></dl>
+            <h3 class="section">Settlement</h3>
+            <template lwc:if={view.hasAllocations}>
+                <div class="tbl-wrap"><table class="tbl sab-allocations">
+                    <thead><tr><th>Source</th><th>Date</th><th class="n">Amount</th></tr></thead>
+                    <tbody><template for:each={view.allocations} for:item="a"><tr key={a.key}><td>{a.documentNumber}</td><td>{a.dateText}</td><td class="n num">{a.amountText}</td></tr></template></tbody>
+                </table></div>
+            </template>
+            <template lwc:else><p class="muted small">No receipts or credits allocated yet. Paid status is calculated from allocations, it cannot be edited.</p></template>
+        </template>
+        <template lwc:if={drawerOpen}>
+            <template lwc:if={view.canPost}>
+                <button slot="footer" class="btn primary sab-post-invoice" type="button" disabled={postDisabled} title={postTitle} onclick={handlePost}>Post invoice</button>
+            </template>
+        </template>
+    </c-sab-drawer>
+</template>

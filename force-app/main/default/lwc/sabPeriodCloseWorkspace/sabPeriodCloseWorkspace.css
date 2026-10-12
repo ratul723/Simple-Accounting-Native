@@ -1,0 +1,32 @@
+@import 'c/sabStyles';
+
+.panel-h .btn + .btn {
+    margin-left: 6px;
+}
+
+.lower {
+    margin-top: 16px;
+}
+
+.count-row {
+    margin-bottom: 12px;
+}
+
+.tasks {
+    margin: 12px -18px 0;
+}
+
+.row.end {
+    justify-content: flex-end;
+    margin-top: 12px;
+}
+
+.row.center {
+    justify-content: center;
+}
+
+.pcell {
+    text-align: left;
+    font: inherit;
+    color: inherit;
+}

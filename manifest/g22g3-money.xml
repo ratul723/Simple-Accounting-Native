@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>SABMoneyWorkspaceController</members>
+        <members>SABMoneyWorkspaceControllerTest</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>sabAgingBar</members>
+        <members>sabAppShell</members>
+        <members>sabMoneyShared</members>
+        <members>sabPaymentsWorkspace</members>
+        <members>sabPurchasesWorkspace</members>
+        <members>sabSalesWorkspace</members>
+        <name>LightningComponentBundle</name>
+    </types>
+    <types>
+        <members>SAB_App_User</members>
+        <name>PermissionSet</name>
+    </types>
+    <version>67.0</version>
+</Package>

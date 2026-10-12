@@ -1,0 +1,44 @@
+@import 'c/sabStyles';
+
+.aging {
+    margin-bottom: 16px;
+}
+
+.used {
+    min-width: 90px;
+}
+
+.used .small {
+    margin-top: 3px;
+}
+
+.meter.bad i {
+    background: var(--bad);
+}
+
+.meter.warn i {
+    background: var(--warn);
+}
+
+.steps,
+.overdue {
+    margin-bottom: 14px;
+}
+
+.facts {
+    margin: 12px 0 18px;
+}
+
+.section {
+    font-size: 14px;
+    margin: 0 0 8px;
+}
+
+tr.click:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: -2px;
+}
+
+.row.center {
+    justify-content: center;
+}

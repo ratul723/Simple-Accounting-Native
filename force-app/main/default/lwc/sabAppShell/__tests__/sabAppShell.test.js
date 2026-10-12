@@ -14,7 +14,7 @@ jest.mock('@salesforce/apex/SABAppShellController.getShellContext', () => ({ def
 jest.mock('@salesforce/apex/SABAppShellController.search', () => ({ default: jest.fn() }), { virtual: true });
 jest.mock('@salesforce/apex/SABFinanceHomeController.getHome', () => ({ default: jest.fn() }), { virtual: true });
 jest.mock('c/sabJournalsWorkspace', () => jest.requireActual('c/sabFinanceHome'));
-jest.mock('c/sabAccountingPeriodWorkspace', () => jest.requireActual('c/sabIcon'));
+jest.mock('c/sabPeriodCloseWorkspace', () => jest.requireActual('c/sabFinanceHome'));
 jest.mock('c/sabSetupWorkspace', () => jest.requireActual('c/sabFinanceHome'));
 jest.mock('c/sabReportCentre', () => jest.requireActual('c/sabIcon'));
 jest.mock('@salesforce/apex/SABSetupRecordService.getSetupRecords', () => ({ default: jest.fn() }), { virtual: true });
@@ -34,7 +34,7 @@ const COMPANIES = [
 const SHELL = {
     userId: '005000000000001AAA',
     persona: { key: 'FINANCE_MANAGER', label: 'Finance Manager', userName: 'Alex Morgan', firstName: 'Alex', initials: 'AM' },
-    visibleWorkspaces: ['home', 'journal', 'close', 'setup', 'payments'],
+    visibleWorkspaces: ['home', 'journal', 'close', 'setup', 'coa'],
     hasPeriod: true,
     periodKey: 'FY27-P03',
     periodStart: '2026-09-01',
@@ -123,13 +123,13 @@ describe('c-sab-app-shell', () => {
 
         CurrentPageReference.emit({ type: 'standard__navItemPage', attributes: { apiName: 'SAB_Home' }, state: { c__ws: 'close' } });
         await settle();
-        expect(root.querySelector('c-sab-workspace-header').heading).toBe('Period close & reopen');
+        expect(root.querySelector('.nav-item[data-id="close"]').getAttribute('aria-current')).toBe('page');
 
         root.querySelector('.nav-item[data-id="journal"]').click();
         await settle();
         expect(root.querySelector('.nav-item[data-id="journal"]').getAttribute('aria-current')).toBe('page');
 
-        CurrentPageReference.emit({ type: 'standard__navItemPage', attributes: { apiName: 'SAB_Home' }, state: { c__ws: 'payments' } });
+        CurrentPageReference.emit({ type: 'standard__navItemPage', attributes: { apiName: 'SAB_Home' }, state: { c__ws: 'coa' } });
         await settle();
         expect(root.querySelector('.workspace.aware')).not.toBeNull();
     });
@@ -262,7 +262,7 @@ describe('c-sab-app-shell', () => {
         expect(el.shadowRoot.querySelector('c-sab-toast').shadowRoot.querySelector('.toast').textContent).toBe('Saved');
         home.dispatchEvent(new CustomEvent('sabnavigate', { detail: { workspace: 'close' }, bubbles: true, composed: true }));
         await settle();
-        expect(el.shadowRoot.querySelector('c-sab-workspace-header').heading).toBe('Period close & reopen');
+        expect(el.shadowRoot.querySelector('.nav-item[data-id="close"]').getAttribute('aria-current')).toBe('page');
     });
 
     it('shows a message when the user has no companies', async () => {

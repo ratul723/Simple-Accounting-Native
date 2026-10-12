@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>67.0</apiVersion>
+    <isExposed>false</isExposed>
+    <description>Simple Accounting Books Audit and action history in the Harbourline demo layout (G22G-2), rendered inside c/sabAppShell.</description>
+</LightningComponentBundle>

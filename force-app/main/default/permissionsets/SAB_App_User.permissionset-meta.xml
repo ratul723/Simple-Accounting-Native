@@ -20,6 +20,10 @@
         <apexClass>SABJournalBrowseController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
+    <classAccesses>
+        <apexClass>SABMoneyWorkspaceController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
     <customPermissions>
         <enabled>true</enabled>
         <name>SAB_View_Finance_Home</name>

@@ -1,0 +1,114 @@
+<template>
+    <c-sab-workspace-header company-name={companyName} group="Ledger" heading="Period close & reopen"
+        description="Accounting periods, close checklist, blocking exceptions and a permanent record of every close and reopen."></c-sab-workspace-header>
+
+    <template lwc:if={errorMessage}>
+        <section class="panel">
+            <div class="empty">
+                <div class="ill"><c-sab-icon name="alert" size="30"></c-sab-icon></div>
+                <h3>Periods could not be loaded</h3>
+                <p>{errorMessage}</p>
+                <div class="row center"><button class="btn primary" type="button" onclick={handleRetry}>Try again</button></div>
+            </div>
+        </section>
+    </template>
+    <template lwc:elseif={showLoading}>
+        <section class="panel"><div class="panel-b muted" role="status">Loading periods</div></section>
+    </template>
+    <template lwc:elseif={selected}>
+        <section class="panel sab-period-grid">
+            <div class="panel-h"><div><h2>{gridTitle}</h2><div class="sub">{gridSub}</div></div><span class="spacer"></span>
+                <button class="btn sm ghost sab-prev-year" type="button" disabled={prevDisabled} aria-label="Previous fiscal year" onclick={handlePrevYear}>Previous year</button>
+                <button class="btn sm ghost sab-next-year" type="button" disabled={nextDisabled} aria-label="Next fiscal year" onclick={handleNextYear}>Next year</button></div>
+            <div class="panel-b">
+                <div class="periods">
+                    <template for:each={cells} for:item="c">
+                        <button key={c.periodId} class={c.className} type="button" aria-pressed={c.pressed} data-id={c.periodId} onclick={handlePick}>
+                            <div class="k">{c.periodName}</div><div class="m">{c.label}</div>
+                            <template lwc:if={c.isChip}><span class={c.chip}><span class="dot"></span>{c.text}</span></template>
+                            <template lwc:else><span class="small faint">{c.text}</span></template>
+                        </button>
+                    </template>
+                </div>
+            </div>
+        </section>
+
+        <div class="split lower">
+            <section class="panel sab-period-main">
+                <div class="panel-h"><div><h2>{mainTitle}</h2><div class="sub">{mainSub}</div></div></div>
+                <div class="panel-b">
+                    <template lwc:if={isClosed}>
+                        <dl class="kv"><template for:each={closedFacts} for:item="f"><dt key={f.key}>{f.label}</dt><dd key={f.label}>{f.value}</dd></template></dl>
+                        <hr class="sep" />
+                        <label class="field"><span>Reason for reopening (required)</span>
+                            <textarea class="textarea sab-reopen-reason" placeholder="For example: late supplier invoice for August freight" oninput={handleReason}></textarea></label>
+                        <div class="row end"><button class="btn danger sab-reopen" type="button" disabled={reopenDisabled} title={reopenTitle} onclick={handleReopen}>Reopen period</button></div>
+                    </template>
+                    <template lwc:elseif={isClose}>
+                        <template lwc:if={isLateReopened}>
+                            <div class="banner t-warn"><c-sab-icon name="alert"></c-sab-icon><div><b>Reopened period</b>
+                                <div class="small">Postings dated in this period are accepted until it is closed again. Close it as soon as the late entries are posted.</div></div></div>
+                        </template>
+                        <template lwc:if={hasChecklist}>
+                            <div class="row count-row"><span class="strong">{checklistSummary.doneText}</span><span class="spacer"></span><span class="small muted">{checklistSummary.openText}</span></div>
+                            <div class="meter"><i style={checklistSummary.meterStyle}></i></div>
+                            <div class="list tasks">
+                                <template for:each={taskRows} for:item="t">
+                                    <div key={t.taskId} class="li">
+                                        <span class={t.iconClass}><c-sab-icon name={t.icon}></c-sab-icon></span>
+                                        <div class="body"><div class="t">{t.name}</div><div class="d">{t.detail}</div></div>
+                                        <span class={t.chip}><span class="dot"></span>{t.status}</span>
+                                        <template lwc:if={t.resolve}><button class="btn sm sab-resolve" type="button" onclick={handleResolve}>Resolve</button></template>
+                                        <template lwc:if={t.markable}><button class="btn sm ghost sab-mark-done" type="button" data-id={t.taskId} disabled={busy} onclick={handleMarkDone}>Mark done</button></template>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                        <template lwc:elseif={checklistUnavailable}>
+                            <div class="muted small">The close checklist is not available for your access. Period close still refuses to close while checklist tasks are open.</div>
+                        </template>
+                        <template lwc:else>
+                            <div class="muted small">No close checklist for this period. Generate one from Approvals &amp; close to gate the close.</div>
+                        </template>
+                        <hr class="sep" />
+                        <label class="field"><span>Close reason</span><input class="input sab-close-reason" value={reason} oninput={handleReason} /></label>
+                        <div class="row end"><span class="hint">{closeHint}</span>
+                            <button class="btn primary sab-close" type="button" disabled={closeDisabled} title={closeTitle} onclick={handleClose}>
+                                <c-sab-icon name="lock" size="16"></c-sab-icon>{closeLabel}</button></div>
+                    </template>
+                    <template lwc:else>
+                        <div class="empty"><div class="ill"><c-sab-icon name="close" size="30"></c-sab-icon></div>
+                            <h3>This period has not started</h3><p>{futureText}</p></div>
+                    </template>
+                </div>
+            </section>
+
+            <section class="panel sab-history">
+                <div class="panel-h"><div><h2>Period action history</h2><div class="sub">{historySub}</div></div></div>
+                <div class="panel-b flush">
+                    <template lwc:if={hasHistory}>
+                        <div class="tbl-wrap">
+                            <table class="tbl">
+                                <thead><tr><th>Period</th><th>Change</th><th>By</th><th>Reason</th></tr></thead>
+                                <tbody>
+                                    <template for:each={historyRows} for:item="a">
+                                        <tr key={a.actionId}>
+                                            <td><span class="id">{a.period}</span></td><td>{a.change}</td>
+                                            <td>{a.performedByName}<div class="small muted">{a.atText}</div></td>
+                                            <td><span class="small">{a.reason}</span></td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </template>
+                    <template lwc:else><div class="panel-b muted">No closes or reopens recorded for this period.</div></template>
+                </div>
+            </section>
+        </div>
+    </template>
+    <template lwc:elseif={data}>
+        <section class="panel"><div class="empty"><div class="ill"><c-sab-icon name="close" size="30"></c-sab-icon></div>
+            <h3>No accounting periods</h3><p>Create periods in Company setup first.</p></div></section>
+    </template>
+</template>

@@ -1,0 +1,108 @@
+<template>
+    <c-sab-workspace-header company-name={companyName} group="Money in & out" heading="Payments"
+        description="Receipts and disbursements, allocations to invoices and bills, and settlement status."></c-sab-workspace-header>
+
+    <template lwc:if={errorMessage}>
+        <section class="panel"><div class="empty"><div class="ill"><c-sab-icon name="alert" size="30"></c-sab-icon></div>
+            <h3>Payments could not be loaded</h3><p>{errorMessage}</p>
+            <div class="row center"><button class="btn primary" type="button" onclick={handleReload}>Try again</button></div></div></section>
+    </template>
+    <template lwc:elseif={showLoading}>
+        <section class="panel"><div class="panel-b muted" role="status">Loading payments</div></section>
+    </template>
+    <template lwc:elseif={data}>
+        <div class="figs">
+            <template for:each={figures} for:item="f">
+                <div key={f.key} class="fig"><div class="l">{f.label}</div><div class="v">{f.value}<small>{f.unit}</small></div><div class="s">{f.sub}</div></div>
+            </template>
+        </div>
+        <template lwc:if={hasFailed}>
+            <div class="banner t-bad failed-banner"><c-sab-icon name="alert"></c-sab-icon><div><b>{failedTitle}</b><div class="small">{failedText}</div></div>
+                <span class="spacer"></span><button class="btn sm sab-review-failed" type="button" onclick={handleReviewFailed}>Review</button></div>
+        </template>
+        <div class="tabs" role="tablist">
+            <template for:each={tabs} for:item="t">
+                <button key={t.id} class={t.className} type="button" role="tab" aria-selected={t.selected} data-tab={t.id} onclick={handleTab}>{t.label}
+                    <template lwc:if={t.hasCount}><span class="count">{t.count}</span></template></button>
+            </template>
+        </div>
+        <section class="panel"><div class="panel-b flush">
+            <template lwc:if={hasRows}>
+                <div class="tbl-wrap"><table class="tbl sab-payments">
+                    <thead><tr><th>Payment</th><th>Party</th><th>Value date</th><th>Bank</th><th>Method</th><th class="n">Amount</th><th class="n">Allocated</th><th>State</th></tr></thead>
+                    <tbody>
+                        <template for:each={rows} for:item="p">
+                            <tr key={p.paymentId} class="click" tabindex="0" data-id={p.paymentId} onclick={handleRow} onkeydown={handleRow}>
+                                <td><span class="id">{p.paymentNumber}</span><div class="small muted">{p.direction}</div></td><td>{p.partyName}</td><td>{p.dateText}</td>
+                                <td>{p.bankName}</td><td>{p.method}</td><td class="n num">{p.amountText} <span class="small muted">{p.currencyCode}</span></td>
+                                <td class="n"><span class={p.allocatedClass}>{p.allocatedText}</span></td><td><span class={p.chip}><span class="dot"></span>{p.state}</span></td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table></div>
+            </template>
+            <template lwc:else><div class="panel-b muted">No payments match this view.</div></template>
+        </div></section>
+    </template>
+
+    <c-sab-drawer open={drawerOpen} heading={drawerHeading} subheading={drawerSub} onclose={handleCloseDrawer}>
+        <template lwc:if={drawerOpen}>
+            <template lwc:if={view.failed}>
+                <div class="banner t-bad steps"><c-sab-icon name="alert"></c-sab-icon><div><b>Bank rejected this payment</b><div class="small">Retry sends it back to authorised for another attempt.</div></div></div>
+            </template>
+            <template lwc:else>
+                <div class="hsteps steps">
+                    <template for:each={view.steps} for:item="s">
+                        <div key={s.key} class={s.className}><span class="n"><template lwc:if={s.done}><c-sab-icon name="check" size="12"></c-sab-icon></template>
+                            <template lwc:else>{s.number}</template></span>{s.label}</div>
+                    </template>
+                </div>
+            </template>
+            <template lwc:if={view.managed}><div class="banner t-info steps"><c-sab-icon name="info"></c-sab-icon><div class="small">{view.managedText}</div></div></template>
+            <dl class="kv facts"><template for:each={view.facts} for:item="f"><dt key={f.key}>{f.label}</dt><dd key={f.valueKey}>{f.value}</dd></template></dl>
+            <h3 class="section">Allocations</h3>
+            <template lwc:if={view.hasAllocations}>
+                <div class="tbl-wrap"><table class="tbl sab-allocations">
+                    <thead><tr><th>Document</th><th>Date</th><th class="n">Amount</th></tr></thead>
+                    <tbody><template for:each={view.allocations} for:item="a"><tr key={a.key}><td>{a.documentNumber}</td><td>{a.dateText}</td><td class="n num">{a.amountText}</td></tr></template></tbody>
+                </table></div>
+            </template>
+            <template lwc:else><p class="muted small">Nothing allocated yet.</p></template>
+            <template lwc:if={view.showAllocate}>
+                <h3 class="section allocate-title">Allocate {view.remainingText} to open invoices</h3>
+                <div class="tbl-wrap"><table class="tbl egrid sab-open-invoices">
+                    <thead><tr><th>Invoice</th><th>Due</th><th class="n">Outstanding</th><th class="n">Allocate</th></tr></thead>
+                    <tbody><template for:each={view.openInvoices} for:item="i"><tr key={i.documentId}><td><span class="id">{i.documentNumber}</span></td><td>{i.dueText}</td>
+                        <td class="n num">{i.outstandingText}</td><td class="amt"><input class="input n" inputmode="decimal" data-id={i.documentId} value={i.value}
+                        aria-label={i.label} oninput={handleAllocationInput} /></td></tr></template></tbody>
+                </table></div>
+            </template>
+            <template lwc:if={view.noOpenInvoices}><p class="muted small">This customer has no open posted invoices to allocate to.</p></template>
+        </template>
+        <template lwc:if={drawerOpen}>
+            <template lwc:if={view.canAuthorize}>
+                <button slot="footer" class="btn primary sab-authorize" type="button" disabled={view.approveDisabled} title={view.approveTitle} onclick={handleAuthorize}>Authorise</button>
+            </template>
+            <template lwc:if={view.canRelease}>
+                <button slot="footer" class="btn primary sab-release" type="button" disabled={view.editDisabled} title={view.editTitle} onclick={handleRelease}>Release to bank</button>
+            </template>
+            <template lwc:if={view.canClear}>
+                <button slot="footer" class="btn ghost sab-fail" type="button" disabled={view.editDisabled} title={view.editTitle} onclick={handleOpenFail}>Mark failed</button>
+                <button slot="footer" class="btn primary sab-clear" type="button" disabled={view.postDisabled} title={view.postTitle} onclick={handleClear}>Mark as cleared</button>
+            </template>
+            <template lwc:if={view.canRetry}>
+                <button slot="footer" class="btn primary sab-retry" type="button" disabled={view.editDisabled} title={view.editTitle} onclick={handleRetry}>Retry</button>
+            </template>
+            <template lwc:if={view.showAllocate}>
+                <button slot="footer" class="btn primary sab-allocate" type="button" disabled={busy} onclick={handleAllocate}>Allocate</button>
+            </template>
+        </template>
+    </c-sab-drawer>
+
+    <c-sab-modal open={failOpen} heading="Mark payment as failed" subheading="Record what the bank reported. A reason is required." onclose={handleCloseFail}>
+        <template lwc:if={failError}><div class="banner t-bad form-error" role="alert"><c-sab-icon name="alert"></c-sab-icon><div>{failError}</div></div></template>
+        <label class="field"><span>Reason</span><textarea class="textarea sab-fail-reason" rows="3" oninput={handleFailInput}></textarea></label>
+        <button slot="footer" class="btn ghost sab-fail-close" type="button" onclick={handleCloseFail}>Close</button>
+        <button slot="footer" class="btn danger sab-fail-save" type="button" disabled={busy} onclick={handleFailSave}>Mark failed</button>
+    </c-sab-modal>
+</template>
