@@ -1,0 +1,139 @@
+<template>
+    <c-sab-workspace-header company-name={companyName} group="Money in & out" heading="Banking & reconciliation"
+        description="Import bank statements, match them to posted ledger lines, explain differences and finalise.">
+        <button slot="actions" class="btn sab-import" type="button" disabled={importDisabled} title={importTitle} onclick={handleOpenImport}>
+            <c-sab-icon name="import" size="16"></c-sab-icon>Import statement</button>
+        <button slot="actions" class="btn primary sab-finalize" type="button" disabled={finalizeDisabled} title={finalizeTitle} onclick={handleFinalize}>
+            <c-sab-icon name="lock" size="16"></c-sab-icon>Finalise reconciliation</button>
+    </c-sab-workspace-header>
+
+    <template lwc:if={errorMessage}>
+        <section class="panel"><div class="empty"><div class="ill"><c-sab-icon name="alert" size="30"></c-sab-icon></div>
+            <h3>Banking could not be loaded</h3><p>{errorMessage}</p>
+            <div class="row center"><button class="btn primary" type="button" onclick={handleRetry}>Try again</button></div></div></section>
+    </template>
+    <template lwc:elseif={showLoading}>
+        <section class="panel"><div class="panel-b muted" role="status">Loading bank accounts</div></section>
+    </template>
+    <template lwc:elseif={hasBanks}>
+        <div class="grid g2 cards">
+            <template for:each={cards} for:item="b">
+                <div key={b.bankAccountId} class={b.className} role="button" tabindex="0" aria-pressed={b.pressed} data-id={b.bankAccountId}
+                    onclick={handleBank} onkeydown={handleBank}>
+                    <div class="row"><h4>{b.name}</h4><span class="spacer"></span><span class="tag">{b.currencyCode}</span></div>
+                    <div class="small muted">{b.detail}</div>
+                    <div class="row card-foot"><div><div class="small muted">Book balance</div><div class="big">{b.bookText}</div></div><span class="spacer"></span>
+                        <span class={b.chip}><span class="dot"></span>{b.statusText}</span></div>
+                </div>
+            </template>
+        </div>
+
+        <template lwc:if={hasManyStatements}>
+            <label class="field statement-pick"><span>Statement</span>
+                <select class="select sab-statement" onchange={handleStatement}>
+                    <template for:each={statementOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template>
+                </select></label>
+        </template>
+
+        <template lwc:if={statement}>
+            <div class="figs">
+                <template for:each={figures} for:item="f">
+                    <div key={f.key} class="fig"><div class="l">{f.label}</div><div class="v">{f.value}</div>
+                        <div class="s"><template lwc:if={f.hasGood}><b class="up">{f.good}</b></template>{f.sub}</div></div>
+                </template>
+            </div>
+            <template lwc:if={finalizedBanner}>
+                <div class="banner t-good gap"><c-sab-icon name="check"></c-sab-icon><div><b>Reconciliation finalised</b><div class="small">{finalizedBanner}</div></div></div>
+            </template>
+            <template lwc:if={statementStatusBanner}>
+                <div class="banner t-info gap"><c-sab-icon name="info"></c-sab-icon><div><b>{statementStatusBanner.title}</b><div class="small">{statementStatusBanner.text}</div></div>
+                    <span class="spacer"></span><button class="btn sm primary sab-statement-action" type="button" disabled={busy} onclick={handleStatementAction}>{statementStatusBanner.action}</button></div>
+            </template>
+
+            <div class="row actions">
+                <button class="btn sm sab-accept" type="button" disabled={acceptDisabled} onclick={handleAccept}><c-sab-icon name="spark" size="14"></c-sab-icon>Accept suggestions of 90% or more</button>
+                <button class="btn sm primary sab-match" type="button" disabled={matchDisabled} onclick={handleMatch}><c-sab-icon name="link" size="14"></c-sab-icon>Match selected</button>
+                <button class="btn sm sab-confirm-all" type="button" disabled={confirmDisabled} onclick={handleConfirmAll}><c-sab-icon name="check" size="14"></c-sab-icon>{confirmLabel}</button>
+                <button class="btn sm sab-adjustment" type="button" disabled={adjustmentDisabled} onclick={handleAdjustment}><c-sab-icon name="plus" size="14"></c-sab-icon>Record as bank adjustment</button>
+                <span class="spacer"></span><span class="hint">{hint}</span>
+            </div>
+
+            <div class="rec">
+                <section class="panel sab-statement-lines">
+                    <div class="panel-h"><div><h2>Bank statement lines</h2><div class="sub">{statementPaneSub}</div></div></div>
+                    <div class="panel-b flush">
+                        <template lwc:if={hasStatementRows}>
+                            <template for:each={statementRows} for:item="s">
+                                <div key={s.lineId} class={s.className} role="button" tabindex={s.tabIndex} data-id={s.lineId} onclick={handleStatementLine} onkeydown={handleStatementLine}>
+                                    <div class="small muted">{s.dateText}</div>
+                                    <div class="body"><div class="ref">{s.ref}</div><div class="sub">{s.sub}</div></div>
+                                    <div class={s.amountClass}>{s.amountText}</div>
+                                </div>
+                            </template>
+                        </template>
+                        <template lwc:else><div class="panel-b muted">This statement has no lines.</div></template>
+                    </div>
+                </section>
+                <section class="panel sab-ledger-lines">
+                    <div class="panel-h"><div><h2>{ledgerPaneTitle}</h2><div class="sub">Unreconciled posted lines</div></div></div>
+                    <div class="panel-b flush">
+                        <template lwc:if={hasLedgerRows}>
+                            <template for:each={ledgerRows} for:item="l">
+                                <div key={l.journalEntryLineId} class={l.className} role="button" tabindex={l.tabIndex} data-id={l.journalEntryLineId}
+                                    onclick={handleLedgerLine} onkeydown={handleLedgerLine}>
+                                    <div class="small muted">{l.dateText}</div>
+                                    <div class="body"><div class="ref">{l.ref}<template lwc:if={l.hasScore}><span class="score">{l.scoreText}</span></template></div>
+                                        <div class="sub">{l.sub}</div></div>
+                                    <div class={l.amountClass}>{l.amountText}</div>
+                                </div>
+                            </template>
+                        </template>
+                        <template lwc:else><div class="panel-b muted">No unreconciled posted lines on this bank account.</div></template>
+                    </div>
+                </section>
+            </div>
+
+            <template lwc:if={hasMatches}>
+                <section class="panel sab-matches">
+                    <div class="panel-h"><div><h2>Matches</h2><div class="sub">Proposed matches lock once confirmed; a confirmed match changes only by reversal</div></div></div>
+                    <div class="panel-b flush"><div class="tbl-wrap"><table class="tbl">
+                        <thead><tr><th>Statement line</th><th>Journal</th><th>Date</th><th>Type</th><th class="n">Amount</th><th>Status</th><th><span class="sr">Actions</span></th></tr></thead>
+                        <tbody><template for:each={matchRows} for:item="m"><tr key={m.matchId}>
+                            <td>{m.lineText}</td><td><span class="id">{m.journalName}</span></td><td>{m.dateText}</td><td>{m.matchType}</td><td class="n num">{m.amountText}</td>
+                            <td><span class={m.chip}><span class="dot"></span>{m.status}</span></td>
+                            <td class="act">
+                                <template lwc:if={m.canConfirm}><button class="btn sm sab-confirm" type="button" data-id={m.matchId} onclick={handleConfirm}>Confirm</button></template>
+                                <template lwc:if={m.canReverse}><button class="btn ghost sm sab-reverse" type="button" data-id={m.matchId} onclick={handleReverse}>Reverse</button></template>
+                            </td></tr></template></tbody>
+                    </table></div></div>
+                </section>
+            </template>
+        </template>
+        <template lwc:else>
+            <section class="panel"><div class="empty"><div class="ill"><c-sab-icon name="bank" size="30"></c-sab-icon></div>
+                <h3>No statement for this account</h3><p>Import a bank statement to start reconciling this account.</p></div></section>
+        </template>
+    </template>
+    <template lwc:elseif={dashboard}>
+        <section class="panel"><div class="empty"><div class="ill"><c-sab-icon name="bank" size="30"></c-sab-icon></div>
+            <h3>No bank accounts</h3><p>Add a bank account linked to a GL account in Company setup first.</p></div></section>
+    </template>
+
+    <c-sab-modal open={importOpen} heading="Import statement" subheading="CSV with date, amount and reference columns; value_date and id are optional" onclose={handleCloseImport}>
+        <template lwc:if={importError}><div class="banner t-bad form-error" role="alert"><c-sab-icon name="alert"></c-sab-icon><div>{importError}</div></div></template>
+        <label class="cardlet drop">
+            <input class="file sab-file" type="file" accept=".csv,text/csv" onchange={handleImportFile} />
+            <div class="drop-ic"><c-sab-icon name="import" size="26"></c-sab-icon></div>
+            <template lwc:if={importForm.fileName}><div class="strong">{importForm.fileName}</div><div class="small muted">{importLineText}</div></template>
+            <template lwc:else><div class="strong">Choose a statement CSV</div><div class="small muted">Dates as yyyy-mm-dd, amounts signed (money out negative)</div></template>
+        </label>
+        <div class="grid g2 form">
+            <label class="field"><span>Statement start</span><input class="input" type="date" data-field="statementStartDate" value={importForm.statementStartDate} oninput={handleImportField} /></label>
+            <label class="field"><span>Statement end</span><input class="input" type="date" data-field="statementEndDate" value={importForm.statementEndDate} oninput={handleImportField} /></label>
+            <label class="field"><span>Opening balance</span><input class="input n" type="number" step="0.01" data-field="openingAmount" value={importForm.openingAmount} oninput={handleImportField} /></label>
+            <label class="field"><span>Closing balance</span><input class="input n" type="number" step="0.01" data-field="closingAmount" value={importForm.closingAmount} oninput={handleImportField} /></label>
+        </div>
+        <button slot="footer" class="btn ghost sab-import-cancel" type="button" onclick={handleCloseImport}>Cancel</button>
+        <button slot="footer" class="btn primary sab-import-save" type="button" disabled={importSaveDisabled} onclick={handleImport}>Import and start</button>
+    </c-sab-modal>
+</template>

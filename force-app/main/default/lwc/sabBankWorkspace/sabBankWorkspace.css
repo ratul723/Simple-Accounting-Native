@@ -1,0 +1,84 @@
+@import 'c/sabStyles';
+
+.cards {
+    margin-bottom: 16px;
+}
+
+.cardlet[role="button"]:focus-visible,
+.rline[role="button"]:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: -2px;
+}
+
+.card-foot {
+    margin-top: 10px;
+    align-items: flex-end;
+}
+
+.statement-pick {
+    max-width: 360px;
+    margin-bottom: 14px;
+}
+
+.gap {
+    margin-bottom: 14px;
+    align-items: center;
+}
+
+.actions {
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.rline .body {
+    min-width: 0;
+}
+
+.sab-matches {
+    margin-top: 16px;
+}
+
+.act {
+    text-align: right;
+    white-space: nowrap;
+}
+
+.act .btn + .btn {
+    margin-left: 6px;
+}
+
+.drop {
+    display: block;
+    border-style: dashed;
+    text-align: center;
+    padding: 22px;
+    cursor: pointer;
+    margin-bottom: 14px;
+}
+
+.drop .file {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+}
+
+.drop-ic {
+    color: var(--accent);
+    display: flex;
+    justify-content: center;
+    margin-bottom: 6px;
+}
+
+.form {
+    gap: 12px 14px;
+}
+
+.form-error {
+    margin-bottom: 14px;
+}
+
+.row.center {
+    justify-content: center;
+}
