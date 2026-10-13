@@ -1,0 +1,131 @@
+<template>
+    <c-sab-workspace-header company-name={companyName} group="Compliance & reporting" heading="Tax"
+        description="Tax registrations and returns prepared from posted tax lines, reviewed, submitted and tracked to the authority outcome.">
+        <button slot="actions" class="btn primary sab-prepare" type="button" disabled={prepareDisabled} title={prepareTitle} onclick={handlePrepare}>
+            <c-sab-icon name="plus" size="16"></c-sab-icon>Prepare return</button>
+    </c-sab-workspace-header>
+
+    <template lwc:if={errorMessage}>
+        <section class="panel"><div class="empty"><div class="ill"><c-sab-icon name="alert" size="30"></c-sab-icon></div>
+            <h3>Tax could not be loaded</h3><p>{errorMessage}</p>
+            <div class="row center"><button class="btn primary" type="button" onclick={handleRetry}>Try again</button></div></div></section>
+    </template>
+    <template lwc:elseif={showLoading}>
+        <section class="panel"><div class="panel-b muted" role="status">Loading tax returns</div></section>
+    </template>
+    <template lwc:elseif={data}>
+        <div class="tabs" role="tablist">
+            <template for:each={tabs} for:item="t">
+                <button key={t.id} class={t.className} type="button" role="tab" aria-selected={t.selected} data-tab={t.id} onclick={handleTab}>{t.label}<span class="count">{t.count}</span></button>
+            </template>
+        </div>
+        <template lwc:if={isReturns}>
+            <div class="banner t-info gap"><c-sab-icon name="info"></c-sab-icon><div><b>Preparation only</b>
+                <div class="small">Review figures against source tax lines before lodging through the authority portal or your tax agent. The app prepares the return, it does not lodge on your behalf.</div></div></div>
+            <template lwc:if={hasReturns}>
+                <template lwc:if={detailError}><div class="banner t-bad gap" role="alert"><c-sab-icon name="alert"></c-sab-icon><div>{detailError}</div></div></template>
+                <template lwc:if={current}>
+                    <div class="split">
+                        <section class="panel sab-return">
+                            <div class="panel-h"><div><h2>{view.title}</h2><div class="sub">{view.sub}</div></div><span class="spacer"></span>
+                                <template lwc:if={view.showNext}><button class="btn primary sm sab-next" type="button" data-kind={view.nextKind} disabled={view.nextDisabled}
+                                    title={view.nextTitle} onclick={handleNext}>{view.nextLabel}</button></template>
+                                <template lwc:if={view.showAmend}><button class="btn sm sab-amend" type="button" disabled={view.amendDisabled} title={view.amendTitle} onclick={handleAmend}>Create amendment</button></template>
+                                <span class={view.chip}><span class="dot"></span>{current.status}</span></div>
+                            <div class="panel-b">
+                                <div class="hsteps steps">
+                                    <template for:each={view.steps} for:item="s">
+                                        <div key={s.key} class={s.className}><span class="n"><template lwc:if={s.done}><c-sab-icon name="check" size="12"></c-sab-icon></template>
+                                            <template lwc:else>{s.number}</template></span>{s.label}</div>
+                                    </template>
+                                </div>
+                                <template lwc:if={view.hasLines}>
+                                    <div class="tbl-wrap"><table class="tbl sab-boxes">
+                                        <thead><tr><th>Label</th><th>Description</th><th class="n">Calculated</th><th class="n">Adjustment</th><th class="n">Amount</th></tr></thead>
+                                        <tbody><template for:each={view.lines} for:item="l"><tr key={l.lineId}><td><span class="id">{l.boxKey}</span></td><td>{l.label}</td>
+                                            <td class="n num">{l.calcText}</td>
+                                            <td class="n amt"><template lwc:if={l.editable}><input class="input n sab-adjust" inputmode="decimal" data-box={l.boxKey} value={l.adjustmentAmount}
+                                                aria-label="Adjustment" onchange={handleAdjustment} /></template><template lwc:else>{l.adjText}</template></td>
+                                            <td class="n num">{l.finalText}</td></tr></template></tbody>
+                                    </table></div>
+                                </template>
+                                <template lwc:else><div class="muted small">No box lines yet.</div></template>
+                            </div>
+                        </section>
+                        <div class="stack">
+                            <section class="panel sab-payable">
+                                <div class="panel-h"><div><h2>{view.payableLabel}</h2></div></div>
+                                <div class="panel-b">
+                                    <div class="big payable">{view.payableText} <span class="small muted">{cur}</span></div>
+                                    <hr class="sep" />
+                                    <dl class="kv"><template for:each={view.facts} for:item="f"><dt key={f.key}>{f.label}</dt><dd key={f.valueKey}>{f.value}</dd></template></dl>
+                                </div>
+                            </section>
+                            <section class="panel sab-returns">
+                                <div class="panel-h"><div><h2>Returns</h2></div></div>
+                                <div class="panel-b flush"><div class="tbl-wrap"><table class="tbl">
+                                    <thead><tr><th>Return</th><th class="n">Net due</th><th>Status</th></tr></thead>
+                                    <tbody><template for:each={returnRows} for:item="r"><tr key={r.taxReturnId} class={r.className} tabindex="0" data-id={r.taxReturnId} onclick={handleRow} onkeydown={handleRow}>
+                                        <td><span class="strong">{r.name}</span> <span class="small muted">{r.versionText}</span><div class="small muted">{r.periodText}</div></td>
+                                        <td class="n num">{r.dueText}</td><td><span class={r.chip}><span class="dot"></span>{r.status}</span></td></tr></template></tbody>
+                                </table></div></div>
+                            </section>
+                            <template lwc:if={view.hasHistory}>
+                                <section class="panel sab-history">
+                                    <div class="panel-h"><div><h2>History</h2></div></div>
+                                    <div class="panel-b flush"><div class="list">
+                                        <template for:each={view.history} for:item="h"><div key={h.key} class="li"><div class="body"><div class="t">{h.action}</div>
+                                            <div class="d">{h.actorName}, {h.atText}</div><div class="d">{h.reason}</div></div></div></template>
+                                    </div></div>
+                                </section>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+            </template>
+            <template lwc:else>
+                <section class="panel"><div class="empty"><div class="ill"><c-sab-icon name="tax" size="30"></c-sab-icon></div>
+                    <h3>No tax returns yet</h3><p>Prepare a return for a registration and period. Figures come from posted tax lines.</p></div></section>
+            </template>
+        </template>
+        <template lwc:else>
+            <section class="panel"><div class="panel-b flush">
+                <template lwc:if={hasRegistrations}>
+                    <div class="tbl-wrap"><table class="tbl sab-registrations">
+                        <thead><tr><th>Registration</th><th>Frequency</th><th>From</th><th>To</th><th>Status</th></tr></thead>
+                        <tbody><template for:each={registrationRows} for:item="r"><tr key={r.value}><td>{r.label}</td><td>{r.filingFrequency}</td><td>{r.fromText}</td><td>{r.toText}</td>
+                            <td><span class={r.chip}><span class="dot"></span>{r.statusText}</span></td></tr></template></tbody>
+                    </table></div>
+                </template>
+                <template lwc:else><div class="panel-b muted">No tax registrations for this company.</div></template>
+            </div></section>
+        </template>
+    </template>
+
+    <c-sab-modal open={modalOpen} heading={modalHeading} subheading={modalSub} onclose={handleCloseModal}>
+        <template lwc:if={formError}><div class="banner t-bad form-error" role="alert"><c-sab-icon name="alert"></c-sab-icon><div>{formError}</div></div></template>
+        <template lwc:if={isPrepareModal}>
+            <div class="grid g2 form">
+                <label class="field wide"><span>Registration</span><select class="select" data-field="registrationId" onchange={handleField}>
+                    <template for:each={registrationOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+                <label class="field"><span>Period start</span><input class="input" type="date" data-field="periodStart" value={form.periodStart} oninput={handleField} /></label>
+                <label class="field"><span>Period end</span><input class="input" type="date" data-field="periodEnd" value={form.periodEnd} oninput={handleField} /></label>
+            </div>
+        </template>
+        <template lwc:if={isSubmitModal}>
+            <label class="field gap-sm"><span>Filing reference</span><input class="input sab-filing" data-field="filingReference" value={form.filingReference} oninput={handleField} /></label>
+        </template>
+        <template lwc:if={isOutcomeModal}>
+            <div class="grid g2 form gap-sm">
+                <label class="field"><span>Outcome</span><select class="select" data-field="outcome" onchange={handleField}>
+                    <template for:each={outcomeOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+                <label class="field"><span>Acknowledgement reference</span><input class="input sab-ack" data-field="acknowledgementReference" value={form.acknowledgementReference} oninput={handleField} /></label>
+            </div>
+        </template>
+        <template lwc:if={needsReason}>
+            <label class="field"><span>Reason or note</span><input class="input sab-reason" data-field="reason" value={form.reason} oninput={handleField} /></label>
+        </template>
+        <button slot="footer" class="btn ghost sab-modal-close" type="button" onclick={handleCloseModal}>Close</button>
+        <button slot="footer" class="btn primary sab-modal-save" type="button" disabled={busy} onclick={handleSave}>{saveLabel}</button>
+    </c-sab-modal>
+</template>

@@ -9,6 +9,10 @@ jest.mock('@salesforce/apex/SABMoneyWorkspaceController.getSales', () => ({ defa
 jest.mock('@salesforce/apex/SABMoneyWorkspaceController.getPayments', () => ({ default: jest.fn() }), { virtual: true });
 jest.mock('@salesforce/apex/SABMoneyWorkspaceController.getDocumentDetail', () => ({ default: jest.fn() }), { virtual: true });
 jest.mock('@salesforce/apex/SABInvoicePostingService.postApprovedInvoice', () => ({ default: jest.fn() }), { virtual: true });
+jest.mock('@salesforce/apex/SABDocumentEntryService.submitInvoice', () => ({ default: jest.fn() }), { virtual: true });
+jest.mock('@salesforce/apex/SABDocumentEntryService.approveInvoice', () => ({ default: jest.fn() }), { virtual: true });
+import submitInvoice from '@salesforce/apex/SABDocumentEntryService.submitInvoice';
+import approveInvoice from '@salesforce/apex/SABDocumentEntryService.approveInvoice';
 
 const SALES = {
     currencyCode: 'AUD', canPost: true, agingAvailable: true, totalOutstanding: 48210, overdueAmount: 9120, overdueCount: 2, openCount: 5,
@@ -167,5 +171,55 @@ describe('c-sab-sales-workspace', () => {
         await flush();
         expect(el2.shadowRoot.querySelector('.figs')).not.toBeNull();
         el2.recordId = 'missing';
+    });
+
+    it('opens the document editor, submits drafts and approves submitted invoices', async () => {
+        getSales.mockResolvedValue({ ...SALES, canApprove: true, invoices: [...SALES.invoices,
+            { documentId: 'I4', documentNumber: 'INV-DRAFT', documentType: 'Invoice', partyName: 'Coastal Foods', documentDate: '2026-10-02', dueDate: '2026-11-01', total: 100, status: 'Draft' },
+            { documentId: 'I5', documentNumber: 'INV-SUB', documentType: 'Invoice', partyName: 'Coastal Foods', documentDate: '2026-10-02', dueDate: '2026-11-01', total: 100, status: 'Submitted' }] });
+        submitInvoice.mockResolvedValue('Submitted');
+        approveInvoice.mockRejectedValueOnce({ body: { message: 'An invoice must be approved by someone other than the person who created it.' } }).mockResolvedValue('Approved');
+        const el = mount({ caps: { canCreateInvoice: true } });
+        await flush();
+        const toast = jest.fn();
+        el.addEventListener('sabtoast', toast);
+        const root = el.shadowRoot;
+        root.querySelector('.sab-new-invoice').click();
+        await flush();
+        const editor = root.querySelector('c-sab-document-editor');
+        expect(editor.open).toBe(true);
+        expect(editor.kind).toBe('invoice');
+        editor.dispatchEvent(new CustomEvent('close'));
+        root.querySelector('.sab-new-credit').click();
+        await flush();
+        expect(editor.kind).toBe('credit');
+        editor.dispatchEvent(new CustomEvent('saved', { detail: { recordId: 'I4' } }));
+        await flush();
+        expect(root.querySelector('c-sab-drawer').heading).toBe('INV-DRAFT');
+        root.querySelector('.sab-edit-invoice').click();
+        await flush();
+        expect(editor.recordId).toBe('I4');
+        root.querySelector('.sab-submit-invoice').click();
+        await flush();
+        expect(submitInvoice.mock.calls[0][0]).toMatchObject({ invoiceId: 'I4', requestKey: expect.stringMatching(/^INV-SUBMIT-I4-/) });
+        root.querySelectorAll('.sab-invoices tbody tr')[4].click();
+        await flush();
+        root.querySelector('.sab-approve-invoice').click();
+        await flush();
+        expect(toast.mock.calls[toast.mock.calls.length - 1][0].detail.tone).toBe('bad');
+        root.querySelector('.sab-approve-invoice').click();
+        await flush();
+        expect(approveInvoice.mock.calls[1][0].requestKey).toBe(approveInvoice.mock.calls[0][0].requestKey);
+    });
+
+    it('explains when the role cannot create or approve invoices', async () => {
+        getSales.mockResolvedValue({ ...SALES, canApprove: false, invoices: [{ documentId: 'I5', documentNumber: 'INV-SUB', status: 'Submitted', total: 1 }] });
+        const el = mount({ caps: {} });
+        await flush();
+        const root = el.shadowRoot;
+        expect(root.querySelector('.sab-new-invoice').title).toBe('Bookkeeper role cannot create invoices');
+        root.querySelector('.sab-invoices tbody tr').click();
+        await flush();
+        expect(root.querySelector('.sab-approve-invoice').title).toBe('Bookkeeper role cannot approve invoices');
     });
 });

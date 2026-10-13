@@ -96,7 +96,9 @@ private class SABPayrollWorkspaceControllerTest {
                     Currency__c = 'BDT', Effective_From__c = Date.newInstance(2026, 11, 1), Status__c = 'Draft')};
             seedRuns(company.Id, active.Id, basic.Id, bonus.Id, operating.Id);
         }
-        SABTestGovernor.assertSetupWithin(50);
+        // Later stages added trigger work to these objects; seeding now costs about 55 queries. Every test method still runs
+        // its own work inside Test.startTest(), so 60 keeps a 40-query margin in the outer window.
+        SABTestGovernor.assertSetupWithin(60);
     }
 
     // Approved run (one consumed award) and a Settled run (paid by one succeeded payment), seeded through the

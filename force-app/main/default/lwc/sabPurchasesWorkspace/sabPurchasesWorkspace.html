@@ -1,6 +1,9 @@
 <template>
     <c-sab-workspace-header company-name={companyName} group="Money in & out" heading="Purchases & payables"
-        description="Supplier bills and credits, approvals and payment scheduling."></c-sab-workspace-header>
+        description="Supplier bills and credits, purchase orders and receipts, approvals and payment scheduling.">
+        <button slot="actions" class="btn primary sab-new-bill" type="button" disabled={createDisabled} title={createTitle} onclick={handleNewBill}>
+            <c-sab-icon name="plus" size="16"></c-sab-icon>New bill</button>
+    </c-sab-workspace-header>
 
     <template lwc:if={errorMessage}>
         <section class="panel"><div class="empty"><div class="ill"><c-sab-icon name="alert" size="30"></c-sab-icon></div>
@@ -67,6 +70,9 @@
             </template>
             <template lwc:else><section class="panel"><div class="panel-b muted">No posted bills are waiting for payment.</div></section></template>
         </template>
+        <template lwc:elseif={isOrders}>
+            <c-sab-purchase-orders company-id={companyId} persona={persona}></c-sab-purchase-orders>
+        </template>
         <template lwc:else>
             <section class="panel"><div class="panel-b flush">
                 <template lwc:if={hasSuppliers}>
@@ -112,6 +118,7 @@
         </template>
         <template lwc:if={drawerOpen}>
             <template lwc:if={view.isDraft}>
+                <button slot="footer" class="btn ghost sab-edit-bill" type="button" disabled={view.editDisabled} title={view.editTitle} onclick={handleEditBill}>Edit</button>
                 <button slot="footer" class="btn ghost sab-cancel-bill" type="button" disabled={view.editDisabled} title={view.editTitle} onclick={handleCancel}>Cancel bill</button>
                 <button slot="footer" class="btn primary sab-submit-bill" type="button" disabled={view.editDisabled} title={view.editTitle} onclick={handleSubmit}>Submit for approval</button>
             </template>
@@ -131,4 +138,6 @@
         <button slot="footer" class="btn ghost sab-reason-close" type="button" onclick={handleCloseReason}>Close</button>
         <button slot="footer" class="btn danger sab-reason-save" type="button" disabled={busy} onclick={handleReasonSave}>{reasonSaveLabel}</button>
     </c-sab-modal>
+
+    <c-sab-document-editor company-id={companyId} kind={editorKind} record-id={editorRecordId} open={editorOpen} onclose={handleEditorClose} onsaved={handleEditorSaved}></c-sab-document-editor>
 </template>

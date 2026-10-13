@@ -186,10 +186,14 @@ export default class SabAuditWorkspace extends LightningElement {
     }
 
     get exportDisabled() {
-        return !this.hasEvents;
+        return !this.data;
     }
 
     handleExport() {
+        if (!this.hasEvents) {
+            this.dispatchEvent(new CustomEvent('sabtoast', { detail: { message: 'Nothing to export for this filter', tone: 'bad' }, bubbles: true, composed: true }));
+            return;
+        }
         const quote = (v) => `"${String(v === null || v === undefined ? '' : v).replace(/"/g, '""')}"`;
         const lines = ['date,time,kind,title,detail,actor,key',
             ...this.filtered.map((e) => [e.dateText, e.timeText, e.kind, e.title, e.detail, e.actor, e.requestKey].map(quote).join(','))];

@@ -98,6 +98,9 @@ describe('c-sab-purchases-workspace', () => {
         root.querySelectorAll('.tab')[2].click();
         await flush();
         expect(root.querySelectorAll('.sab-suppliers tbody tr')[1].textContent).toContain('8,150.00');
+        root.querySelectorAll('.tab')[3].click();
+        await flush();
+        expect(root.querySelector('c-sab-purchase-orders')).not.toBeNull();
     });
 
     it('submits and cancels a draft bill', async () => {
@@ -215,5 +218,26 @@ describe('c-sab-purchases-workspace', () => {
         expect(el3.shadowRoot.querySelector('.figs')).not.toBeNull();
         el3.shadowRoot.querySelectorAll('.sab-bills tbody tr')[0].dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
         el3.shadowRoot.querySelectorAll('.sab-bills tbody tr')[0].dispatchEvent(new KeyboardEvent('keydown', { key: 'a' }));
+    });
+
+    it('opens the document editor for new and draft bills', async () => {
+        const el = mount();
+        await flush();
+        const root = el.shadowRoot;
+        root.querySelector('.sab-new-bill').click();
+        await flush();
+        const editor = root.querySelector('c-sab-document-editor');
+        expect(editor.open).toBe(true);
+        expect(editor.kind).toBe('bill');
+        editor.dispatchEvent(new CustomEvent('close'));
+        await flush();
+        openRow(root, 2);
+        await flush();
+        root.querySelector('.sab-edit-bill').click();
+        await flush();
+        expect(editor.recordId).toBe('B3');
+        editor.dispatchEvent(new CustomEvent('saved', { detail: { recordId: 'B3' } }));
+        await flush();
+        expect(getWorkspace).toHaveBeenCalledTimes(2);
     });
 });

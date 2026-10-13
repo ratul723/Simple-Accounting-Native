@@ -3,6 +3,8 @@ import getSales from '@salesforce/apex/SABMoneyWorkspaceController.getSales';
 import getPayments from '@salesforce/apex/SABMoneyWorkspaceController.getPayments';
 import getDocumentDetail from '@salesforce/apex/SABMoneyWorkspaceController.getDocumentDetail';
 import postInvoice from '@salesforce/apex/SABInvoicePostingService.postApprovedInvoice';
+import submitInvoice from '@salesforce/apex/SABDocumentEntryService.submitInvoice';
+import approveInvoice from '@salesforce/apex/SABDocumentEntryService.approveInvoice';
 import { formatNumber, formatDate, chipClass, plural } from 'c/sabFormat';
 import { reduceError, newKey, documentState, hsteps, toast } from 'c/sabMoneyShared';
 
@@ -304,7 +306,9 @@ export default class SabSalesWorkspace extends LightningElement {
             ].map(([label, value]) => ({ key: label, valueKey: `${label}-v`, label, value })),
             allocations: (d.allocations || []).map((a) => ({ ...a, key: a.allocationId, dateText: formatDate(a.allocationDate), amountText: formatNumber(a.amount) })),
             hasAllocations: (d.allocations || []).length > 0,
-            canPost: POSTABLE.includes(s.status)
+            canPost: POSTABLE.includes(s.status),
+            isDraft: s.status === 'Draft',
+            isSubmitted: s.status === 'Submitted'
         };
     }
 
@@ -337,4 +341,89 @@ export default class SabSalesWorkspace extends LightningElement {
     handleRetry() {
         this.load();
     }
+
+    // ---------- document entry ----------
+
+    editorOpen = false;
+    editorKind = 'invoice';
+    editorRecordId;
+
+    openEditor(kind, recordId) {
+        this.editorKind = kind;
+        this.editorRecordId = recordId;
+        this.editorOpen = true;
+    }
+
+    handleEditorClose() {
+        this.editorOpen = false;
+    }
+
+    async handleEditorSaved(event) {
+        this.requestedRecordId = event.detail.recordId;
+        await this.load();
+    }
+
+    get canCreate() {
+        return Boolean(this.caps && this.caps.canCreateInvoice);
+    }
+
+    get createTitle() {
+        return this.canCreate ? undefined : `${(this.persona && this.persona.label) || 'Your'} role cannot create invoices`;
+    }
+
+    get createDisabled() {
+        return !this.canCreate;
+    }
+
+    handleNewInvoice() {
+        this.openEditor('invoice');
+    }
+
+    handleNewCredit() {
+        this.openEditor('credit');
+    }
+
+    handleEditDocument() {
+        this.openEditor(this.selected.documentType === 'Credit Note' ? 'credit' : 'invoice', this.selected.documentId);
+    }
+
+    get approveTitle() {
+        return this.data && this.data.canApprove ? undefined : `${(this.persona && this.persona.label) || 'Your'} role cannot approve invoices`;
+    }
+
+    get approveDisabled() {
+        return this.busy || !(this.data && this.data.canApprove);
+    }
+
+    async runTransition(call, message) {
+        this.busy = true;
+        try {
+            await call();
+            toast(this, message);
+            this.requestedRecordId = this.selected.documentId;
+            await this.load();
+        } catch (error) {
+            toast(this, reduceError(error), 'bad');
+        } finally {
+            this.busy = false;
+        }
+    }
+
+    handleSubmitInvoice() {
+        const invoiceId = this.selected.documentId;
+        if (!this.transitionKeys[`S${invoiceId}`]) {
+            this.transitionKeys = { ...this.transitionKeys, [`S${invoiceId}`]: newKey('INV-SUBMIT', invoiceId) };
+        }
+        this.runTransition(() => submitInvoice({ invoiceId, requestKey: this.transitionKeys[`S${invoiceId}`] }), `${this.selected.documentNumber} submitted for approval`);
+    }
+
+    handleApproveInvoice() {
+        const invoiceId = this.selected.documentId;
+        if (!this.transitionKeys[`A${invoiceId}`]) {
+            this.transitionKeys = { ...this.transitionKeys, [`A${invoiceId}`]: newKey('INV-APPROVE', invoiceId) };
+        }
+        this.runTransition(() => approveInvoice({ invoiceId, requestKey: this.transitionKeys[`A${invoiceId}`] }), `${this.selected.documentNumber} approved`);
+    }
+
+    transitionKeys = {};
 }

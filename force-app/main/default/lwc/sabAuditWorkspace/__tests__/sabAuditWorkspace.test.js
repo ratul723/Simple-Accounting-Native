@@ -93,7 +93,9 @@ describe('c-sab-audit-workspace', () => {
         search.dispatchEvent(new CustomEvent('input'));
         await flush();
         expect(root.querySelector('.empty h3').textContent).toBe('No matching events');
-        expect(root.querySelector('.sab-export').disabled).toBe(true);
+        expect(root.querySelector('.sab-export').disabled).toBe(false);
+        root.querySelector('.sab-export').click();
+        expect(toast.mock.calls[1][0].detail).toEqual({ message: 'Nothing to export for this filter', tone: 'bad' });
     });
 
     it('shows load errors with retry', async () => {

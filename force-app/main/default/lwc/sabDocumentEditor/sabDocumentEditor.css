@@ -1,0 +1,43 @@
+@import 'c/sabStyles';
+
+.form {
+    gap: 12px 14px;
+}
+
+.form-error {
+    margin-bottom: 14px;
+}
+
+.lines {
+    margin-top: 16px;
+}
+
+td.desc {
+    min-width: 160px;
+}
+
+td.qty {
+    width: 80px;
+}
+
+td.amt {
+    width: 110px;
+}
+
+td.date {
+    width: 140px;
+}
+
+td.cat {
+    width: 120px;
+}
+
+.foot {
+    margin-top: 10px;
+    gap: 10px;
+}
+
+.total {
+    min-width: 90px;
+    text-align: right;
+}

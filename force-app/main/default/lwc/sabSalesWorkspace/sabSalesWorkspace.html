@@ -1,6 +1,10 @@
 <template>
     <c-sab-workspace-header company-name={companyName} group="Money in & out" heading="Sales & receivables"
-        description="Invoices, credit notes, customers, receipts and what is still owed."></c-sab-workspace-header>
+        description="Invoices, credit notes, customers, receipts and what is still owed.">
+        <button slot="actions" class="btn sab-new-credit" type="button" disabled={createDisabled} title={createTitle} onclick={handleNewCredit}>New credit note</button>
+        <button slot="actions" class="btn primary sab-new-invoice" type="button" disabled={createDisabled} title={createTitle} onclick={handleNewInvoice}>
+            <c-sab-icon name="plus" size="16"></c-sab-icon>New invoice</button>
+    </c-sab-workspace-header>
 
     <template lwc:if={errorMessage}>
         <section class="panel"><div class="empty"><div class="ill"><c-sab-icon name="alert" size="30"></c-sab-icon></div>
@@ -149,9 +153,18 @@
             <template lwc:else><p class="muted small">No receipts or credits allocated yet. Paid status is calculated from allocations, it cannot be edited.</p></template>
         </template>
         <template lwc:if={drawerOpen}>
+            <template lwc:if={view.isDraft}>
+                <button slot="footer" class="btn ghost sab-edit-invoice" type="button" disabled={createDisabled} title={createTitle} onclick={handleEditDocument}>Edit</button>
+                <button slot="footer" class="btn primary sab-submit-invoice" type="button" disabled={createDisabled} title={createTitle} onclick={handleSubmitInvoice}>Submit for approval</button>
+            </template>
+            <template lwc:if={view.isSubmitted}>
+                <button slot="footer" class="btn primary sab-approve-invoice" type="button" disabled={approveDisabled} title={approveTitle} onclick={handleApproveInvoice}>Approve</button>
+            </template>
             <template lwc:if={view.canPost}>
                 <button slot="footer" class="btn primary sab-post-invoice" type="button" disabled={postDisabled} title={postTitle} onclick={handlePost}>Post invoice</button>
             </template>
         </template>
     </c-sab-drawer>
+
+    <c-sab-document-editor company-id={companyId} kind={editorKind} record-id={editorRecordId} open={editorOpen} onclose={handleEditorClose} onsaved={handleEditorSaved}></c-sab-document-editor>
 </template>

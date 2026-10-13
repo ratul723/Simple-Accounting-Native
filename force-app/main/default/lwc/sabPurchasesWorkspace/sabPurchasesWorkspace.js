@@ -142,7 +142,8 @@ export default class SabPurchasesWorkspace extends LightningElement {
         return [
             { id: 'bills', label: 'Bills', count: this.bills.length },
             { id: 'sched', label: 'Payment schedule', count: '' },
-            { id: 'sup', label: 'Suppliers', count: ((this.extras && this.extras.suppliers) || []).length }
+            { id: 'sup', label: 'Suppliers', count: ((this.extras && this.extras.suppliers) || []).length },
+            { id: 'po', label: 'Purchase orders', count: '' }
         ].map((t) => ({ ...t, hasCount: t.count !== '', className: t.id === this.activeTab ? 'tab active' : 'tab', selected: t.id === this.activeTab ? 'true' : 'false' }));
     }
 
@@ -156,6 +157,10 @@ export default class SabPurchasesWorkspace extends LightningElement {
 
     get isSchedule() {
         return this.activeTab === 'sched';
+    }
+
+    get isOrders() {
+        return this.activeTab === 'po';
     }
 
     billState(b) {
@@ -394,5 +399,43 @@ export default class SabPurchasesWorkspace extends LightningElement {
 
     handleRetry() {
         this.load();
+    }
+
+    // ---------- document entry ----------
+
+    editorOpen = false;
+    editorKind = 'bill';
+    editorRecordId;
+
+    openEditor(kind, recordId) {
+        this.editorKind = kind;
+        this.editorRecordId = recordId;
+        this.editorOpen = true;
+    }
+
+    handleEditorClose() {
+        this.editorOpen = false;
+    }
+
+    async handleEditorSaved(event) {
+        this.requestedRecordId = event.detail.recordId;
+        this.activeTab = 'bills';
+        await this.load();
+    }
+
+    get createDisabled() {
+        return !(this.extras && this.extras.canEdit);
+    }
+
+    get createTitle() {
+        return this.createDisabled ? `${this.personaLabel} role cannot create bills` : undefined;
+    }
+
+    handleNewBill() {
+        this.openEditor('bill');
+    }
+
+    handleEditBill() {
+        this.openEditor(this.selected.documentType === 'Supplier Credit' ? 'supplierCredit' : 'bill', this.selected.billId);
     }
 }

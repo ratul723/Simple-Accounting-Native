@@ -1,0 +1,156 @@
+<template>
+    <c-sab-workspace-header company-name={companyName} group="Ledger" heading="Allocations"
+        description="Spread shared costs across departments and cost centers with approved rules, previewed and posted as allocation journals.">
+        <button slot="actions" class="btn primary sab-new-rule" type="button" disabled={newDisabled} title={newTitle} onclick={handleNewRule}>
+            <c-sab-icon name="plus" size="16"></c-sab-icon>New rule</button>
+    </c-sab-workspace-header>
+
+    <template lwc:if={errorMessage}>
+        <section class="panel"><div class="empty"><div class="ill"><c-sab-icon name="alert" size="30"></c-sab-icon></div>
+            <h3>Allocations could not be loaded</h3><p>{errorMessage}</p>
+            <div class="row center"><button class="btn primary" type="button" onclick={handleRetry}>Try again</button></div></div></section>
+    </template>
+    <template lwc:elseif={showLoading}>
+        <section class="panel"><div class="panel-b muted" role="status">Loading allocations</div></section>
+    </template>
+    <template lwc:elseif={data}>
+        <div class="figs">
+            <template for:each={figures} for:item="f">
+                <div key={f.key} class="fig"><div class="l">{f.label}</div><div class="v">{f.value}<template lwc:if={f.hasUnit}><small>{f.unit}</small></template></div><div class="s">{f.sub}</div></div>
+            </template>
+        </div>
+        <template lwc:if={roundingWarning}>
+            <div class="banner t-warn gap"><c-sab-icon name="alert"></c-sab-icon><div><b>No rounding account</b>
+                <div class="small">Rules that use the Rounding Account policy cannot run until the company has a default rounding account.</div></div></div>
+        </template>
+        <div class="tabs" role="tablist">
+            <template for:each={tabs} for:item="t">
+                <button key={t.id} class={t.className} type="button" role="tab" aria-selected={t.selected} data-tab={t.id} onclick={handleTab}>{t.label}<span class="count">{t.count}</span></button>
+            </template>
+        </div>
+        <template lwc:if={isRules}>
+            <section class="panel"><div class="panel-b flush">
+                <template lwc:if={hasRules}>
+                    <div class="tbl-wrap"><table class="tbl sab-rules">
+                        <thead><tr><th>Rule</th><th>Driver</th><th>Effective</th><th class="n">Targets</th><th>Status</th></tr></thead>
+                        <tbody><template for:each={ruleRows} for:item="r"><tr key={r.ruleId} class="click" tabindex="0" data-id={r.ruleId} onclick={handleRule} onkeydown={handleRule}>
+                            <td><span class="strong">{r.name}</span><div class="small muted">{r.ruleKey} v{r.version}</div></td><td>{r.driverType}</td><td>{r.effectiveText}</td>
+                            <td class="n num">{r.targetCount}</td><td><span class={r.chip}><span class="dot"></span>{r.status}</span></td></tr></template></tbody>
+                    </table></div>
+                </template>
+                <template lwc:else><div class="empty"><div class="ill"><c-sab-icon name="link" size="30"></c-sab-icon></div><h3>No allocation rules yet</h3>
+                    <p>Create a rule that spreads a shared cost such as rent across departments.</p></div></template>
+            </div></section>
+        </template>
+        <template lwc:else>
+            <section class="panel"><div class="panel-b flush">
+                <template lwc:if={hasRuns}>
+                    <div class="tbl-wrap"><table class="tbl sab-runs">
+                        <thead><tr><th>Run</th><th>Rule</th><th>Period</th><th class="n">Allocated</th><th>Journal</th><th>Status</th></tr></thead>
+                        <tbody><template for:each={runRows} for:item="r"><tr key={r.runId} class="click" tabindex="0" data-id={r.runId} onclick={handleRun} onkeydown={handleRun}>
+                            <td><span class="id">{r.name}</span></td><td>{r.ruleKey} v{r.ruleVersion}</td><td>{r.periodName}</td><td class="n num">{r.amountText}</td>
+                            <td>{r.journalName}</td><td><span class={r.chip}><span class="dot"></span>{r.status}</span></td></tr></template></tbody>
+                    </table></div>
+                </template>
+                <template lwc:else><div class="panel-b muted">No allocation runs yet. Open an approved rule and run it for a period.</div></template>
+            </div></section>
+        </template>
+    </template>
+
+    <c-sab-drawer open={drawerOpen} heading={drawerHeading} subheading={drawerSub} onclose={handleCloseDrawer}>
+        <template lwc:if={detailError}><div class="banner t-bad">{detailError}</div></template>
+        <template lwc:elseif={isRuleDrawer}>
+            <dl class="kv facts"><template for:each={ruleView.facts} for:item="f"><dt key={f.key}>{f.label}</dt><dd key={f.valueKey}>{f.value}</dd></template></dl>
+            <h3 class="section">Source accounts</h3>
+            <div class="tags"><template for:each={ruleView.sources} for:item="s"><span key={s.key} class="tag">{s.label}</span></template></div>
+            <h3 class="section">Targets</h3>
+            <div class="tbl-wrap"><table class="tbl sab-targets">
+                <thead><tr><th>Account</th><th>Department or cost center</th><th class="n">{ruleView.weightLabel}</th></tr></thead>
+                <tbody><template for:each={ruleView.targets} for:item="t"><tr key={t.key}><td>{t.targetAccountName}</td><td>{t.dimension}</td><td class="n num">{t.weightText}</td></tr></template></tbody>
+            </table></div>
+        </template>
+        <template lwc:elseif={isRunDrawer}>
+            <dl class="kv facts"><dt>Source amount</dt><dd>{runView.sourceText}</dd>
+                <template lwc:if={runView.isPosted}><dt>Journal</dt><dd><template lwc:if={runView.canOpenJournal}>
+                    <button class="linkish sab-open-journal" type="button" onclick={handleOpenJournal}>{runView.journalName}</button></template>
+                    <template lwc:else>{runView.journalName}</template></dd></template></dl>
+            <template lwc:if={runView.hasLines}>
+                <div class="tbl-wrap"><table class="tbl sab-run-lines">
+                    <thead><tr><th>From</th><th>To</th><th>Department or cost center</th><th class="n">Amount</th></tr></thead>
+                    <tbody><template for:each={runView.lines} for:item="l"><tr key={l.rowKey}><td>{l.sourceAccountName}</td><td>{l.targetAccountName}</td><td>{l.dimension}</td>
+                        <td class="n num">{l.amountText}</td></tr></template></tbody>
+                    <tfoot><tr><td>Total</td><td></td><td></td><td class="n num">{runView.totalText}</td></tr></tfoot>
+                </table></div>
+            </template>
+            <template lwc:else><p class="small muted">No allocation lines for this run.</p></template>
+        </template>
+        <template lwc:if={isRuleDrawer}>
+            <template lwc:if={ruleView.isDraft}>
+                <button slot="footer" class="btn ghost sab-edit-rule" type="button" disabled={ruleView.manageDisabled} title={ruleView.manageTitle} onclick={handleEditRule}>Edit</button>
+                <button slot="footer" class="btn primary sab-approve-rule" type="button" disabled={ruleView.approveDisabled} title={ruleView.approveTitle} onclick={handleApproveRule}>Approve</button>
+            </template>
+            <template lwc:if={ruleView.isApproved}>
+                <button slot="footer" class="btn ghost sab-retire" type="button" disabled={ruleView.manageDisabled} title={ruleView.manageTitle} onclick={handleRetire}>Retire</button>
+                <button slot="footer" class="btn ghost sab-revise" type="button" disabled={ruleView.manageDisabled} title={ruleView.manageTitle} onclick={handleRevise}>New version</button>
+                <button slot="footer" class="btn primary sab-preview" type="button" disabled={ruleView.manageDisabled} title={ruleView.manageTitle} onclick={handlePreview}>Run allocation</button>
+            </template>
+        </template>
+        <template lwc:if={isRunDrawer}>
+            <template lwc:if={runView.isPreview}>
+                <button slot="footer" class="btn ghost sab-discard" type="button" disabled={runView.manageDisabled} title={runView.manageTitle} onclick={handleDiscard}>Discard</button>
+                <button slot="footer" class="btn primary sab-approve-run" type="button" disabled={runView.approveDisabled} title={runView.approveTitle} onclick={handleApproveRun}>Approve</button>
+            </template>
+            <template lwc:if={runView.isApproved}>
+                <button slot="footer" class="btn ghost sab-discard" type="button" disabled={runView.manageDisabled} title={runView.manageTitle} onclick={handleDiscard}>Discard</button>
+                <button slot="footer" class="btn primary sab-post-run" type="button" disabled={runView.postDisabled} title={runView.postTitle} onclick={handlePostRun}>Post allocation</button>
+            </template>
+        </template>
+    </c-sab-drawer>
+
+    <c-sab-modal open={modalOpen} heading={modalHeading} subheading={modalSub} onclose={handleCloseModal}>
+        <template lwc:if={formError}><div class="banner t-bad form-error" role="alert"><c-sab-icon name="alert"></c-sab-icon><div>{formError}</div></div></template>
+        <template lwc:if={isRuleModal}>
+            <div class="grid g2 form">
+                <label class="field"><span>Name</span><input class="input" data-field="name" value={form.name} oninput={handleField} /></label>
+                <label class="field"><span>Rule key</span><input class="input" data-field="ruleKey" value={form.ruleKey} placeholder="For example RENT-BY-DEPT" oninput={handleField} /></label>
+                <label class="field"><span>Driver</span><select class="select" data-field="driverType" onchange={handleField}>
+                    <template for:each={driverOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+                <label class="field"><span>Rounding</span><select class="select" data-field="roundingPolicy" onchange={handleField}>
+                    <template for:each={roundingOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+                <label class="field"><span>Effective from</span><input class="input" type="date" data-field="effectiveFrom" value={form.effectiveFrom} oninput={handleField} /></label>
+                <label class="field"><span>Effective to</span><input class="input" type="date" data-field="effectiveTo" value={form.effectiveTo} oninput={handleField} /></label>
+                <label class="field wide"><span>Source accounts (hold Ctrl or Cmd to pick several)</span>
+                    <select class="select multi" multiple data-field="sourceAccountIds" onchange={handleField}>
+                        <template for:each={sourceAccountOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+                <label class="field"><span>Source department</span><select class="select" data-field="sourceDepartmentId" onchange={handleField}><option value="">Any</option>
+                    <template for:each={departmentOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+                <label class="field"><span>Source cost center</span><select class="select" data-field="sourceCostCenterId" onchange={handleField}><option value="">Any</option>
+                    <template for:each={costCenterOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+            </div>
+            <h3 class="section">Targets</h3>
+            <div class="tbl-wrap"><table class="tbl egrid sab-target-grid">
+                <thead><tr><th>Account</th><th>Department</th><th>Cost center</th><th class="n">{weightLabel}</th><th><span class="sr">Remove</span></th></tr></thead>
+                <tbody><template for:each={targetRows} for:item="t"><tr key={t.key}>
+                    <td><select class="select" data-index={t.index} data-field="targetGlAccountId" aria-label="Target account" onchange={handleTargetField}><option value="">Account</option>
+                        <template for:each={t.accountOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></td>
+                    <td><select class="select" data-index={t.index} data-field="targetDepartmentId" aria-label="Target department" onchange={handleTargetField}><option value="">&#8212;</option>
+                        <template for:each={t.departmentOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></td>
+                    <td><select class="select" data-index={t.index} data-field="targetCostCenterId" aria-label="Target cost center" onchange={handleTargetField}><option value="">&#8212;</option>
+                        <template for:each={t.costCenterOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></td>
+                    <td class="amt"><input class="input n" inputmode="decimal" data-index={t.index} data-field={t.weightField} value={t.weight} aria-label="Weight" oninput={handleTargetField} /></td>
+                    <td><button class="btn ghost sm sab-remove-target" type="button" data-index={t.index} onclick={handleRemoveTarget}>Remove</button></td></tr></template></tbody>
+                <tfoot><tr><td>Total</td><td></td><td></td><td class={targetTotalClass}>{targetTotal}</td><td></td></tr></tfoot>
+            </table></div>
+            <button class="btn sm ghost sab-add-target add-line" type="button" onclick={handleAddTarget}><c-sab-icon name="plus" size="14"></c-sab-icon>Add target</button>
+        </template>
+        <template lwc:if={isPreviewModal}>
+            <label class="field"><span>Accounting period</span><select class="select" data-field="periodId" onchange={handleField}>
+                <template for:each={periodOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+        </template>
+        <template lwc:if={isReasonModal}>
+            <label class="field"><span>Reason</span><input class="input sab-reason" data-field="reason" value={form.reason} oninput={handleField} /></label>
+        </template>
+        <button slot="footer" class="btn ghost sab-modal-close" type="button" onclick={handleCloseModal}>Close</button>
+        <button slot="footer" class={saveClass} type="button" disabled={busy} onclick={handleSave}>{saveLabel}</button>
+    </c-sab-modal>
+</template>

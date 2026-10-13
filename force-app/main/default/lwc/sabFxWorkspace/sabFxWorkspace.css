@@ -1,0 +1,48 @@
+@import 'c/sabStyles';
+
+.gap {
+    margin-bottom: 16px;
+}
+
+.gap-sm {
+    margin-bottom: 12px;
+}
+
+.steps {
+    margin-bottom: 14px;
+}
+
+.facts {
+    margin: 4px 0 16px;
+}
+
+.act {
+    text-align: right;
+}
+
+.wide {
+    grid-column: 1 / -1;
+}
+
+.check {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.form {
+    gap: 12px 14px;
+}
+
+.form-error {
+    margin-bottom: 14px;
+}
+
+tr.click:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: -2px;
+}
+
+.row.center {
+    justify-content: center;
+}

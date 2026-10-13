@@ -16,7 +16,7 @@ jest.mock('@salesforce/apex/SABFinanceHomeController.getHome', () => ({ default:
 jest.mock('c/sabJournalsWorkspace', () => jest.requireActual('c/sabFinanceHome'));
 jest.mock('c/sabPeriodCloseWorkspace', () => jest.requireActual('c/sabFinanceHome'));
 jest.mock('c/sabSetupWorkspace', () => jest.requireActual('c/sabFinanceHome'));
-jest.mock('c/sabReportCentre', () => jest.requireActual('c/sabIcon'));
+jest.mock('c/sabReportsWorkspace', () => jest.requireActual('c/sabFinanceHome'));
 jest.mock('@salesforce/apex/SABSetupRecordService.getSetupRecords', () => ({ default: jest.fn() }), { virtual: true });
 jest.mock('@salesforce/apex/SABSetupRecordService.canManageSetup', () => ({ default: jest.fn() }), { virtual: true });
 jest.mock('@salesforce/apex/SABSetupRecordService.createCompany', () => ({ default: jest.fn() }), { virtual: true });
@@ -307,8 +307,8 @@ describe('c-sab-app-shell', () => {
             ['Finance home', 'Report center', 'Capital & equity', 'Investments & loans', 'Group accounting']);
         root.querySelector('.nav-item[data-id="reports"]').click();
         await settle();
-        expect(root.querySelector('c-sab-workspace-header').heading).toBe('Report center');
-        expect(root.querySelector('.workspace.legacy-ws')).not.toBeNull();
+        expect(root.querySelector('.nav-item[data-id="reports"]').getAttribute('aria-current')).toBe('page');
+        expect(root.querySelector('.workspace.aware')).not.toBeNull();
     });
 
     it('creates a new accounting company from the switcher and opens its setup', async () => {

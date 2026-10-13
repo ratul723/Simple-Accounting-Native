@@ -1,0 +1,155 @@
+<template>
+    <c-sab-workspace-header company-name={companyName} group="Ledger" heading="Foreign exchange"
+        description="Period-end revaluation of foreign-currency balances, foreign-currency payments and realized gains and losses.">
+        <button slot="actions" class="btn primary sab-new-run" type="button" disabled={newRunDisabled} title={newRunTitle} onclick={handleNewRun}>
+            <c-sab-icon name="plus" size="16"></c-sab-icon>New revaluation</button>
+    </c-sab-workspace-header>
+
+    <template lwc:if={errorMessage}>
+        <section class="panel"><div class="empty"><div class="ill"><c-sab-icon name="alert" size="30"></c-sab-icon></div>
+            <h3>Foreign exchange could not be loaded</h3><p>{errorMessage}</p>
+            <div class="row center"><button class="btn primary" type="button" onclick={handleRetry}>Try again</button></div></div></section>
+    </template>
+    <template lwc:elseif={showLoading}>
+        <section class="panel"><div class="panel-b muted" role="status">Loading foreign exchange</div></section>
+    </template>
+    <template lwc:elseif={data}>
+        <div class="figs">
+            <template for:each={figures} for:item="f">
+                <div key={f.key} class="fig"><div class="l">{f.label}</div><div class="v">{f.value}<template lwc:if={f.hasUnit}><small>{f.unit}</small></template></div><div class="s">{f.sub}</div></div>
+            </template>
+        </div>
+        <template lwc:if={setupWarnings}>
+            <div class="banner t-warn gap"><c-sab-icon name="alert"></c-sab-icon><div><b>FX accounts missing</b><div class="small">{setupWarnings}</div></div></div>
+        </template>
+        <div class="tabs" role="tablist">
+            <template for:each={tabs} for:item="t">
+                <button key={t.id} class={t.className} type="button" role="tab" aria-selected={t.selected} data-tab={t.id} onclick={handleTab}>{t.label}<span class="count">{t.count}</span></button>
+            </template>
+        </div>
+        <template lwc:if={isRuns}>
+            <section class="panel"><div class="panel-b flush">
+                <template lwc:if={hasRuns}>
+                    <div class="tbl-wrap"><table class="tbl sab-runs">
+                        <thead><tr><th>Run</th><th>Period</th><th>Lines</th><th class="n">Adjustment</th><th>Status</th></tr></thead>
+                        <tbody><template for:each={runRows} for:item="r"><tr key={r.runId} class="click" tabindex="0" data-id={r.runId} onclick={handleRun} onkeydown={handleRun}>
+                            <td><span class="id">{r.name}</span><div class="small muted">{r.runKey}</div></td><td>{r.accountingPeriodName}</td><td class="small">{r.linesText}</td>
+                            <td class={r.adjustmentClass}>{r.adjustmentText}</td><td><span class={r.chip}><span class="dot"></span>{r.status}</span></td></tr></template></tbody>
+                    </table></div>
+                </template>
+                <template lwc:else><div class="empty"><div class="ill"><c-sab-icon name="refresh" size="30"></c-sab-icon></div><h3>No revaluation runs yet</h3>
+                    <p>Run a revaluation at period end to restate open foreign-currency balances.</p></div></template>
+            </div></section>
+        </template>
+        <template lwc:elseif={isPayments}>
+            <section class="panel"><div class="panel-b flush">
+                <template lwc:if={hasPayments}>
+                    <div class="tbl-wrap"><table class="tbl sab-fx-payments">
+                        <thead><tr><th>Payment</th><th>Party</th><th class="n">Amount</th><th class="n">Rate</th><th class="n">Unallocated</th><th>State</th></tr></thead>
+                        <tbody><template for:each={paymentRows} for:item="p"><tr key={p.paymentId} class="click" tabindex="0" data-id={p.paymentId} onclick={handlePayment} onkeydown={handlePayment}>
+                            <td><span class="id">{p.name}</span><div class="small muted">{p.direction}</div></td><td>{p.partyProfileName}</td><td class="n num">{p.amountText}</td>
+                            <td class="n num">{p.rateText}</td><td class="n num">{p.unallocatedText}</td><td><span class={p.chip}><span class="dot"></span>{p.processingState}</span></td></tr></template></tbody>
+                    </table></div>
+                </template>
+                <template lwc:else><div class="panel-b muted">No foreign-currency payments.</div></template>
+            </div></section>
+        </template>
+        <template lwc:else>
+            <section class="panel"><div class="panel-b flush">
+                <template lwc:if={hasAllocations}>
+                    <div class="tbl-wrap"><table class="tbl sab-fx-allocations">
+                        <thead><tr><th>Payment</th><th>Settles</th><th>Date</th><th class="n">Amount</th><th class="n">Realized FX</th><th>Status</th><th><span class="sr">Actions</span></th></tr></thead>
+                        <tbody><template for:each={allocationRows} for:item="a"><tr key={a.allocationId}><td>{a.paymentReference}</td><td>{a.targetName}<div class="small muted">{a.targetType}</div></td>
+                            <td>{a.dateText}</td><td class="n num">{a.amountText}</td><td class={a.fxClass}>{a.fxText}</td><td><span class={a.chip}><span class="dot"></span>{a.status}</span></td>
+                            <td class="act"><template lwc:if={a.canReverse}><button class="btn ghost sm sab-reverse-allocation" type="button" data-id={a.allocationId} onclick={handleReverseAllocation}>Reverse</button></template></td></tr></template></tbody>
+                    </table></div>
+                </template>
+                <template lwc:else><div class="panel-b muted">No foreign-currency settlements yet.</div></template>
+            </div></section>
+        </template>
+    </template>
+
+    <c-sab-drawer open={drawerOpen} heading={drawerHeading} subheading={drawerSub} onclose={handleCloseDrawer}>
+        <template lwc:if={run}>
+            <template lwc:if={runView.reversed}><div class="banner t-neutral steps"><c-sab-icon name="reverse"></c-sab-icon><div><b>Reversed</b></div></div></template>
+            <template lwc:else>
+                <div class="hsteps steps"><template for:each={runView.steps} for:item="s">
+                    <div key={s.key} class={s.className}><span class="n"><template lwc:if={s.done}><c-sab-icon name="check" size="12"></c-sab-icon></template>
+                        <template lwc:else>{s.number}</template></span>{s.label}</div></template></div>
+            </template>
+            <dl class="kv facts"><template for:each={runView.facts} for:item="f"><dt key={f.key}>{f.label}</dt><dd key={f.valueKey}>{f.value}</dd></template></dl>
+            <template lwc:if={runView.hasLines}>
+                <div class="tbl-wrap"><table class="tbl sab-run-lines">
+                    <thead><tr><th>Source</th><th>Account</th><th class="n">Open</th><th class="n">Carrying</th><th class="n">Rate</th><th class="n">Revalued</th><th class="n">Adjustment</th></tr></thead>
+                    <tbody><template for:each={runView.lines} for:item="l"><tr key={l.lineId}><td>{l.sourceType}</td><td class="small">{l.account}</td><td class="n num">{l.outstandingText}</td>
+                        <td class="n num">{l.carryingText}</td><td class="n num">{l.rateText}</td><td class="n num">{l.revaluedText}</td><td class={l.adjustmentClass}>{l.adjustmentText}</td></tr></template></tbody>
+                    <tfoot><tr><td>Total</td><td></td><td></td><td></td><td></td><td></td><td class="n num">{runView.totalText}</td></tr></tfoot>
+                </table></div>
+            </template>
+            <template lwc:else><p class="small muted">No open foreign-currency balances to revalue.</p></template>
+        </template>
+        <template lwc:elseif={payment}>
+            <template lwc:if={paymentView.failed}><div class="banner t-bad steps"><c-sab-icon name="alert"></c-sab-icon><div><b>Bank rejected this payment</b></div></div></template>
+            <template lwc:else>
+                <div class="hsteps steps"><template for:each={paymentView.steps} for:item="s">
+                    <div key={s.key} class={s.className}><span class="n"><template lwc:if={s.done}><c-sab-icon name="check" size="12"></c-sab-icon></template>
+                        <template lwc:else>{s.number}</template></span>{s.label}</div></template></div>
+            </template>
+            <dl class="kv facts"><template for:each={paymentView.facts} for:item="f"><dt key={f.key}>{f.label}</dt><dd key={f.valueKey}>{f.value}</dd></template></dl>
+        </template>
+        <template lwc:if={run}>
+            <template lwc:if={runView.isPreview}><button slot="footer" class="btn primary sab-approve-run" type="button" disabled={runView.approveDisabled} title={runView.approveTitle} onclick={handleApproveRun}>Approve</button></template>
+            <template lwc:if={runView.isApproved}><button slot="footer" class="btn primary sab-post-run" type="button" disabled={runView.postDisabled} title={runView.postTitle} onclick={handlePostRun}>Post revaluation</button></template>
+            <template lwc:if={runView.isPosted}><button slot="footer" class="btn danger sab-reverse-run" type="button" disabled={runView.reverseDisabled} title={runView.reverseTitle} onclick={handleReverseRun}>Reverse</button></template>
+        </template>
+        <template lwc:if={payment}>
+            <template lwc:if={paymentView.showAuthorize}><button slot="footer" class="btn primary sab-authorize" type="button" disabled={paymentView.disabled} title={paymentView.title} onclick={handleAuthorize}>Authorise</button></template>
+            <template lwc:if={paymentView.showSubmit}><button slot="footer" class="btn primary sab-release" type="button" disabled={paymentView.disabled} title={paymentView.title} onclick={handleSubmitPayment}>Release to bank</button></template>
+            <template lwc:if={paymentView.showPost}><button slot="footer" class="btn primary sab-clear" type="button" disabled={paymentView.postDisabled} title={paymentView.postTitle} onclick={handlePostPayment}>Mark as cleared</button></template>
+            <template lwc:if={paymentView.showAllocate}><button slot="footer" class="btn primary sab-allocate" type="button" disabled={paymentView.disabled} title={paymentView.title} onclick={handleAllocate}>Allocate</button></template>
+        </template>
+    </c-sab-drawer>
+
+    <c-sab-modal open={modalOpen} heading={modalHeading} subheading={modalSub} onclose={handleCloseModal}>
+        <template lwc:if={formError}><div class="banner t-bad form-error" role="alert"><c-sab-icon name="alert"></c-sab-icon><div>{formError}</div></div></template>
+        <template lwc:if={isPreviewModal}>
+            <div class="grid g2 form">
+                <label class="field"><span>Period</span><select class="select" data-field="periodId" onchange={handleField}>
+                    <template for:each={periodOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+                <label class="field"><span>Reversal</span><select class="select" data-field="reversalPolicy" onchange={handleField}>
+                    <template for:each={policyOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+                <label class="field wide"><span>Run key</span><input class="input" data-field="runKey" value={form.runKey} oninput={handleField} /></label>
+            </div>
+        </template>
+        <template lwc:if={isReverseModal}>
+            <label class="check gap-sm"><input type="checkbox" data-field="manual" checked={form.manual} onchange={handleField} />Choose the reversal period and date instead of the run's policy</label>
+            <template lwc:if={form.manual}>
+                <div class="grid g2 form gap-sm">
+                    <label class="field"><span>Period</span><select class="select" data-field="periodId" onchange={handleField}><option value="">Select</option>
+                        <template for:each={periodOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+                    <label class="field"><span>Date</span><input class="input" type="date" data-field="reversalDate" value={form.reversalDate} oninput={handleField} /></label>
+                </div>
+            </template>
+        </template>
+        <template lwc:if={isAllocateModal}>
+            <template lwc:if={noTargets}><p class="small muted">Loading open invoices and bills in this currency.</p></template>
+            <template lwc:else>
+                <div class="grid g2 form gap-sm">
+                    <label class="field wide"><span>Settles</span><select class="select" data-field="targetId" onchange={handleField}>
+                        <template for:each={targetOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+                    <label class="field"><span>Amount (payment currency)</span><input class="input n" type="number" step="0.01" data-field="amount" value={form.amount} oninput={handleField} /></label>
+                    <label class="field"><span>Effective date</span><input class="input" type="date" data-field="effectiveDate" value={form.effectiveDate} oninput={handleField} /></label>
+                    <label class="field wide"><span>Notes</span><input class="input" data-field="notes" value={form.notes} oninput={handleField} /></label>
+                </div>
+            </template>
+        </template>
+        <template lwc:if={isReverseAllocModal}>
+            <label class="field gap-sm"><span>Reversal date</span><input class="input" type="date" data-field="reversalDate" value={form.reversalDate} oninput={handleField} /></label>
+        </template>
+        <template lwc:if={showReason}>
+            <label class="field"><span>{reasonLabel}</span><input class="input sab-reason" data-field="reason" value={form.reason} oninput={handleField} /></label>
+        </template>
+        <button slot="footer" class="btn ghost sab-modal-close" type="button" onclick={handleCloseModal}>Close</button>
+        <button slot="footer" class={saveClass} type="button" disabled={busy} onclick={handleSave}>{saveLabel}</button>
+    </c-sab-modal>
+</template>

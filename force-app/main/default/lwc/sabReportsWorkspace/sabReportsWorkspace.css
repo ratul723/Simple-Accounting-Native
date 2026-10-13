@@ -1,0 +1,78 @@
+@import 'c/sabStyles';
+
+.reports {
+    grid-template-columns: minmax(220px, 0.55fr) minmax(0, 2.4fr);
+}
+
+.sab-report-list .li {
+    width: 100%;
+    border: 0;
+    border-bottom: 1px solid var(--line);
+    background: none;
+    text-align: left;
+    font: inherit;
+    color: inherit;
+}
+
+.sab-report-list .li.sel {
+    background: var(--accent-soft);
+    box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.filters {
+    margin-bottom: 14px;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.filters .row {
+    gap: 6px;
+}
+
+.filters .select {
+    width: auto;
+}
+
+.check {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.gap {
+    margin-bottom: 14px;
+}
+
+.section {
+    font-size: 14px;
+    margin: 18px 0 8px;
+}
+
+.net td {
+    font-size: 15px;
+}
+
+.linkish {
+    background: none;
+    border: 0;
+    padding: 0;
+    font: inherit;
+    font-weight: 600;
+    color: var(--accent);
+    cursor: pointer;
+}
+
+.sab-download {
+    display: none;
+}
+
+tr.click:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: -2px;
+}
+
+@media (max-width: 900px) {
+    .reports {
+        grid-template-columns: 1fr;
+    }
+}

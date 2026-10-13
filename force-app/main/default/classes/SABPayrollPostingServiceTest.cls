@@ -123,7 +123,7 @@ private class SABPayrollPostingServiceTest {
             Boolean cancelled=false;String cancelMessage;
             try{SABPayrollReviewService.cancel(runId,'Cannot cancel posted');}
             catch(SABPayrollReviewService.ReviewException ex){cancelled=true;cancelMessage=ex.getMessage();}
-            Test.stopTest();
+            // Budget: the read-back queries also run inside the window; the outer window holds setup plus calculate/submit/approve.
             System.assertEquals(false,r.replay);System.assertEquals(true,replay.replay);
             System.assertEquals(r.journalEntryId,replay.journalEntryId);System.assertEquals(r.accountingEventId,replay.accountingEventId);
             Payroll_Run__c run=[SELECT Workflow_State__c,Accounting_Event__c,Accounting_Date__c,Posted_By__c,Posted_At__c,Net_Payable_Account__c,Posting_Request_Key__c
@@ -142,6 +142,7 @@ private class SABPayrollPostingServiceTest {
             System.assertEquals(1,[SELECT COUNT() FROM Accounting_Event__c WHERE Source_Record_Id__c=:runId WITH USER_MODE]);
             System.assertEquals(false,direct.isSuccess());System.assert(direct.getErrors()[0].getMessage().contains('authorized payroll service'));
             System.assert(cancelled,'Posted payroll cannot be cancelled.');System.assert(cancelMessage.contains('controlled reversal'),cancelMessage);
+            Test.stopTest();
         }
     }
     @IsTest static void rejectsReplayWithChangedIdentity(){
@@ -183,12 +184,12 @@ private class SABPayrollPostingServiceTest {
     }
     @IsTest static void deniesUserWithoutCompanyGrant(){
         System.runAs(maker()){
-            Id runId=approved();User denied=noGrantUser();allowRunEdit(runId,denied.Id);Id p=period('D01-OCT');Id a=account('2300');Test.startTest();
+            Id runId=approved();Test.startTest();User denied=noGrantUser();allowRunEdit(runId,denied.Id);Id p=period('D01-OCT');Id a=account('2300');
             Boolean blocked=false;System.runAs(denied){
                 System.assert(FeatureManagement.checkPermission('SAB_Post_Payroll'));
                 try{SABPayrollPostingService.post(runId,p,Date.newInstance(2026,10,31),a,'DENIED');}
                 catch(SABCompanyAccessService.CompanyAccessDeniedException ex){blocked=true;}
-            }Test.stopTest();System.assert(blocked);System.assertEquals('Approved',snapshot(runId).Workflow_State__c);
+            }System.assert(blocked);System.assertEquals('Approved',snapshot(runId).Workflow_State__c);Test.stopTest();
         }
     }
     @IsTest static void requiresPostingActionPermission(){
@@ -264,16 +265,17 @@ private class SABPayrollPostingServiceTest {
     }
     @IsTest static void rollsBackJournalWhenEventIdentityConflicts(){
         System.runAs(maker()){
-            Id runId=approved();SABAccountingEventService.ReservationRequest reserved=new SABAccountingEventService.ReservationRequest();
+            Id runId=approved();Test.startTest();SABAccountingEventService.ReservationRequest reserved=new SABAccountingEventService.ReservationRequest();
             reserved.companyId=companyId();reserved.adapterKey='DIFFERENT_ADAPTER';reserved.requestKey='RESERVE';
             reserved.eventKey='PAYROLL|'+runId+'|V1|ACCRUAL';reserved.eventType='Payroll';reserved.sourceType='Payroll_Run__c';
             reserved.sourceRecordId=String.valueOf(runId);reserved.sourceVersion=1;reserved.sourceBusinessKey='DIFFERENT';
             SABAccountingEventService.reserveForPosting(reserved);
-            Integer beforeCount=[SELECT COUNT() FROM Journal_Entry__c WITH USER_MODE];Test.startTest();Boolean blocked=false;
+            Integer beforeCount=[SELECT COUNT() FROM Journal_Entry__c WITH USER_MODE];Boolean blocked=false;
             try{post(runId);}catch(SABAccountingEventService.AccountingEventException ex){blocked=true;System.assert(ex.getMessage().contains('identity'));}
-            Test.stopTest();System.assert(blocked);System.assertEquals(beforeCount,[SELECT COUNT() FROM Journal_Entry__c WITH USER_MODE]);
+            System.assert(blocked);System.assertEquals(beforeCount,[SELECT COUNT() FROM Journal_Entry__c WITH USER_MODE]);
             Payroll_Run__c run=snapshot(runId);System.assertEquals('Approved',run.Workflow_State__c);System.assertEquals(null,run.Accounting_Event__c);
             System.assertEquals(1,[SELECT COUNT() FROM Accounting_Event__c WHERE Event_Key__c=:reserved.eventKey WITH USER_MODE]);
+            Test.stopTest();
         }
     }
 

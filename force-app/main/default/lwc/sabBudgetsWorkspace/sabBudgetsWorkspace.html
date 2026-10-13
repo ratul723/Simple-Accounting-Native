@@ -1,0 +1,118 @@
+<template>
+    <c-sab-workspace-header company-name={companyName} group="Planning" heading="Budgets"
+        description="Budget versions, budget lines by account and department, and actual against budget on the same basis.">
+        <button slot="actions" class="btn sab-new-budget" type="button" disabled={actions.manageDisabled} title={actions.manageTitle} onclick={handleNew}>
+            <c-sab-icon name="plus" size="16"></c-sab-icon>New budget</button>
+        <template lwc:if={hasBudget}>
+            <template lwc:if={actions.showRevise}><button slot="actions" class="btn sab-revise" type="button" disabled={actions.manageDisabled} title={actions.manageTitle} onclick={handleRevise}>New version</button></template>
+            <template lwc:if={actions.showEdit}><button slot="actions" class="btn sab-edit-lines" type="button" disabled={actions.manageDisabled} title={actions.manageTitle} onclick={handleEdit}>Edit lines</button></template>
+            <template lwc:if={actions.showSubmit}><button slot="actions" class="btn primary sab-submit" type="button" disabled={actions.manageDisabled} title={actions.manageTitle} onclick={handleSubmit}>Submit for approval</button></template>
+            <template lwc:if={actions.showReturn}><button slot="actions" class="btn sab-return" type="button" disabled={actions.approveDisabled} title={actions.approveTitle} onclick={handleReturn}>Return to draft</button></template>
+            <template lwc:if={actions.showApprove}><button slot="actions" class="btn primary sab-approve" type="button" disabled={actions.approveDisabled} title={actions.approveTitle} onclick={handleApprove}>Approve</button></template>
+        </template>
+    </c-sab-workspace-header>
+
+    <template lwc:if={errorMessage}>
+        <section class="panel"><div class="empty"><div class="ill"><c-sab-icon name="alert" size="30"></c-sab-icon></div>
+            <h3>Budgets could not be loaded</h3><p>{errorMessage}</p>
+            <div class="row center"><button class="btn primary" type="button" onclick={handleRetry}>Try again</button></div></div></section>
+    </template>
+    <template lwc:elseif={showLoading}>
+        <section class="panel"><div class="panel-b muted" role="status">Loading budgets</div></section>
+    </template>
+    <template lwc:elseif={data}>
+        <div class="row picker">
+            <select class="select sab-year" aria-label="Fiscal year" onchange={handleYear}>
+                <template for:each={yearOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template>
+            </select>
+            <div class="seg sab-versions" role="group" aria-label="Budget version">
+                <template for:each={versionButtons} for:item="v"><button key={v.id} class={v.className} type="button" aria-pressed={v.pressed} data-id={v.id} onclick={handleVersion}>{v.label}</button></template>
+            </div>
+            <template lwc:if={hasBudget}><span class={statusChip}><span class="dot"></span>{budget.status}</span></template>
+            <span class="spacer"></span>
+            <label class="row small muted dept">Department
+                <select class="select sab-department" onchange={handleDepartment}><option value="">All departments</option>
+                    <template for:each={departmentOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+        </div>
+
+        <template lwc:if={hasBudget}>
+            <template lwc:if={varianceError}>
+                <div class="banner t-bad gap" role="alert"><c-sab-icon name="alert"></c-sab-icon><div>{varianceError}</div></div>
+            </template>
+            <div class="figs">
+                <template for:each={figures} for:item="f">
+                    <div key={f.key} class="fig"><div class="l">{f.label}</div><div class="v">{f.value}<small>{cur}</small></div><div class="s">{f.sub}</div></div>
+                </template>
+            </div>
+            <div class="split">
+                <section class="panel sab-variance">
+                    <div class="panel-h"><div><h2>{tableTitle}</h2><div class="sub">Favourable variances are positive for both income and expenses</div></div></div>
+                    <div class="panel-b flush">
+                        <template lwc:if={hasRows}>
+                            <div class="tbl-wrap"><table class="tbl">
+                                <thead><tr><th>Account</th><th class="n">Actual</th><th class="n">Budget</th><th class="n">Variance</th><th class="n">%</th><th>Used</th></tr></thead>
+                                <tbody>
+                                    <tr class="grp"><td colspan="6">Income</td></tr>
+                                    <template for:each={incomeRows} for:item="r"><tr key={r.key}><td><span class="id">{r.accountCode}</span> {r.accountName}<template lwc:if={r.dimensionName}><div class="small muted">{r.dimensionName}</div></template></td>
+                                        <td class="n num">{r.actualText}</td><td class="n num">{r.budgetText}</td><td class={r.varianceClass}>{r.varianceText}</td><td class="n pct">{r.pctText}</td>
+                                        <td class="bar-cell"><div class={r.meterClass}><i style={r.meterStyle}></i></div></td></tr></template>
+                                    <tr class="grp"><td colspan="6">Cost of sales and expenses</td></tr>
+                                    <template for:each={expenseRows} for:item="r"><tr key={r.key}><td><span class="id">{r.accountCode}</span> {r.accountName}<template lwc:if={r.dimensionName}><div class="small muted">{r.dimensionName}</div></template></td>
+                                        <td class="n num">{r.actualText}</td><td class="n num">{r.budgetText}</td><td class={r.varianceClass}>{r.varianceText}</td><td class="n pct">{r.pctText}</td>
+                                        <td class="bar-cell"><div class={r.meterClass}><i style={r.meterStyle}></i></div></td></tr></template>
+                                    <tr class="tot"><td>Net profit</td><td class="n">{netRow.actual}</td><td class="n">{netRow.budget}</td><td class={netRow.varianceClass}>{netRow.variance}</td><td></td><td></td></tr>
+                                </tbody>
+                            </table></div>
+                        </template>
+                        <template lwc:else><div class="panel-b muted">No budget lines or actuals for this selection.</div></template>
+                    </div>
+                </section>
+                <section class="panel sab-monthly">
+                    <div class="panel-h"><div><h2>Monthly revenue</h2><div class="sub">Revenue actual and budget by period</div></div></div>
+                    <div class="panel-b">
+                        <template lwc:if={hasMonthly}><c-sab-bar-chart groups={monthly} series={chartSeries} label="Revenue actual and budget"></c-sab-bar-chart></template>
+                        <template lwc:else><div class="muted small">Loading monthly figures</div></template>
+                    </div>
+                </section>
+            </div>
+        </template>
+        <template lwc:else>
+            <section class="panel"><div class="empty"><div class="ill"><c-sab-icon name="budget" size="30"></c-sab-icon></div>
+                <h3>No budget for this year</h3><p>Create a draft budget, add lines by period and account, then submit it for approval.</p></div></section>
+        </template>
+    </template>
+
+    <c-sab-modal open={modalOpen} heading={modalHeading} subheading={modalSub} onclose={handleCloseModal}>
+        <template lwc:if={formError}><div class="banner t-bad form-error" role="alert"><c-sab-icon name="alert"></c-sab-icon><div>{formError}</div></div></template>
+        <template lwc:if={isNewModal}>
+            <div class="grid g2 form">
+                <label class="field"><span>Name</span><input class="input" data-field="name" value={form.name} placeholder="For example FY27 Original" oninput={handleField} /></label>
+                <label class="field"><span>Fiscal year</span><input class="input n" type="number" data-field="fiscalYear" value={form.fiscalYear} oninput={handleField} /></label>
+            </div>
+        </template>
+        <template lwc:if={isReasonModal}>
+            <label class="field"><span>Reason</span><input class="input sab-reason" data-field="reason" value={form.reason} oninput={handleField} /></label>
+        </template>
+        <template lwc:if={isLinesModal}>
+            <div class="tbl-wrap"><table class="tbl egrid sab-lines">
+                <thead><tr><th>Period</th><th>Account</th><th>Department</th><th>Cost center</th><th class="n">Amount</th><th><span class="sr">Remove</span></th></tr></thead>
+                <tbody><template for:each={lineRows} for:item="l"><tr key={l.key}>
+                    <td><select class="select" data-index={l.index} data-field="accountingPeriodId" aria-label="Period" onchange={handleLineField}><option value="">Period</option>
+                        <template for:each={l.periodOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></td>
+                    <td><select class="select" data-index={l.index} data-field="glAccountId" aria-label="Account" onchange={handleLineField}><option value="">Account</option>
+                        <template for:each={l.accountOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></td>
+                    <td><select class="select" data-index={l.index} data-field="departmentId" aria-label="Department" onchange={handleLineField}><option value="">&#8212;</option>
+                        <template for:each={l.departmentOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></td>
+                    <td><select class="select" data-index={l.index} data-field="costCenterId" aria-label="Cost center" onchange={handleLineField}><option value="">&#8212;</option>
+                        <template for:each={l.costCenterOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></td>
+                    <td class="amt"><input class="input n" inputmode="decimal" data-index={l.index} data-field="amount" value={l.amount} aria-label="Amount" oninput={handleLineField} /></td>
+                    <td><button class="btn ghost sm sab-remove-line" type="button" data-index={l.index} aria-label="Remove line" onclick={handleRemoveLine}>Remove</button></td>
+                </tr></template></tbody>
+                <tfoot><tr><td>Total</td><td></td><td></td><td></td><td class="n num">{linesTotal}</td><td></td></tr></tfoot>
+            </table></div>
+            <button class="btn sm ghost sab-add-line add-line" type="button" onclick={handleAddLine}><c-sab-icon name="plus" size="14"></c-sab-icon>Add line</button>
+        </template>
+        <button slot="footer" class="btn ghost sab-modal-close" type="button" onclick={handleCloseModal}>Close</button>
+        <button slot="footer" class="btn primary sab-modal-save" type="button" disabled={busy} onclick={handleSave}>{saveLabel}</button>
+    </c-sab-modal>
+</template>

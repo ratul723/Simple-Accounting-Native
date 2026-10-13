@@ -229,4 +229,27 @@ describe('c-sab-payments-workspace', () => {
         await flush();
         expect(el2.shadowRoot.querySelector('c-sab-drawer').open).toBe(true);
     });
+
+    it('records receipts and payments and edits drafts in the document editor', async () => {
+        const el = mount();
+        await flush();
+        const root = el.shadowRoot;
+        const editor = root.querySelector('c-sab-document-editor');
+        root.querySelector('.sab-new-receipt').click();
+        await flush();
+        expect(editor.kind).toBe('receipt');
+        root.querySelector('.sab-new-payment').click();
+        await flush();
+        expect(editor.kind).toBe('payment');
+        editor.dispatchEvent(new CustomEvent('close'));
+        open(root, 'D4');
+        await flush();
+        root.querySelector('.sab-edit-payment').click();
+        await flush();
+        expect(editor.kind).toBe('payment');
+        expect(editor.recordId).toBe('D4');
+        editor.dispatchEvent(new CustomEvent('saved', { detail: { recordId: 'D4' } }));
+        await flush();
+        expect(root.querySelector('c-sab-drawer').heading).toBe('PAY-D4');
+    });
 });

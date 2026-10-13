@@ -20,6 +20,8 @@ private class SABAppShellControllerTest {
         System.assert(context.visibleWorkspaces.contains('home'), 'SAB_App_User grants Finance home.');
         System.assert(context.visibleWorkspaces.contains('journal'), 'Journal access shows Journals.');
         System.assert(!context.visibleWorkspaces.contains('projects'), 'Optional modules need their view permission.');
+        System.assert(!context.visibleWorkspaces.contains('allocations'), 'Allocations need SAB_View_Allocations.');
+        System.assert(!context.visibleWorkspaces.contains('fx') && !context.visibleWorkspaces.contains('expenses'), 'FX and expenses need their view permissions.');
         System.assert(context.hasPeriod, 'The current month period is found.');
         System.assertEquals('Open', context.periodStatus, 'Period status is returned.');
         System.assertEquals(Date.today().toStartOfMonth(), context.periodStart, 'Period start is returned.');

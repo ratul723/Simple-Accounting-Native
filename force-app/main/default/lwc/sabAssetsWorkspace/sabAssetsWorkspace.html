@@ -1,0 +1,164 @@
+<template>
+    <c-sab-workspace-header company-name={companyName} group="People & assets" heading="Fixed assets"
+        description="Asset register, depreciation, transfers, impairment and disposal.">
+        <button slot="actions" class="btn primary sab-register" type="button" disabled={registerDisabled} title={registerTitle} onclick={handleRegister}>
+            <c-sab-icon name="plus" size="16"></c-sab-icon>Register asset</button>
+    </c-sab-workspace-header>
+
+    <template lwc:if={errorMessage}>
+        <section class="panel"><div class="empty"><div class="ill"><c-sab-icon name="alert" size="30"></c-sab-icon></div>
+            <h3>Fixed assets could not be loaded</h3><p>{errorMessage}</p>
+            <div class="row center"><button class="btn primary" type="button" onclick={handleRetry}>Try again</button></div></div></section>
+    </template>
+    <template lwc:elseif={showLoading}>
+        <section class="panel"><div class="panel-b muted" role="status">Loading fixed assets</div></section>
+    </template>
+    <template lwc:elseif={data}>
+        <div class="figs">
+            <template for:each={figures} for:item="f">
+                <div key={f.key} class="fig"><div class="l">{f.label}</div><div class="v">{f.value}<small>{cur}</small></div><div class="s">{f.sub}</div></div>
+            </template>
+        </div>
+        <template lwc:if={reviewBanner}>
+            <div class="banner t-warn gap"><c-sab-icon name="alert"></c-sab-icon><div><b>Reconciliation review</b><div class="small">{reviewBanner}</div></div></div>
+        </template>
+        <div class="tabs" role="tablist">
+            <template for:each={tabs} for:item="t">
+                <button key={t.id} class={t.className} type="button" role="tab" aria-selected={t.selected} data-tab={t.id} onclick={handleTab}>{t.label}<span class="count">{t.count}</span></button>
+            </template>
+        </div>
+        <template lwc:if={isRegister}>
+            <section class="panel"><div class="panel-b flush">
+                <template lwc:if={hasAssets}>
+                    <div class="tbl-wrap"><table class="tbl sab-register-table">
+                        <thead><tr><th>Asset</th><th>Category</th><th>In service</th><th class="n">Cost</th><th class="n">Accum. depn</th><th class="n">Book value</th><th>Status</th></tr></thead>
+                        <tbody><template for:each={registerRows} for:item="a"><tr key={a.assetId} class="click" tabindex="0" data-id={a.assetId} onclick={handleRow} onkeydown={handleRow}>
+                            <td><span class="id">{a.label}</span><div class="small muted">{a.name}</div></td><td>{a.categoryName}</td><td>{a.inServiceText}</td>
+                            <td class="n num">{a.costText}</td><td class="n num">{a.accText}</td><td class="n num">{a.bookText}</td>
+                            <td><span class={a.chip}><span class="dot"></span>{a.status}</span><template lwc:if={a.review}><div class="small down">Review</div></template></td></tr></template></tbody>
+                        <tfoot><tr><td>In service</td><td></td><td></td><td class="n num">{registerFoot.cost}</td><td class="n num">{registerFoot.acc}</td><td class="n num">{registerFoot.book}</td><td></td></tr></tfoot>
+                    </table></div>
+                </template>
+                <template lwc:else>
+                    <div class="empty"><div class="ill"><c-sab-icon name="assets" size="30"></c-sab-icon></div><h3>No assets yet</h3>
+                        <p>Register an asset, then generate its depreciation schedule.</p></div>
+                </template>
+            </div></section>
+        </template>
+        <template lwc:else>
+            <div class="banner t-info gap"><c-sab-icon name="info"></c-sab-icon><div><b>Depreciation is posted per schedule line</b>
+                <div class="small">Open an asset to post its next due line. Each posting creates one journal and marks the line posted.</div></div></div>
+            <section class="panel"><div class="panel-b flush">
+                <template lwc:if={hasDepreciation}>
+                    <div class="tbl-wrap"><table class="tbl sab-depreciation-table">
+                        <thead><tr><th>Asset</th><th class="n">Book value</th><th class="n">Posted</th><th class="n">Planned</th><th class="n">Book value after plan</th></tr></thead>
+                        <tbody><template for:each={depreciationRows} for:item="a"><tr key={a.assetId} class="click" tabindex="0" data-id={a.assetId} onclick={handleRow} onkeydown={handleRow}>
+                            <td><span class="id">{a.label}</span> {a.name}</td><td class="n num">{a.bookText}</td><td class="n num">{a.postedText}</td>
+                            <td class="n num">{a.plannedText}</td><td class="n num">{a.closingText}</td></tr></template></tbody>
+                    </table></div>
+                </template>
+                <template lwc:else><div class="panel-b muted">No planned depreciation. Generate schedules for assets in service.</div></template>
+            </div></section>
+        </template>
+    </template>
+
+    <c-sab-drawer open={drawerOpen} heading={drawerHeading} subheading={drawerSub} onclose={handleCloseDrawer}>
+        <template lwc:if={drawerOpen}>
+            <template lwc:if={detailError}><div class="banner t-bad">{detailError}</div></template>
+            <template lwc:elseif={detail}>
+                <template lwc:if={view.hasIssues}>
+                    <div class="banner t-warn section-gap"><c-sab-icon name="alert"></c-sab-icon><div><b>Reconciliation review</b>
+                        <template for:each={view.issues} for:item="i"><div key={i.key} class="small">{i.message}</div></template></div></div>
+                </template>
+                <template lwc:if={view.hasChart}>
+                    <c-sab-line-chart series={view.chartSeries} labels={view.chartLabels} every={view.chartEvery} height="160" area label="Book value over the schedule"></c-sab-line-chart>
+                </template>
+                <dl class="kv facts"><template for:each={view.facts} for:item="f"><dt key={f.key}>{f.label}</dt><dd key={f.valueKey}>{f.value}</dd></template></dl>
+                <h3 class="section">Depreciation schedule</h3>
+                <template lwc:if={view.hasSchedule}>
+                    <div class="tbl-wrap"><table class="tbl sab-schedule">
+                        <thead><tr><th>Period</th><th>Date</th><th class="n">Amount</th><th>Status</th><th><span class="sr">Actions</span></th></tr></thead>
+                        <tbody><template for:each={view.schedule} for:item="l"><tr key={l.lineId}><td>{l.periodName}</td><td>{l.dateText}</td><td class="n num">{l.amountText}</td>
+                            <td><span class={l.chip}><span class="dot"></span>{l.status}</span></td>
+                            <td class="act"><template lwc:if={l.isNext}><button class="btn sm primary sab-post-line" type="button" data-id={l.lineId} disabled={view.postDisabled}
+                                title={view.postTitle} onclick={handlePostLine}>Post</button></template></td></tr></template></tbody>
+                    </table></div>
+                </template>
+                <template lwc:elseif={view.showGenerate}>
+                    <p class="small muted">No schedule yet.</p>
+                    <button class="btn sm sab-generate" type="button" disabled={view.generateDisabled} title={view.generateTitle} onclick={handleGenerate}>Generate schedule</button>
+                </template>
+                <h3 class="section movements-title">Movements</h3>
+                <template lwc:if={view.hasMovements}>
+                    <div class="tbl-wrap"><table class="tbl sab-movements">
+                        <thead><tr><th>Date</th><th>Movement</th><th>Detail</th><th class="n">Amount</th></tr></thead>
+                        <tbody><template for:each={view.movements} for:item="m"><tr key={m.movementId}><td>{m.dateText}</td><td>{m.movementType}</td>
+                            <td class="small">{m.detail}</td><td class="n num">{m.amountText}</td></tr></template></tbody>
+                    </table></div>
+                </template>
+                <template lwc:else><p class="small muted">No movements yet.</p></template>
+            </template>
+        </template>
+        <template lwc:if={drawerOpen}>
+            <template lwc:if={detail}>
+                <template lwc:if={view.canMoveAsset}>
+                    <button slot="footer" class="btn ghost sab-transfer" type="button" disabled={view.moveDisabled} title={view.moveTitle} onclick={handleTransfer}>Transfer</button>
+                    <button slot="footer" class="btn ghost sab-impair" type="button" disabled={view.moveDisabled} title={view.moveTitle} onclick={handleImpair}>Impair</button>
+                    <button slot="footer" class="btn danger sab-dispose" type="button" disabled={view.moveDisabled} title={view.moveTitle} onclick={handleDispose}>Dispose</button>
+                </template>
+            </template>
+        </template>
+    </c-sab-drawer>
+
+    <c-sab-modal open={modalOpen} heading={modalHeading} subheading={modalSub} onclose={handleCloseModal}>
+        <template lwc:if={formError}><div class="banner t-bad form-error" role="alert"><c-sab-icon name="alert"></c-sab-icon><div>{formError}</div></div></template>
+        <template lwc:if={isRegisterModal}>
+            <div class="grid g2 form">
+                <label class="field"><span>Asset name</span><input class="input" data-field="assetName" value={form.assetName} oninput={handleField} /></label>
+                <label class="field"><span>Asset key</span><input class="input" data-field="companyAssetKey" value={form.companyAssetKey} placeholder="For example FA-0014" oninput={handleField} /></label>
+                <label class="field"><span>Category</span><select class="select" data-field="assetCategoryId" onchange={handleField}><option value="">Select</option>
+                    <template for:each={categoryOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+                <label class="field"><span>Status</span><select class="select" data-field="initialStatus" onchange={handleField}>
+                    <template for:each={statusOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+                <label class="field"><span>Acquired</span><input class="input" type="date" data-field="acquisitionDate" value={form.acquisitionDate} oninput={handleField} /></label>
+                <label class="field"><span>In service</span><input class="input" type="date" data-field="inServiceDate" value={form.inServiceDate} oninput={handleField} /></label>
+                <label class="field"><span>Cost</span><input class="input n" type="number" step="0.01" data-field="functionalCurrencyCost" value={form.functionalCurrencyCost} oninput={handleField} /></label>
+                <label class="field"><span>Residual value</span><input class="input n" type="number" step="0.01" data-field="residualValue" value={form.residualValue} oninput={handleField} /></label>
+                <label class="field"><span>Useful life (months)</span><input class="input n" type="number" data-field="usefulLifeMonths" value={form.usefulLifeMonths} oninput={handleField} /></label>
+                <label class="field"><span>Asset tag</span><input class="input" data-field="assetTag" value={form.assetTag} oninput={handleField} /></label>
+                <label class="field"><span>Location</span><input class="input" data-field="location" value={form.location} oninput={handleField} /></label>
+                <label class="field"><span>Department</span><select class="select" data-field="departmentId" onchange={handleField}><option value="">None</option>
+                    <template for:each={departmentOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+            </div>
+        </template>
+        <template lwc:if={isTransferModal}>
+            <div class="grid g2 form">
+                <label class="field"><span>Date</span><input class="input" type="date" data-field="movementDate" value={form.movementDate} oninput={handleField} /></label>
+                <label class="field"><span>New location</span><input class="input" data-field="toLocation" value={form.toLocation} oninput={handleField} /></label>
+                <label class="field"><span>New department</span><select class="select" data-field="toDepartmentId" onchange={handleField}><option value="">No change</option>
+                    <template for:each={departmentOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+                <label class="field"><span>New cost center</span><select class="select" data-field="toCostCenterId" onchange={handleField}><option value="">No change</option>
+                    <template for:each={costCenterOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+            </div>
+        </template>
+        <template lwc:if={isImpairModal}>
+            <div class="grid g2 form">
+                <label class="field"><span>Date</span><input class="input" type="date" data-field="movementDate" value={form.movementDate} oninput={handleField} /></label>
+                <label class="field"><span>Impairment amount</span><input class="input n" type="number" step="0.01" data-field="impairmentAmount" value={form.impairmentAmount} oninput={handleField} /></label>
+            </div>
+        </template>
+        <template lwc:if={isDisposeModal}>
+            <div class="grid g2 form">
+                <label class="field"><span>Date</span><input class="input" type="date" data-field="movementDate" value={form.movementDate} oninput={handleField} /></label>
+                <label class="field"><span>Sale proceeds</span><input class="input n" type="number" step="0.01" data-field="proceeds" value={form.proceeds} oninput={handleField} /></label>
+                <label class="field"><span>Proceeds received into</span><select class="select" data-field="bankAccountId" onchange={handleField}><option value="">No proceeds</option>
+                    <template for:each={bankOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+            </div>
+        </template>
+        <template lwc:if={needsReason}>
+            <label class="field reason"><span>Reason</span><input class="input sab-reason" data-field="reason" value={form.reason} oninput={handleField} /></label>
+        </template>
+        <button slot="footer" class="btn ghost sab-modal-close" type="button" onclick={handleCloseModal}>Close</button>
+        <button slot="footer" class={saveClass} type="button" disabled={busy} onclick={handleSave}>{saveLabel}</button>
+    </c-sab-modal>
+</template>

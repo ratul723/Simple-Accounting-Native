@@ -1,0 +1,85 @@
+<template>
+    <c-sab-modal open={open} heading={heading} subheading={subheading} onclose={handleClose}>
+        <template lwc:if={formError}><div class="banner t-bad form-error" role="alert"><c-sab-icon name="alert"></c-sab-icon><div>{formError}</div></div></template>
+        <template lwc:if={loading}><div class="muted" role="status">Loading</div></template>
+        <template lwc:elseif={options}>
+            <template lwc:if={isPayment}>
+                <div class="grid g2 form">
+                    <label class="field"><span>{partyLabel}</span><select class="select" data-field="partyProfileId" onchange={handleField}><option value="">Select</option>
+                        <template for:each={partyOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+                    <label class="field"><span>Bank account</span><select class="select" data-field="bankAccountId" onchange={handleField}><option value="">Select</option>
+                        <template for:each={bankOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+                    <label class="field"><span>Amount</span><input class="input n" type="number" step="0.01" data-field="amount" value={form.amount} oninput={handleField} /></label>
+                    <label class="field"><span>Value date</span><input class="input" type="date" data-field="effectiveDate" value={form.effectiveDate} oninput={handleField} /></label>
+                    <label class="field"><span>Method</span><select class="select" data-field="method" onchange={handleField}>
+                        <template for:each={methodOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+                    <label class="field"><span>Reference</span><input class="input" data-field="reference" value={form.reference} oninput={handleField} /></label>
+                    <label class="field"><span>Currency</span><input class="input" data-field="currencyCode" value={form.currencyCode} oninput={handleField} /></label>
+                    <template lwc:if={foreign}><label class="field"><span>Exchange rate</span><input class="input n" type="number" step="0.000001" data-field="exchangeRate"
+                        value={form.exchangeRate} oninput={handleField} /></label></template>
+                </div>
+            </template>
+            <template lwc:else>
+                <div class="grid g2 form">
+                    <template lwc:if={isClaim}>
+                        <label class="field"><span>Claimant</span><select class="select" data-field="employmentId" onchange={handleField}><option value="">Select</option>
+                            <template for:each={employmentOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+                        <label class="field"><span>Claim date</span><input class="input" type="date" data-field="documentDate" value={form.documentDate} oninput={handleField} /></label>
+                    </template>
+                    <template lwc:else>
+                        <label class="field"><span>{partyLabel}</span><select class="select" data-field="partyProfileId" onchange={handleField}><option value="">Select</option>
+                            <template for:each={partyOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+                        <template lwc:if={isCredit}>
+                            <label class="field"><span>Reduces invoice</span><select class="select" data-field="originalInvoiceId" onchange={handleField}><option value="">Select</option>
+                                <template for:each={creditOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+                        </template>
+                        <template lwc:if={isBillKind}>
+                            <label class="field"><span>Supplier reference</span><input class="input" data-field="reference" value={form.reference} oninput={handleField} /></label>
+                        </template>
+                        <label class="field"><span>Document date</span><input class="input" type="date" data-field="documentDate" value={form.documentDate} oninput={handleField} /></label>
+                        <label class="field"><span>Due date</span><input class="input" type="date" data-field="dueDate" value={form.dueDate} oninput={handleField} /></label>
+                    </template>
+                    <label class="field"><span>Currency</span><input class="input" data-field="currencyCode" value={form.currencyCode} oninput={handleField} /></label>
+                    <template lwc:if={foreign}><template lwc:if={isDocument}><label class="field"><span>Exchange rate</span><input class="input n" type="number" step="0.000001"
+                        data-field="exchangeRate" value={form.exchangeRate} oninput={handleField} /></label></template></template>
+                </div>
+                <div class="tbl-wrap lines"><table class="tbl egrid sab-doc-lines">
+                    <thead><tr>
+                        <template lwc:if={isClaim}><th>Date</th><th>Category</th></template>
+                        <th>Description</th><th>{accountLabel}</th><th>Tax</th>
+                        <template lwc:if={isDocument}><th class="n">Qty</th><th class="n">Unit price</th><template lwc:if={showDiscount}><th class="n">Discount</th></template></template>
+                        <template lwc:if={isClaim}><th class="n">Amount</th></template>
+                        <th>Department</th><th class="n">Net</th><th><span class="sr">Remove</span></th></tr></thead>
+                    <tbody><template for:each={lineRows} for:item="l"><tr key={l.key}>
+                        <template lwc:if={isClaim}>
+                            <td class="date"><input class="input" type="date" data-index={l.index} data-field="expenseDate" value={l.expenseDate} aria-label="Expense date" oninput={handleLine} /></td>
+                            <td class="cat"><input class="input" data-index={l.index} data-field="category" value={l.category} aria-label="Category" oninput={handleLine} /></td>
+                        </template>
+                        <td class="desc"><input class="input" data-index={l.index} data-field="description" value={l.description} aria-label="Description" oninput={handleLine} /></td>
+                        <td><select class="select" data-index={l.index} data-field="accountId" aria-label="Account" onchange={handleLine}><option value="">Account</option>
+                            <template for:each={l.accountOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></td>
+                        <td><select class="select" data-index={l.index} data-field="taxCodeId" aria-label="Tax code" onchange={handleLine}><option value="">No tax</option>
+                            <template for:each={l.taxOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></td>
+                        <template lwc:if={isDocument}>
+                            <td class="qty"><input class="input n" inputmode="decimal" data-index={l.index} data-field="quantity" value={l.quantity} aria-label="Quantity" oninput={handleLine} /></td>
+                            <td class="amt"><input class="input n" inputmode="decimal" data-index={l.index} data-field="unitPrice" value={l.unitPrice} aria-label="Unit price" oninput={handleLine} /></td>
+                            <template lwc:if={showDiscount}><td class="amt"><input class="input n" inputmode="decimal" data-index={l.index} data-field="discount" value={l.discount}
+                                aria-label="Discount" oninput={handleLine} /></td></template>
+                        </template>
+                        <template lwc:if={isClaim}>
+                            <td class="amt"><input class="input n" inputmode="decimal" data-index={l.index} data-field="amount" value={l.amount} aria-label="Amount" oninput={handleLine} /></td>
+                        </template>
+                        <td><select class="select" data-index={l.index} data-field="departmentId" aria-label="Department" onchange={handleLine}><option value="">&#8212;</option>
+                            <template for:each={l.departmentOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></td>
+                        <td class="n num">{l.netText}</td>
+                        <td><button class="btn ghost sm sab-remove-line" type="button" data-index={l.index} onclick={handleRemoveLine}>Remove</button></td>
+                    </tr></template></tbody>
+                </table></div>
+                <div class="row foot"><button class="btn sm ghost sab-add-line" type="button" onclick={handleAddLine}><c-sab-icon name="plus" size="14"></c-sab-icon>Add line</button>
+                    <span class="spacer"></span><span class="small muted">{totalLabel}</span><span class="strong num total">{netTotal}</span></div>
+            </template>
+        </template>
+        <button slot="footer" class="btn ghost sab-doc-cancel" type="button" onclick={handleClose}>Cancel</button>
+        <button slot="footer" class="btn primary sab-doc-save" type="button" disabled={saveDisabled} onclick={handleSave}>Save draft</button>
+    </c-sab-modal>
+</template>

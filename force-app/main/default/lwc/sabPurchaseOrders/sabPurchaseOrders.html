@@ -1,0 +1,123 @@
+<template>
+    <template lwc:if={errorMessage}>
+        <section class="panel"><div class="panel-b"><div class="banner t-bad" role="alert"><c-sab-icon name="alert"></c-sab-icon>
+            <div><b>Purchase orders could not be loaded</b><div class="small">{errorMessage}</div></div>
+            <span class="spacer"></span><button class="btn sm" type="button" onclick={handleRetry}>Try again</button></div></div></section>
+    </template>
+    <template lwc:elseif={showLoading}>
+        <section class="panel"><div class="panel-b muted" role="status">Loading purchase orders</div></section>
+    </template>
+    <template lwc:elseif={data}>
+        <section class="panel">
+            <div class="panel-h"><div><h2>Purchase orders</h2><div class="sub">{summary}</div></div><span class="spacer"></span>
+                <button class="btn sm primary sab-new-po" type="button" disabled={newDisabled} title={newTitle} onclick={handleNew}>
+                    <c-sab-icon name="plus" size="14"></c-sab-icon>New purchase order</button></div>
+            <div class="panel-b flush">
+                <template lwc:if={hasOrders}>
+                    <div class="tbl-wrap"><table class="tbl sab-orders">
+                        <thead><tr><th>Order</th><th>Supplier</th><th>Ordered</th><th class="n">Total</th><th>Status</th></tr></thead>
+                        <tbody><template for:each={orderRows} for:item="o"><tr key={o.purchaseOrderId} class="click" tabindex="0" data-id={o.purchaseOrderId} onclick={handleRow} onkeydown={handleRow}>
+                            <td><span class="id">{o.name}</span></td><td>{o.supplierName}</td><td>{o.dateText}</td>
+                            <td class="n num">{o.totalText} <span class="small muted">{o.currencyCode}</span></td><td><span class={o.chip}><span class="dot"></span>{o.status}</span></td></tr></template></tbody>
+                    </table></div>
+                </template>
+                <template lwc:else><div class="panel-b muted">No purchase orders yet.</div></template>
+            </div>
+        </section>
+    </template>
+
+    <c-sab-drawer open={drawerOpen} heading={drawerHeading} subheading={drawerSub} onclose={handleCloseDrawer}>
+        <template lwc:if={detailError}><div class="banner t-bad">{detailError}</div></template>
+        <template lwc:elseif={order}>
+            <template lwc:if={view.cancelled}><div class="banner t-neutral steps"><c-sab-icon name="info"></c-sab-icon><div><b>Cancelled</b></div></div></template>
+            <template lwc:else>
+                <div class="hsteps steps">
+                    <template for:each={view.steps} for:item="s">
+                        <div key={s.key} class={s.className}><span class="n"><template lwc:if={s.done}><c-sab-icon name="check" size="12"></c-sab-icon></template>
+                            <template lwc:else>{s.number}</template></span>{s.label}</div>
+                    </template>
+                </div>
+            </template>
+            <div class="tbl-wrap"><table class="tbl sab-po-lines">
+                <thead><tr><th>Line</th><th class="n">Qty</th><th class="n">Price</th><th class="n">Amount</th><th class="n">Received</th><th class="n">Billed</th><th>Match</th></tr></thead>
+                <tbody><template for:each={view.lines} for:item="l"><tr key={l.lineId}><td>{l.description}<div class="small muted">{l.departmentName}</div></td>
+                    <td class="n num">{l.qtyText}</td><td class="n num">{l.priceText}</td><td class="n num">{l.amountText}</td><td class="n num">{l.receivedText}</td>
+                    <td class="n num">{l.billedText}</td><td><span class={l.matchChip}><span class="dot"></span>{l.matchText}</span></td></tr></template></tbody>
+            </table></div>
+            <h3 class="section">Goods receipts</h3>
+            <template lwc:if={view.hasReceipts}>
+                <div class="tbl-wrap"><table class="tbl sab-receipts">
+                    <thead><tr><th>Receipt</th><th>Date</th><th class="n">Quantity</th><th>Status</th><th><span class="sr">Actions</span></th></tr></thead>
+                    <tbody><template for:each={view.receipts} for:item="r"><tr key={r.goodsReceiptId}><td><span class="id">{r.name}</span></td><td>{r.dateText}</td>
+                        <td class="n num">{r.qtyText}</td><td><span class={r.chip}><span class="dot"></span>{r.status}</span></td>
+                        <td class="act"><template lwc:if={r.isDraft}>
+                            <button class="btn sm sab-accept-receipt" type="button" data-id={r.goodsReceiptId} disabled={view.receiveDisabled} title={view.receiveTitle} onclick={handleAcceptReceipt}>Accept</button>
+                            <button class="btn ghost sm sab-cancel-receipt" type="button" data-id={r.goodsReceiptId} data-kind="cancelReceipt" disabled={view.receiveDisabled}
+                                title={view.receiveTitle} onclick={handleReasonAction}>Cancel</button></template></td></tr></template></tbody>
+                </table></div>
+            </template>
+            <template lwc:else><p class="small muted">Nothing received yet.</p></template>
+            <h3 class="section">Supplier bills</h3>
+            <template lwc:if={view.hasBills}>
+                <div class="list"><template for:each={view.bills} for:item="b"><div key={b.supplierBillId} class="li"><div class="body"><div class="t">{b.name}</div><div class="d">{b.documentType}</div></div>
+                    <span class={b.chip}><span class="dot"></span>{b.status}</span></div></template></div>
+            </template>
+            <template lwc:else><p class="small muted">No bills matched to this order yet.</p></template>
+        </template>
+        <template lwc:if={order}>
+            <template lwc:if={view.isDraft}>
+                <button slot="footer" class="btn ghost sab-cancel-po" type="button" data-kind="cancel" disabled={view.manageDisabled} title={view.manageTitle} onclick={handleReasonAction}>Cancel</button>
+                <button slot="footer" class="btn ghost sab-edit-po" type="button" disabled={view.manageDisabled} title={view.manageTitle} onclick={handleEdit}>Edit</button>
+                <button slot="footer" class="btn primary sab-submit-po" type="button" disabled={view.manageDisabled} title={view.manageTitle} onclick={handleSubmit}>Submit for approval</button>
+            </template>
+            <template lwc:if={view.isSubmitted}>
+                <button slot="footer" class="btn ghost sab-return-po" type="button" data-kind="return" disabled={view.approveDisabled} title={view.approveTitle} onclick={handleReasonAction}>Return to draft</button>
+                <button slot="footer" class="btn primary sab-approve-po" type="button" disabled={view.approveDisabled} title={view.approveTitle} onclick={handleApprove}>Approve</button>
+            </template>
+            <template lwc:if={view.canReceive}>
+                <button slot="footer" class="btn ghost sab-close-po" type="button" data-kind="close" disabled={view.manageDisabled} title={view.manageTitle} onclick={handleReasonAction}>Close</button>
+                <button slot="footer" class="btn primary sab-receive" type="button" disabled={view.receiveDisabled} title={view.receiveTitle} onclick={handleReceive}>Receive goods</button>
+            </template>
+        </template>
+    </c-sab-drawer>
+
+    <c-sab-modal open={modalOpen} heading={modalHeading} subheading={modalSub} onclose={handleCloseModal}>
+        <template lwc:if={formError}><div class="banner t-bad form-error" role="alert"><c-sab-icon name="alert"></c-sab-icon><div>{formError}</div></div></template>
+        <template lwc:if={isOrderModal}>
+            <div class="grid g2 form">
+                <label class="field"><span>Supplier</span><select class="select" data-field="supplierProfileId" onchange={handleField}><option value="">Select</option>
+                    <template for:each={supplierOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+                <label class="field"><span>Order date</span><input class="input" type="date" data-field="orderDate" value={form.orderDate} oninput={handleField} /></label>
+                <label class="field"><span>Currency</span><input class="input" data-field="currencyCode" value={form.currencyCode} oninput={handleField} /></label>
+            </div>
+            <div class="tbl-wrap lines"><table class="tbl egrid sab-po-grid">
+                <thead><tr><th>Description</th><th class="n">Qty</th><th class="n">Unit price</th><th>Department</th><th>Cost center</th><th class="n">Amount</th><th><span class="sr">Remove</span></th></tr></thead>
+                <tbody><template for:each={lineRows} for:item="l"><tr key={l.key}>
+                    <td><input class="input" data-index={l.index} data-field="description" value={l.description} aria-label="Description" oninput={handleLineField} /></td>
+                    <td class="qty"><input class="input n" inputmode="decimal" data-index={l.index} data-field="quantity" value={l.quantity} aria-label="Quantity" oninput={handleLineField} /></td>
+                    <td class="amt"><input class="input n" inputmode="decimal" data-index={l.index} data-field="unitPrice" value={l.unitPrice} aria-label="Unit price" oninput={handleLineField} /></td>
+                    <td><select class="select" data-index={l.index} data-field="departmentId" aria-label="Department" onchange={handleLineField}><option value="">&#8212;</option>
+                        <template for:each={l.departmentOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></td>
+                    <td><select class="select" data-index={l.index} data-field="costCenterId" aria-label="Cost center" onchange={handleLineField}><option value="">&#8212;</option>
+                        <template for:each={l.costCenterOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></td>
+                    <td class="n num">{l.amountText}</td>
+                    <td><button class="btn ghost sm sab-remove-line" type="button" data-index={l.index} onclick={handleRemoveLine}>Remove</button></td></tr></template></tbody>
+                <tfoot><tr><td>Total</td><td></td><td></td><td></td><td></td><td class="n num">{linesTotal}</td><td></td></tr></tfoot>
+            </table></div>
+            <button class="btn sm ghost sab-add-line add-line" type="button" onclick={handleAddLine}><c-sab-icon name="plus" size="14"></c-sab-icon>Add line</button>
+        </template>
+        <template lwc:if={isReceiveModal}>
+            <label class="field gap"><span>Receipt date</span><input class="input" type="date" data-field="receiptDate" value={form.receiptDate} oninput={handleField} /></label>
+            <div class="tbl-wrap"><table class="tbl egrid sab-receive-grid">
+                <thead><tr><th>Line</th><th class="n">Outstanding</th><th class="n">Received now</th></tr></thead>
+                <tbody><template for:each={receiptLines} for:item="l"><tr key={l.purchaseOrderLineId}><td>{l.description}</td><td class="n num">{l.remainingText}</td>
+                    <td class="qty"><input class="input n" inputmode="decimal" data-id={l.purchaseOrderLineId} value={l.acceptedQuantity} aria-label={l.label} oninput={handleReceiptQty} /></td></tr></template></tbody>
+            </table></div>
+        </template>
+        <template lwc:if={isReasonModal}>
+            <label class="field"><span>Reason</span><input class="input sab-reason" data-field="reason" value={form.reason} oninput={handleField} /></label>
+        </template>
+        <button slot="footer" class="btn ghost sab-modal-close" type="button" onclick={handleCloseModal}>Close</button>
+        <button slot="footer" class={saveClass} type="button" disabled={busy} onclick={handleSave}>{saveLabel}</button>
+    </c-sab-modal>
+</template>

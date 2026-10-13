@@ -369,4 +369,45 @@ export default class SabPaymentsWorkspace extends LightningElement {
     handleReload() {
         this.load();
     }
+
+    // ---------- document entry ----------
+
+    editorOpen = false;
+    editorKind = 'receipt';
+    editorRecordId;
+
+    openEditor(kind, recordId) {
+        this.editorKind = kind;
+        this.editorRecordId = recordId;
+        this.editorOpen = true;
+    }
+
+    handleEditorClose() {
+        this.editorOpen = false;
+    }
+
+    async handleEditorSaved(event) {
+        this.requestedRecordId = event.detail.recordId;
+        await this.load();
+    }
+
+    get createDisabled() {
+        return !(this.data && this.data.canEdit);
+    }
+
+    get createTitle() {
+        return this.createDisabled ? `${this.personaLabel} role cannot record payments` : undefined;
+    }
+
+    handleNewReceipt() {
+        this.openEditor('receipt');
+    }
+
+    handleNewPayment() {
+        this.openEditor('payment');
+    }
+
+    handleEditPayment() {
+        this.openEditor(this.selected.direction === 'Receipt' ? 'receipt' : 'payment', this.selected.paymentId);
+    }
 }

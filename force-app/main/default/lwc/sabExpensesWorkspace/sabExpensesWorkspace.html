@@ -1,0 +1,134 @@
+<template>
+    <c-sab-workspace-header company-name={companyName} group="Money in & out" heading="Expense claims"
+        description="Staff expense claims from submission and review to posting, reimbursement and settlement.">
+        <button slot="actions" class="btn primary sab-new-claim" type="button" disabled={createDisabled} title={createTitle} onclick={handleNewClaim}>
+            <c-sab-icon name="plus" size="16"></c-sab-icon>New expense claim</button>
+    </c-sab-workspace-header>
+
+    <template lwc:if={errorMessage}>
+        <section class="panel"><div class="empty"><div class="ill"><c-sab-icon name="alert" size="30"></c-sab-icon></div>
+            <h3>Expense claims could not be loaded</h3><p>{errorMessage}</p>
+            <div class="row center"><button class="btn primary" type="button" onclick={handleRetry}>Try again</button></div></div></section>
+    </template>
+    <template lwc:elseif={showLoading}>
+        <section class="panel"><div class="panel-b muted" role="status">Loading expense claims</div></section>
+    </template>
+    <template lwc:elseif={data}>
+        <div class="figs">
+            <template for:each={figures} for:item="f">
+                <div key={f.key} class="fig"><div class="l">{f.label}</div><div class="v">{f.value}<template lwc:if={f.hasUnit}><small>{f.unit}</small></template></div><div class="s">{f.sub}</div></div>
+            </template>
+        </div>
+        <div class="tabs" role="tablist">
+            <template for:each={tabs} for:item="t">
+                <button key={t.id} class={t.className} type="button" role="tab" aria-selected={t.selected} data-tab={t.id} onclick={handleTab}>{t.label}<span class="count">{t.count}</span></button>
+            </template>
+        </div>
+        <template lwc:if={isClaims}>
+            <section class="panel"><div class="panel-b flush">
+                <template lwc:if={hasClaims}>
+                    <div class="tbl-wrap"><table class="tbl sab-claims">
+                        <thead><tr><th>Claim</th><th>Claimant</th><th>Date</th><th class="n">Total</th><th class="n">Paid</th><th class="n">Owed</th><th>Status</th></tr></thead>
+                        <tbody><template for:each={claimRows} for:item="c"><tr key={c.claimId} class="click" tabindex="0" data-id={c.claimId} onclick={handleClaim} onkeydown={handleClaim}>
+                            <td><span class="id">{c.name}</span><div class="small muted">{c.lineCount} lines</div></td><td>{c.claimantName}</td><td>{c.dateText}</td>
+                            <td class="n num">{c.totalText}</td><td class="n num">{c.paidText}</td><td class="n num">{c.remainingText}</td>
+                            <td><span class={c.chip}><span class="dot"></span>{c.status}</span></td></tr></template></tbody>
+                    </table></div>
+                </template>
+                <template lwc:else><div class="empty"><div class="ill"><c-sab-icon name="file" size="30"></c-sab-icon></div><h3>No expense claims yet</h3>
+                    <p>Claims appear here once staff create them.</p></div></template>
+            </div></section>
+        </template>
+        <template lwc:else>
+            <section class="panel"><div class="panel-b flush">
+                <template lwc:if={hasPayments}>
+                    <div class="tbl-wrap"><table class="tbl sab-reimbursements">
+                        <thead><tr><th>Payment</th><th>Value date</th><th>Bank</th><th class="n">Amount</th><th class="n">Not yet applied</th><th>State</th></tr></thead>
+                        <tbody><template for:each={paymentRows} for:item="p"><tr key={p.paymentId} class="click" tabindex="0" data-id={p.paymentId} onclick={handlePayment} onkeydown={handlePayment}>
+                            <td><span class="id">{p.name}</span><div class="small muted">{p.reference}</div></td><td>{p.dateText}</td><td>{p.bankAccountName}</td>
+                            <td class="n num">{p.amountText}</td><td class="n num">{p.remainingText}</td><td><span class={p.chip}><span class="dot"></span>{p.processingState}</span></td></tr></template></tbody>
+                    </table></div>
+                </template>
+                <template lwc:else><div class="panel-b muted">No reimbursement payments yet.</div></template>
+            </div></section>
+        </template>
+    </template>
+
+    <c-sab-drawer open={drawerOpen} heading={drawerHeading} subheading={drawerSub} onclose={handleCloseDrawer}>
+        <template lwc:if={detailError}><div class="banner t-bad">{detailError}</div></template>
+        <template lwc:elseif={isClaimDrawer}>
+            <template lwc:if={claimView.rejected}><div class="banner t-bad steps"><c-sab-icon name="alert"></c-sab-icon><div><b>Rejected</b></div></div></template>
+            <template lwc:else>
+                <div class="hsteps steps"><template for:each={claimView.steps} for:item="s">
+                    <div key={s.key} class={s.className}><span class="n"><template lwc:if={s.done}><c-sab-icon name="check" size="12"></c-sab-icon></template>
+                        <template lwc:else>{s.number}</template></span>{s.label}</div></template></div>
+            </template>
+            <dl class="kv facts"><template for:each={claimView.facts} for:item="f"><dt key={f.key}>{f.label}</dt><dd key={f.valueKey}>{f.value}</dd></template></dl>
+            <template lwc:if={claimView.hasLines}>
+                <div class="tbl-wrap"><table class="tbl sab-claim-lines">
+                    <thead><tr><th>Date</th><th>Expense</th><th>Account</th><th>Tax</th><th class="n">Tax</th><th class="n">Amount</th></tr></thead>
+                    <tbody><template for:each={claimView.lines} for:item="l"><tr key={l.lineId}><td>{l.dateText}</td><td>{l.description}<div class="small muted">{l.category}</div></td>
+                        <td class="small">{l.account}</td><td><span class="tag">{l.taxCode}</span></td><td class="n num">{l.taxText}</td><td class="n num">{l.amountText}</td></tr></template></tbody>
+                </table></div>
+            </template>
+            <h3 class="section">Reimbursement</h3>
+            <template lwc:if={claimView.hasSettlements}>
+                <div class="tbl-wrap"><table class="tbl sab-settlements">
+                    <thead><tr><th>Payment</th><th>Date</th><th class="n">Amount</th><th>Status</th><th><span class="sr">Actions</span></th></tr></thead>
+                    <tbody><template for:each={claimView.settlements} for:item="s"><tr key={s.settlementId}><td>{s.paymentName}</td><td>{s.dateText}</td><td class="n num">{s.amountText}</td>
+                        <td><span class={s.chip}><span class="dot"></span>{s.status}</span></td>
+                        <td class="act"><template lwc:if={s.canReverse}><button class="btn ghost sm sab-reverse-settlement" type="button" data-id={s.settlementId} disabled={busy} onclick={handleReverseSettlement}>Reverse</button></template></td></tr></template></tbody>
+                </table></div>
+            </template>
+            <template lwc:else><p class="small muted">Nothing reimbursed yet.</p></template>
+        </template>
+        <template lwc:elseif={isPaymentDrawer}>
+            <template lwc:if={paymentView.failed}><div class="banner t-bad steps"><c-sab-icon name="alert"></c-sab-icon><div><b>Bank rejected this payment</b></div></div></template>
+            <template lwc:else>
+                <div class="hsteps steps"><template for:each={paymentView.steps} for:item="s">
+                    <div key={s.key} class={s.className}><span class="n"><template lwc:if={s.done}><c-sab-icon name="check" size="12"></c-sab-icon></template>
+                        <template lwc:else>{s.number}</template></span>{s.label}</div></template></div>
+            </template>
+            <dl class="kv facts"><template for:each={paymentView.facts} for:item="f"><dt key={f.key}>{f.label}</dt><dd key={f.valueKey}>{f.value}</dd></template></dl>
+        </template>
+        <template lwc:if={isClaimDrawer}>
+            <template lwc:if={claimView.isDraft}>
+                <button slot="footer" class="btn ghost sab-edit-claim" type="button" disabled={claimView.submitDisabled} title={claimView.submitTitle} onclick={handleEditClaim}>Edit</button>
+                <button slot="footer" class="btn primary sab-submit-claim" type="button" disabled={claimView.submitDisabled} title={claimView.submitTitle} onclick={handleSubmit}>Submit for review</button>
+            </template>
+            <template lwc:if={claimView.isSubmitted}>
+                <button slot="footer" class="btn ghost sab-reject-claim" type="button" disabled={claimView.reviewDisabled} title={claimView.reviewTitle} onclick={handleReject}>Reject</button>
+                <button slot="footer" class="btn primary sab-approve-claim" type="button" disabled={claimView.reviewDisabled} title={claimView.reviewTitle} onclick={handleApprove}>Approve</button>
+            </template>
+            <template lwc:if={claimView.isApproved}>
+                <button slot="footer" class="btn primary sab-post-claim" type="button" disabled={claimView.postDisabled} title={claimView.postTitle} onclick={handlePost}>Post claim</button>
+            </template>
+            <template lwc:if={claimView.canSettle}>
+                <button slot="footer" class="btn primary sab-settle" type="button" disabled={claimView.settleDisabled} title={claimView.settleTitle} onclick={handleSettle}>Apply reimbursement</button>
+            </template>
+        </template>
+        <template lwc:if={isPaymentDrawer}>
+            <template lwc:if={paymentView.showAuthorize}><button slot="footer" class="btn primary sab-authorize" type="button" disabled={paymentView.disabled} title={paymentView.title} onclick={handleAuthorize}>Authorise</button></template>
+            <template lwc:if={paymentView.showRelease}><button slot="footer" class="btn primary sab-release" type="button" disabled={paymentView.disabled} title={paymentView.title} onclick={handleRelease}>Release to bank</button></template>
+            <template lwc:if={paymentView.showClear}><button slot="footer" class="btn primary sab-clear" type="button" disabled={paymentView.disabled} title={paymentView.title} onclick={handleClear}>Mark as cleared</button></template>
+        </template>
+    </c-sab-drawer>
+
+    <c-sab-modal open={modalOpen} heading={modalHeading} subheading={modalSub} onclose={handleCloseModal}>
+        <template lwc:if={formError}><div class="banner t-bad form-error" role="alert"><c-sab-icon name="alert"></c-sab-icon><div>{formError}</div></div></template>
+        <template lwc:if={isReasonModal}>
+            <label class="field"><span>{reasonLabel}</span><input class="input sab-reason" data-field="reason" value={form.reason} oninput={handleField} /></label>
+        </template>
+        <template lwc:if={isSettleModal}>
+            <div class="grid g2 form">
+                <label class="field"><span>Reimbursement payment</span><select class="select" data-field="paymentId" onchange={handleField}>
+                    <template for:each={payableOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+                <label class="field"><span>Amount</span><input class="input n" type="number" step="0.01" data-field="amount" value={form.amount} oninput={handleField} /></label>
+            </div>
+        </template>
+        <button slot="footer" class="btn ghost sab-modal-close" type="button" onclick={handleCloseModal}>Close</button>
+        <button slot="footer" class={saveClass} type="button" disabled={busy} onclick={handleSave}>{saveLabel}</button>
+    </c-sab-modal>
+
+    <c-sab-document-editor company-id={companyId} kind={editorKind} record-id={editorRecordId} open={editorOpen} onclose={handleEditorClose} onsaved={handleEditorSaved}></c-sab-document-editor>
+</template>

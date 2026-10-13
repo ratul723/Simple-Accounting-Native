@@ -1,6 +1,10 @@
 <template>
     <c-sab-workspace-header company-name={companyName} group="Money in & out" heading="Payments"
-        description="Receipts and disbursements, allocations to invoices and bills, and settlement status."></c-sab-workspace-header>
+        description="Receipts and disbursements, allocations to invoices and bills, and settlement status.">
+        <button slot="actions" class="btn sab-new-receipt" type="button" disabled={createDisabled} title={createTitle} onclick={handleNewReceipt}>Record receipt</button>
+        <button slot="actions" class="btn primary sab-new-payment" type="button" disabled={createDisabled} title={createTitle} onclick={handleNewPayment}>
+            <c-sab-icon name="plus" size="16"></c-sab-icon>New payment</button>
+    </c-sab-workspace-header>
 
     <template lwc:if={errorMessage}>
         <section class="panel"><div class="empty"><div class="ill"><c-sab-icon name="alert" size="30"></c-sab-icon></div>
@@ -81,6 +85,7 @@
         </template>
         <template lwc:if={drawerOpen}>
             <template lwc:if={view.canAuthorize}>
+                <button slot="footer" class="btn ghost sab-edit-payment" type="button" disabled={view.editDisabled} title={view.editTitle} onclick={handleEditPayment}>Edit</button>
                 <button slot="footer" class="btn primary sab-authorize" type="button" disabled={view.approveDisabled} title={view.approveTitle} onclick={handleAuthorize}>Authorise</button>
             </template>
             <template lwc:if={view.canRelease}>
@@ -105,4 +110,6 @@
         <button slot="footer" class="btn ghost sab-fail-close" type="button" onclick={handleCloseFail}>Close</button>
         <button slot="footer" class="btn danger sab-fail-save" type="button" disabled={busy} onclick={handleFailSave}>Mark failed</button>
     </c-sab-modal>
+
+    <c-sab-document-editor company-id={companyId} kind={editorKind} record-id={editorRecordId} open={editorOpen} onclose={handleEditorClose} onsaved={handleEditorSaved}></c-sab-document-editor>
 </template>

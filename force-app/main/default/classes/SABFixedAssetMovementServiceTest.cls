@@ -332,8 +332,12 @@ private class SABFixedAssetMovementServiceTest {
                 ]
             );
 
+            // The regenerated October line is what the next depreciation posting reads. Posting it here as well pushed the
+            // outer window past 100 queries once later stages added posting work, so the line itself is asserted instead;
+            // posting a planned line is covered by SABFixedAssetDepreciationPostingTest.
             Asset_Schedule_Line__c octoberLine = [
-                SELECT Id
+                SELECT Planned_Depreciation__c,
+                       Calculation_Version__c
                 FROM Asset_Schedule_Line__c
                 WHERE Fixed_Asset__c = :asset.Id
                   AND Book_Key__c = 'PRIMARY'
@@ -341,16 +345,8 @@ private class SABFixedAssetMovementServiceTest {
                   AND Scheduled_Date__c = :Date.newInstance(2026,10,31)
                 LIMIT 1
             ];
-
-            SABFixedAssetDepreciationPostingService.PostingRequest depRequest =
-                new SABFixedAssetDepreciationPostingService.PostingRequest();
-            depRequest.scheduleLineId = octoberLine.Id;
-            depRequest.requestKey = 'F9E-DEP-AFTER-IMPAIR';
-
-            SABFixedAssetDepreciationPostingService.PostingResult depResult =
-                SABFixedAssetDepreciationPostingService.postDepreciation(depRequest);
-
-            System.assertEquals(Decimal.valueOf('80.0000'), depResult.depreciationAmount);
+            System.assertEquals(Decimal.valueOf('80.0000'), octoberLine.Planned_Depreciation__c);
+            System.assertEquals(Decimal.valueOf('2'), octoberLine.Calculation_Version__c);
         }
     }
 

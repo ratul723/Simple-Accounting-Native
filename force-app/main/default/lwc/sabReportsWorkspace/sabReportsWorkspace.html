@@ -1,0 +1,176 @@
+<template>
+    <c-sab-workspace-header company-name={companyName} group="Compliance & reporting" heading="Report center"
+        description="Financial statements from the posted ledger, with drill-down to journal lines and source documents.">
+        <button slot="actions" class="btn primary sab-export" type="button" disabled={exportDisabled} onclick={handleExport}>
+            <c-sab-icon name="down" size="16"></c-sab-icon>Export</button>
+    </c-sab-workspace-header>
+
+    <div class="split-l reports">
+        <section class="panel sab-report-list">
+            <div class="list">
+                <template for:each={reportItems} for:item="r">
+                    <button key={r.id} class={r.className} type="button" aria-current={r.current} data-id={r.id} onclick={handleReport}>
+                        <div class="body"><div class="t">{r.label}</div></div><span class={r.tagClass}>{r.tag}</span></button>
+                </template>
+            </div>
+        </section>
+
+        <section class="panel sab-report">
+            <div class="panel-h"><div><h2>{reportTitle}</h2><div class="sub">{reportSub}</div></div></div>
+            <div class="panel-b">
+                <div class="row filters">
+                    <template lwc:if={showRange}>
+                        <label class="row small muted">From <select class="select sab-from" data-field="fromPeriod" onchange={handleFilter}>
+                            <template for:each={fromOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+                        <label class="row small muted">To <select class="select sab-to" data-field="toPeriod" onchange={handleFilter}>
+                            <template for:each={toOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+                    </template>
+                    <template lwc:if={showAsOf}>
+                        <label class="row small muted">As at end of <select class="select sab-asof" data-field="asOfPeriod" onchange={handleFilter}>
+                            <template for:each={asOfOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+                    </template>
+                    <template lwc:if={showDepartment}>
+                        <label class="row small muted">Department <select class="select sab-department" data-field="departmentId" onchange={handleFilter}><option value="">All</option>
+                            <template for:each={departmentOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+                    </template>
+                    <template lwc:if={showAccount}>
+                        <label class="row small muted">Account <select class="select sab-account" data-field="glAccountId" onchange={handleFilter}>
+                            <template for:each={accountOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+                    </template>
+                    <template lwc:if={showCompare}>
+                        <label class="check small muted"><input type="checkbox" class="sab-compare" data-field="compare" checked={compare} onchange={handleFilter} />Compare with a year earlier</label>
+                    </template>
+                </div>
+
+                <template lwc:if={errorMessage}>
+                    <div class="banner t-bad" role="alert"><c-sab-icon name="alert"></c-sab-icon><div><b>The report could not be run</b><div class="small">{errorMessage}</div></div>
+                        <span class="spacer"></span><button class="btn sm" type="button" onclick={handleRetry}>Try again</button></div>
+                </template>
+                <template lwc:elseif={showLoading}><div class="muted" role="status">Running report</div></template>
+
+                <template lwc:elseif={isOverview}>
+                    <div class="figs">
+                        <template for:each={overview.figures} for:item="f">
+                            <div key={f.key} class="fig"><div class="l">{f.label}</div><div class="v">{f.value}<small>{cur}</small></div><div class="s">{f.sub}</div></div>
+                        </template>
+                    </div>
+                    <template lwc:if={overview.hasTrend}>
+                        <h3 class="section">Revenue and expenses by month</h3>
+                        <c-sab-bar-chart groups={overview.groups} series={overview.series} label="Revenue and expenses by month"></c-sab-bar-chart>
+                    </template>
+                    <template lwc:if={overview.hasRuns}>
+                        <h3 class="section">Recent report runs</h3>
+                        <div class="list runs"><template for:each={overview.runs} for:item="r"><div key={r.key} class="li"><span class="ic t-info"><c-sab-icon name="file"></c-sab-icon></span>
+                            <div class="body"><div class="t">{r.title}</div><div class="d">{r.detail}</div></div></div></template></div>
+                    </template>
+                </template>
+
+                <template lwc:elseif={isPnl}>
+                    <template lwc:if={pnl.empty}><div class="muted">No posted activity in this range.</div></template>
+                    <template lwc:else>
+                        <div class="tbl-wrap"><table class="tbl sab-pnl">
+                            <thead><tr><th>{pnl.rangeText}</th><th class="n">Amount</th><template lwc:if={pnl.hasComparison}><th class="n">Prior year</th><th class="n">Variance</th></template></tr></thead>
+                            <tbody>
+                                <template for:each={pnl.groups} for:item="g">
+                                    <tr key={g.key} class="grp"><td colspan="4">{g.label}</td></tr>
+                                    <template for:each={g.rows} for:item="r">
+                                        <tr key={r.key} class={r.rowClass} tabindex="0" data-key={r.rowKey} onclick={handleDrill} onkeydown={handleDrillKey}>
+                                            <td class="ind">{r.label}</td><td class="n">{r.currentText}</td>
+                                            <template lwc:if={pnl.hasComparison}><td class="n">{r.comparisonText}</td><td class={r.varianceClass}>{r.varianceText}</td></template></tr>
+                                    </template>
+                                    <tr key={g.totalLabel} class="tot"><td>{g.totalLabel}</td><td class="n">{g.currentText}</td>
+                                        <template lwc:if={pnl.hasComparison}><td class="n">{g.comparisonText}</td><td class={g.varianceClass}>{g.varianceText}</td></template></tr>
+                                </template>
+                                <tr class="tot net"><td>Net profit</td><td class="n">{pnl.netText}</td>
+                                    <template lwc:if={pnl.hasComparison}><td class="n">{pnl.comparisonNetText}</td><td class="n">{pnl.varianceText}</td></template></tr>
+                            </tbody>
+                        </table></div>
+                    </template>
+                </template>
+
+                <template lwc:elseif={isBs}>
+                    <div class={bs.bannerClass}><c-sab-icon name={bs.bannerIcon}></c-sab-icon><div><b>{bs.bannerTitle}</b><div class="small">{bs.bannerText}</div></div></div>
+                    <template lwc:if={bs.empty}><div class="muted">No balances at this date.</div></template>
+                    <template lwc:else>
+                        <div class="tbl-wrap"><table class="tbl sab-bs">
+                            <thead><tr><th>{bs.asOfText}</th><th class="n">{cur}</th><template lwc:if={bs.hasComparison}><th class="n">{bs.comparisonText}</th></template></tr></thead>
+                            <tbody>
+                                <template for:each={bs.groups} for:item="g">
+                                    <tr key={g.key} class="grp"><td colspan="3">{g.label}</td></tr>
+                                    <template for:each={g.rows} for:item="r">
+                                        <tr key={r.key} class={r.rowClass} tabindex="0" data-key={r.rowKey} onclick={handleDrill} onkeydown={handleDrillKey}>
+                                            <td class="ind">{r.label}</td><td class="n">{r.currentText}</td><template lwc:if={bs.hasComparison}><td class="n">{r.comparisonText}</td></template></tr>
+                                    </template>
+                                    <tr key={g.totalLabel} class="tot"><td>{g.totalLabel}</td><td class="n">{g.currentText}</td><template lwc:if={bs.hasComparison}><td class="n">{g.comparisonText}</td></template></tr>
+                                </template>
+                                <tr class="tot net"><td>Liabilities and equity</td><td class="n">{bs.totalText}</td><template lwc:if={bs.hasComparison}><td></td></template></tr>
+                            </tbody>
+                        </table></div>
+                    </template>
+                </template>
+
+                <template lwc:elseif={isTb}>
+                    <div class={tb.bannerClass}><c-sab-icon name={tb.bannerIcon}></c-sab-icon><div><b>{tb.bannerTitle}</b><div class="small">{tb.bannerText}</div></div></div>
+                    <template lwc:if={tb.empty}><div class="muted">No balances in this range.</div></template>
+                    <template lwc:else>
+                        <div class="tbl-wrap"><table class="tbl sab-tb">
+                            <thead><tr><th>Code</th><th>Account</th><th>Type</th><th class="n">Debit</th><th class="n">Credit</th></tr></thead>
+                            <tbody><template for:each={tb.rows} for:item="r"><tr key={r.glAccountId} class="click" tabindex="0" data-account={r.glAccountId} onclick={handleDrill} onkeydown={handleDrillKey}>
+                                <td><span class="id">{r.accountCode}</span></td><td>{r.accountName}</td><td>{r.accountType}</td><td class="n num">{r.debitText}</td><td class="n num">{r.creditText}</td></tr></template></tbody>
+                            <tfoot><tr><td></td><td>Total</td><td></td><td class="n num">{tb.debitText}</td><td class="n num">{tb.creditText}</td></tr></tfoot>
+                        </table></div>
+                    </template>
+                </template>
+
+                <template lwc:elseif={isGl}>
+                    <template lwc:if={gl.empty}><div class="muted">Choose an account to see its ledger.</div></template>
+                    <template lwc:else>
+                        <template lwc:if={gl.truncated}><div class="banner t-warn gap"><c-sab-icon name="alert"></c-sab-icon><div class="small">{gl.truncatedText}</div></div></template>
+                        <div class="tbl-wrap"><table class="tbl sab-gl">
+                            <thead><tr><th>Date</th><th>Source</th><th>Description</th><th class="n">Debit</th><th class="n">Credit</th><th class="n">Balance</th></tr></thead>
+                            <tbody>
+                                <tr><td></td><td><span class="id">Opening</span></td><td class="small">Balance brought forward</td><td></td><td></td><td class="n num">{gl.openingText}</td></tr>
+                                <template for:each={gl.lines} for:item="l"><tr key={l.journalLineId}><td>{l.dateText}</td>
+                                    <td><template lwc:if={canOpenJournal}><button class="linkish sab-open-journal" type="button" data-id={l.journalId} onclick={handleOpenJournal}>{l.journalName}</button></template>
+                                        <template lwc:else><span class="id">{l.journalName}</span></template></td>
+                                    <td class="small">{l.explanation}</td><td class="n num">{l.debitText}</td><td class="n num">{l.creditText}</td><td class="n num">{l.balanceText}</td></tr></template>
+                            </tbody>
+                            <tfoot><tr><td></td><td></td><td>Closing balance</td><td></td><td></td><td class="n num">{gl.closingText}</td></tr></tfoot>
+                        </table></div>
+                    </template>
+                </template>
+
+                <template lwc:elseif={isCf}>
+                    <div class={cf.bannerClass}><c-sab-icon name="info"></c-sab-icon><div><b>{cf.bannerTitle}</b><div class="small">{cf.bannerText}</div></div></div>
+                    <div class="tbl-wrap"><table class="tbl sab-cf">
+                        <tbody>
+                            <template for:each={cf.sections} for:item="s">
+                                <tr key={s.key} class="grp"><td colspan="2">{s.name}</td></tr>
+                                <template for:each={s.lines} for:item="l"><tr key={l.key}><td class="ind">{l.label}</td><td class="n">{l.amountText}</td></tr></template>
+                                <tr key={s.totalLabel} class="tot"><td>{s.totalLabel}</td><td class="n">{s.totalText}</td></tr>
+                            </template>
+                            <tr class="tot"><td>Net change in cash</td><td class="n">{cf.netText}</td></tr>
+                            <tr><td class="ind">Opening cash</td><td class="n">{cf.openingText}</td></tr>
+                            <tr class="tot net"><td>Closing cash</td><td class="n">{cf.closingText}</td></tr>
+                        </tbody>
+                    </table></div>
+                </template>
+            </div>
+        </section>
+    </div>
+    <a class="sab-download" aria-hidden="true" tabindex="-1"></a>
+
+    <c-sab-drawer open={drillOpen} heading={drillTitle} subheading="Posted journal lines behind this figure" onclose={handleCloseDrill}>
+        <template lwc:if={drillError}><div class="banner t-bad">{drillError}</div></template>
+        <template lwc:elseif={hasDrillLines}>
+            <div class="tbl-wrap"><table class="tbl sab-drill">
+                <thead><tr><th>Date</th><th>Journal</th><th>Description</th><th class="n">Debit</th><th class="n">Credit</th></tr></thead>
+                <tbody><template for:each={drillLines} for:item="l"><tr key={l.journalLineId}><td>{l.dateText}</td>
+                    <td><template lwc:if={canOpenJournal}><button class="linkish sab-drill-journal" type="button" data-id={l.journalId} onclick={handleOpenJournal}>{l.journalName}</button></template>
+                        <template lwc:else><span class="id">{l.journalName}</span></template><div class="small muted">{l.account}</div></td>
+                    <td class="small">{l.explanation}</td><td class="n num">{l.debitText}</td><td class="n num">{l.creditText}</td></tr></template></tbody>
+            </table></div>
+        </template>
+        <template lwc:else><p class="muted small">Loading journal lines</p></template>
+    </c-sab-drawer>
+</template>

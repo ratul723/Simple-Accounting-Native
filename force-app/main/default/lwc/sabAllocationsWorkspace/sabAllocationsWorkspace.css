@@ -1,0 +1,63 @@
+@import 'c/sabStyles';
+
+.gap {
+    margin-bottom: 16px;
+}
+
+.facts {
+    margin: 4px 0 18px;
+}
+
+.section {
+    font-size: 14px;
+    margin: 16px 0 8px;
+}
+
+.tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.wide {
+    grid-column: 1 / -1;
+}
+
+.multi {
+    min-height: 110px;
+}
+
+td.amt {
+    width: 110px;
+}
+
+.add-line {
+    margin-top: 10px;
+}
+
+.linkish {
+    background: none;
+    border: 0;
+    padding: 0;
+    font: inherit;
+    font-weight: 600;
+    color: var(--accent);
+    cursor: pointer;
+}
+
+.form {
+    gap: 12px 14px;
+}
+
+.form-error {
+    margin-bottom: 14px;
+}
+
+tr.click:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: -2px;
+}
+
+.row.center {
+    justify-content: center;
+}

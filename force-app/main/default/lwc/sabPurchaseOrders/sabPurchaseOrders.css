@@ -1,0 +1,52 @@
+@import 'c/sabStyles';
+
+.steps {
+    margin-bottom: 14px;
+}
+
+.section {
+    font-size: 14px;
+    margin: 18px 0 8px;
+}
+
+.act {
+    text-align: right;
+    white-space: nowrap;
+}
+
+.act .btn + .btn {
+    margin-left: 6px;
+}
+
+.lines {
+    margin-top: 14px;
+}
+
+td.qty {
+    width: 90px;
+}
+
+td.amt {
+    width: 120px;
+}
+
+.add-line {
+    margin-top: 10px;
+}
+
+.gap {
+    margin-bottom: 12px;
+}
+
+.form {
+    gap: 12px 14px;
+}
+
+.form-error {
+    margin-bottom: 14px;
+}
+
+tr.click:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: -2px;
+}

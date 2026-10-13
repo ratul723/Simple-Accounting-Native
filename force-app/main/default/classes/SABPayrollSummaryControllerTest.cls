@@ -58,7 +58,7 @@ private class SABPayrollSummaryControllerTest {
             Test.stopTest();
         }
         System.assertEquals('BDT', latest.currencyCode, 'Functional currency.');
-        System.assertEquals(false, latest.canViewDetail, 'The running user has no payroll detail permission.');
+        System.assertEquals(SABPermissionService.hasPermission('SAB_View_Payroll_Detail'), latest.canViewDetail, 'Detail flag follows the running user.');
         System.assertEquals(2, latest.runs.size(), 'Both runs are listed.');
         System.assertEquals('G22P-SEP', latest.runs[1].runKey, 'Newest first.');
         System.assertEquals(latest.runs[1].runId, latest.selectedRunId, 'The latest run that is not cancelled is selected.');

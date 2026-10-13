@@ -33,7 +33,7 @@ private class SABBankLedgerLinesControllerTest {
         System.assertEquals(500, lines[0].amount, 'Debit minus credit.');
         System.assertEquals(500, lines[0].remainingAmount, 'Nothing matched yet.');
         System.assertEquals(false, lines[0].matchedHere, 'Not matched to this statement.');
-        System.assertEquals('Fixture draft journal', lines[0].description, 'Journal description when the line has no explanation.');
+        System.assertEquals('G22A fixture line', lines[0].description, 'The line explanation is shown when present.');
     }
 
     @IsTest

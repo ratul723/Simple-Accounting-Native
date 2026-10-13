@@ -18,6 +18,7 @@ public with sharing class SABMoneyWorkspaceController {
     public class SalesData {
         @AuraEnabled public String currencyCode { get; set; }
         @AuraEnabled public Boolean canPost { get; set; }
+        @AuraEnabled public Boolean canApprove { get; set; }
         @AuraEnabled public Boolean agingAvailable { get; set; }
         @AuraEnabled public Decimal totalOutstanding { get; set; }
         @AuraEnabled public Decimal overdueAmount { get; set; }
@@ -125,6 +126,7 @@ public with sharing class SABMoneyWorkspaceController {
             SalesData data = new SalesData();
             data.currencyCode = currencyOf(companyId);
             data.canPost = SABPermissionService.hasPermission('SAB_Post_Journal');
+            data.canApprove = SABPermissionService.hasPermission('SAB_Approve_Financial_Document');
             data.totalOutstanding = 0;
             data.overdueAmount = 0;
             data.overdueCount = 0;

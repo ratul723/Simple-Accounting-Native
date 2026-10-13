@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>SABBankLedgerLinesControllerTest</members>
+        <members>SABFixedAssetOptionsController</members>
+        <members>SABFixedAssetOptionsControllerTest</members>
+        <members>SABPayrollPostingServiceTest</members>
+        <members>SABPayrollSummaryControllerTest</members>
+        <members>SABPayrollWorkspaceControllerTest</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>sabAppShell</members>
+        <members>sabAssetsWorkspace</members>
+        <members>sabAuditWorkspace</members>
+        <members>sabBudgetsWorkspace</members>
+        <members>sabTaxWorkspace</members>
+        <name>LightningComponentBundle</name>
+    </types>
+    <types>
+        <members>SAB_App_User</members>
+        <name>PermissionSet</name>
+    </types>
+    <version>67.0</version>
+</Package>

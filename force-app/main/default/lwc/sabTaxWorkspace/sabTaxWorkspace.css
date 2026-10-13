@@ -1,0 +1,46 @@
+@import 'c/sabStyles';
+
+.gap {
+    margin-bottom: 16px;
+}
+
+.gap-sm {
+    margin-bottom: 12px;
+}
+
+.steps {
+    margin-bottom: 16px;
+}
+
+.payable {
+    font-size: 34px;
+}
+
+td.amt {
+    width: 130px;
+}
+
+tr.sel {
+    background: var(--accent-soft);
+}
+
+tr.click:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: -2px;
+}
+
+.wide {
+    grid-column: 1 / -1;
+}
+
+.form {
+    gap: 12px 14px;
+}
+
+.form-error {
+    margin-bottom: 14px;
+}
+
+.row.center {
+    justify-content: center;
+}

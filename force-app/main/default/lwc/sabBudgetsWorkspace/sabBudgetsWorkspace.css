@@ -1,0 +1,43 @@
+@import 'c/sabStyles';
+
+.picker {
+    margin-bottom: 16px;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.picker .sab-year {
+    width: auto;
+}
+
+.dept {
+    gap: 6px;
+}
+
+.dept .select {
+    width: auto;
+}
+
+.gap {
+    margin-bottom: 16px;
+}
+
+td.amt {
+    width: 130px;
+}
+
+.add-line {
+    margin-top: 10px;
+}
+
+.form {
+    gap: 12px 14px;
+}
+
+.form-error {
+    margin-bottom: 14px;
+}
+
+.row.center {
+    justify-content: center;
+}
