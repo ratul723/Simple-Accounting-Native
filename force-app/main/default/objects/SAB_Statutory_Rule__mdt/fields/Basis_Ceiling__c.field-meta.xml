@@ -6,8 +6,8 @@
     <fieldManageability>SubscriberControlled</fieldManageability>
     <label>Basis Ceiling</label>
     <precision>18</precision>
-    <scale>4</scale>
     <required>false</required>
+    <scale>4</scale>
     <type>Number</type>
     <unique>false</unique>
 </CustomField>

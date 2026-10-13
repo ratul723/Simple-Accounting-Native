@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
     <description>Allows a finance user to create, read and reverse Payment Allocation records. Use together with the normal SAB finance/company-access permission sets.</description>
-    <hasActivationRequired>false</hasActivationRequired>
-    <label>SAB Payment Allocation User</label>
     <fieldPermissions>
         <editable>true</editable>
         <field>Payment_Allocation__c.Allocated_Amount__c</field>
@@ -68,6 +66,8 @@
         <field>Payment_Allocation__c.Transaction_Currency__c</field>
         <readable>true</readable>
     </fieldPermissions>
+    <hasActivationRequired>false</hasActivationRequired>
+    <label>SAB Payment Allocation User</label>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>false</allowDelete>

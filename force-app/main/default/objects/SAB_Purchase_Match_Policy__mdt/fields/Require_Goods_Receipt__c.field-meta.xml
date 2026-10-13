@@ -3,7 +3,6 @@
     <fullName>Require_Goods_Receipt__c</fullName>
     <defaultValue>true</defaultValue>
     <description>Three-way match: billed quantity cannot exceed received quantity.</description>
-    <externalId>false</externalId>
     <fieldManageability>SubscriberControlled</fieldManageability>
     <label>Require Goods Receipt</label>
     <type>Checkbox</type>

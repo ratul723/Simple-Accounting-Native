@@ -8,5 +8,7 @@
     <relationshipLabel>Companies Using Unrealized FX Gain Account</relationshipLabel>
     <relationshipName>Companies_Unrealized_FX_Gain</relationshipName>
     <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
     <type>Lookup</type>
 </CustomField>

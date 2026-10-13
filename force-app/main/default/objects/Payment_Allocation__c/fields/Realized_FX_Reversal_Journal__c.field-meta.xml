@@ -7,5 +7,7 @@
     <referenceTo>Journal_Entry__c</referenceTo>
     <relationshipLabel>Realized FX Reversal Allocations</relationshipLabel>
     <relationshipName>Realized_FX_Reversal_Allocations</relationshipName>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
     <type>Lookup</type>
 </CustomField>

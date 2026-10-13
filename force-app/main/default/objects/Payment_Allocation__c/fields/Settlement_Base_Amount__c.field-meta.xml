@@ -2,8 +2,12 @@
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Settlement_Base_Amount__c</fullName>
     <description>Functional-currency amount of the allocated payment portion at the settlement exchange rate.</description>
+    <externalId>false</externalId>
     <label>Settlement Base Amount</label>
     <precision>18</precision>
+    <required>false</required>
     <scale>4</scale>
+    <trackTrending>false</trackTrending>
     <type>Number</type>
+    <unique>false</unique>
 </CustomField>

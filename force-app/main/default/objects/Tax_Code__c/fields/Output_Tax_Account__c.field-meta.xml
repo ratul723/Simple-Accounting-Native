@@ -7,5 +7,8 @@
     <referenceTo>GL_Account__c</referenceTo>
     <relationshipLabel>Tax Codes - Output Tax Account</relationshipLabel>
     <relationshipName>Tax_Code_Output_Tax_Account</relationshipName>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
     <type>Lookup</type>
 </CustomField>

@@ -1,0 +1,68 @@
+@import 'c/sabStyles';
+
+.run-card {
+    margin-bottom: 16px;
+}
+
+.run-head {
+    margin-bottom: 14px;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.sab-run {
+    max-width: 340px;
+}
+
+.gap {
+    margin-bottom: 16px;
+}
+
+.lower {
+    margin-top: 16px;
+}
+
+.panel-h .btn + .btn {
+    margin-left: 6px;
+}
+
+.act {
+    text-align: right;
+    white-space: nowrap;
+}
+
+.act .btn + .btn {
+    margin-left: 6px;
+}
+
+.share {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    min-width: 120px;
+}
+
+.share .meter {
+    flex: 1;
+}
+
+.pay-actions {
+    margin-top: 14px;
+    gap: 8px;
+}
+
+.return-date {
+    margin-bottom: 12px;
+}
+
+.form {
+    gap: 12px 14px;
+}
+
+.form-error {
+    margin-bottom: 14px;
+}
+
+.row.center {
+    justify-content: center;
+}

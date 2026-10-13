@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
+<?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Expense_Claim__c</fullName>
     <deleteConstraint>Restrict</deleteConstraint>
@@ -8,5 +8,7 @@
     <relationshipLabel>Claim Settlement Expense Claim</relationshipLabel>
     <relationshipName>Claim_Settlement_Expense_Claim</relationshipName>
     <required>true</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
     <type>Lookup</type>
 </CustomField>

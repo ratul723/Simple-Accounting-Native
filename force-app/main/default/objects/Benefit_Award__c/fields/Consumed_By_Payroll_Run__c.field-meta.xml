@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
+<?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Consumed_By_Payroll_Run__c</fullName>
     <deleteConstraint>SetNull</deleteConstraint>
@@ -7,5 +7,9 @@
     <referenceTo>Payroll_Run__c</referenceTo>
     <relationshipLabel>Benefit Award Consumed By Payroll Run</relationshipLabel>
     <relationshipName>Benefit_Award_Consumed_By_Payroll_Run</relationshipName>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
     <type>Lookup</type>
 </CustomField>

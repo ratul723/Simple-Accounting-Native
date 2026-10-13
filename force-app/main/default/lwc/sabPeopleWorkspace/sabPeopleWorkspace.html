@@ -1,0 +1,246 @@
+<template>
+    <c-sab-workspace-header company-name={companyName} group="People & assets" heading="People & payroll"
+        description="Employees, pay components, incentives and allowances, payroll runs, posting and settlement.">
+        <div slot="actions" class="seg sab-views" role="group" aria-label="Payroll view">
+            <template for:each={viewButtons} for:item="v">
+                <button key={v.id} class={v.className} type="button" aria-pressed={v.pressed} data-id={v.id} onclick={handleView}>{v.label}</button>
+            </template>
+        </div>
+    </c-sab-workspace-header>
+
+    <template lwc:if={errorMessage}>
+        <section class="panel"><div class="empty"><div class="ill"><c-sab-icon name="alert" size="30"></c-sab-icon></div>
+            <h3>Payroll could not be loaded</h3><p>{errorMessage}</p>
+            <div class="row center"><button class="btn primary" type="button" onclick={handleRetry}>Try again</button></div></div></section>
+    </template>
+    <template lwc:elseif={showLoading}>
+        <section class="panel"><div class="panel-b muted" role="status">Loading payroll</div></section>
+    </template>
+    <template lwc:elseif={summary}>
+        <template lwc:if={hasRun}>
+            <section class="panel run-card">
+                <div class="panel-b">
+                    <div class="row run-head">
+                        <div><div class="strong">{runCard.title}</div><div class="small muted">{runCard.sub}</div></div>
+                        <span class="spacer"></span>
+                        <select class="select sab-run" aria-label="Payroll run" onchange={handleRun}>
+                            <template for:each={runOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template>
+                        </select>
+                        <span class={runCard.chip}><span class="dot"></span>{run.state}</span>
+                        <button class="btn sm sab-new-run" type="button" disabled={newRunDisabled} title={newRunTitle} onclick={handleNewRun}>
+                            <c-sab-icon name="plus" size="14"></c-sab-icon>New run</button>
+                    </div>
+                    <template lwc:if={runCard.cancelled}>
+                        <div class="banner t-neutral"><c-sab-icon name="info"></c-sab-icon><div>This run is cancelled.</div></div>
+                    </template>
+                    <template lwc:else>
+                        <div class="hsteps">
+                            <template for:each={runCard.steps} for:item="s">
+                                <div key={s.key} class={s.className}><span class="n"><template lwc:if={s.done}><c-sab-icon name="check" size="12"></c-sab-icon></template>
+                                    <template lwc:else>{s.number}</template></span>{s.label}</div>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+            </section>
+
+            <div class="figs">
+                <template for:each={figures} for:item="f">
+                    <div key={f.key} class="fig"><div class="l">{f.label}</div><div class="v">{f.value}<template lwc:if={f.hasUnit}><small>{f.unit}</small></template></div>
+                        <div class="s">{f.sub}</div></div>
+                </template>
+            </div>
+
+            <template lwc:if={restrictedBanner}>
+                <div class="banner t-info gap"><c-sab-icon name="lock"></c-sab-icon><div><b>Payroll detail is restricted</b>
+                    <div class="small">{personaLabel} users do not have the View Payroll Detail permission. Totals are shown.</div></div></div>
+            </template>
+            <template lwc:if={isDirector}>
+                <div class="banner t-info gap"><c-sab-icon name="info"></c-sab-icon><div><b>Directors see aggregate payroll cost</b>
+                    <div class="small">Individual salaries are hidden by default. Ask HR for an exception if you need employee-level detail.</div></div></div>
+            </template>
+
+            <template lwc:if={isPrep}>
+                <section class="panel sab-lines">
+                    <div class="panel-h"><div><h2>Employee lines</h2><div class="sub">Components come from approved employee pay components and benefit awards</div></div>
+                        <span class="spacer"></span>
+                        <template lwc:if={prepActions.showCalculate}><button class="btn sm sab-calculate" type="button" disabled={prepActions.calculateDisabled}
+                            title={prepActions.calculateTitle} onclick={handleCalculate}>{prepActions.calculateLabel}</button></template>
+                        <template lwc:if={prepActions.showSubmit}><button class="btn sm primary sab-submit" type="button" disabled={prepActions.submitDisabled}
+                            title={prepActions.submitTitle} onclick={handleSubmit}>Submit for approval</button></template>
+                        <template lwc:if={prepActions.showApprove}><button class="btn sm primary sab-approve" type="button" disabled={prepActions.approveDisabled}
+                            title={prepActions.approveTitle} onclick={handleApprove}>Approve</button></template>
+                        <template lwc:if={prepActions.showCancel}><button class="btn sm ghost sab-cancel-run" type="button" disabled={prepActions.cancelDisabled}
+                            title={prepActions.cancelTitle} onclick={handleCancelRun}>Cancel run</button></template>
+                    </div>
+                    <div class="panel-b flush">
+                        <template lwc:if={hasLines}>
+                            <div class="tbl-wrap"><table class="tbl">
+                                <thead><tr><th>Employee</th><th class="n">Gross</th><th class="n">Deductions</th><th class="n">Employer</th><th class="n">Net</th></tr></thead>
+                                <tbody><template for:each={lineRows} for:item="l"><tr key={l.lineId}><td><span class="strong">{l.employeeReference}</span></td>
+                                    <td class="n num">{l.grossText}</td><td class="n num">{l.deductionText}</td><td class="n num">{l.employerText}</td><td class="n num">{l.netText}</td></tr></template></tbody>
+                                <tfoot><tr><td>Total</td><td class="n num">{lineTotals.gross}</td><td class="n num">{lineTotals.deduction}</td><td class="n num">{lineTotals.employer}</td><td class="n num">{lineTotals.net}</td></tr></tfoot>
+                            </table></div>
+                        </template>
+                        <template lwc:else><div class="panel-b muted">Employee lines are hidden for your role, or the run has not been calculated yet.</div></template>
+                    </div>
+                </section>
+                <template lwc:if={detailAccess}>
+                    <div class="grid g2 lower">
+                        <section class="panel sab-awards">
+                            <div class="panel-h"><div><h2>Benefit awards</h2><div class="sub">Each award is consumed into exactly one payroll line</div></div></div>
+                            <div class="panel-b flush">
+                                <template lwc:if={hasAwards}>
+                                    <div class="tbl-wrap"><table class="tbl">
+                                        <thead><tr><th>Award</th><th>Employee</th><th>Type</th><th class="n">Amount</th><th>Status</th><th><span class="sr">Actions</span></th></tr></thead>
+                                        <tbody><template for:each={awardRows} for:item="a"><tr key={a.awardId}><td><span class="id">{a.awardKey}</span></td><td>{a.employeeReference}</td>
+                                            <td>{a.category}</td><td class="n num">{a.amountText}</td><td><span class={a.chip}><span class="dot"></span>{a.status}</span></td>
+                                            <td class="act"><template lwc:if={a.canApprove}><button class="btn sm sab-approve-award" type="button" data-id={a.awardId} disabled={busy} onclick={handleApproveAward}>Approve</button></template>
+                                                <template lwc:if={a.canCancel}><button class="btn ghost sm sab-cancel-award" type="button" data-id={a.awardId} disabled={busy} onclick={handleCancelAward}>Cancel</button></template></td></tr></template></tbody>
+                                    </table></div>
+                                </template>
+                                <template lwc:else><div class="panel-b muted">No benefit awards.</div></template>
+                            </div>
+                        </section>
+                        <section class="panel sab-assignments">
+                            <div class="panel-h"><div><h2>Pay components waiting for approval</h2></div></div>
+                            <div class="panel-b flush">
+                                <template lwc:if={hasAssignments}>
+                                    <div class="tbl-wrap"><table class="tbl">
+                                        <thead><tr><th>Employee</th><th>Component</th><th class="n">Amount</th><th>From</th><th><span class="sr">Actions</span></th></tr></thead>
+                                        <tbody><template for:each={assignmentRows} for:item="a"><tr key={a.assignmentId}><td>{a.employeeReference}</td><td>{a.componentName}<div class="small muted">{a.category}</div></td>
+                                            <td class="n num">{a.amountText}</td><td>{a.fromText}</td>
+                                            <td class="act"><template lwc:if={a.canApprove}><button class="btn sm sab-approve-assignment" type="button" data-id={a.assignmentId} disabled={busy} onclick={handleApproveAssignment}>Approve</button></template></td></tr></template></tbody>
+                                    </table></div>
+                                </template>
+                                <template lwc:else><div class="panel-b muted">Nothing waiting for approval.</div></template>
+                            </div>
+                        </section>
+                    </div>
+                </template>
+            </template>
+
+            <template lwc:elseif={isPost}>
+                <div class="split">
+                    <section class="panel sab-journal">
+                        <div class="panel-h"><div><h2>{journalTitle}</h2><div class="sub">{journalSub}</div></div><span class="spacer"></span>
+                            <template lwc:if={canOpenJournal}><button class="btn sm sab-open-journal" type="button" onclick={handleOpenJournal}>Open journal</button></template>
+                            <template lwc:if={postAction.show}><button class="btn sm primary sab-post" type="button" disabled={postAction.disabled} title={postAction.title} onclick={handlePost}>Post payroll</button></template></div>
+                        <div class="panel-b flush">
+                            <template lwc:if={hasJournal}>
+                                <div class="tbl-wrap"><table class="tbl">
+                                    <thead><tr><th>Account</th><th class="n">Debit</th><th class="n">Credit</th></tr></thead>
+                                    <tbody><template for:each={journalRows} for:item="j"><tr key={j.key}><td><span class="id">{j.accountCode}</span> {j.accountName}</td>
+                                        <td class="n num">{j.debitText}</td><td class="n num">{j.creditText}</td></tr></template></tbody>
+                                    <tfoot><tr><td>Total</td><td class="n num">{journalTotals.debit}</td><td class="n num">{journalTotals.credit}</td></tr></tfoot>
+                                </table></div>
+                            </template>
+                            <template lwc:else><div class="panel-b muted">This run has not been posted yet.</div></template>
+                        </div>
+                    </section>
+                    <section class="panel sab-departments">
+                        <div class="panel-h"><div><h2>Cost by department</h2><div class="sub">Aggregate, visible to finance and directors</div></div></div>
+                        <div class="panel-b flush">
+                            <template lwc:if={hasDepartments}>
+                                <div class="tbl-wrap"><table class="tbl">
+                                    <thead><tr><th>Department</th><th class="n">Gross</th><th>Share</th></tr></thead>
+                                    <tbody><template for:each={departmentRows} for:item="d"><tr key={d.key}><td>{d.name}</td><td class="n num">{d.grossText}</td>
+                                        <td><div class="share"><div class="meter"><i style={d.meterStyle}></i></div><span class="small muted">{d.shareText}</span></div></td></tr></template></tbody>
+                                </table></div>
+                            </template>
+                            <template lwc:else><div class="panel-b muted">No payroll lines in this run.</div></template>
+                        </div>
+                    </section>
+                </div>
+            </template>
+
+            <template lwc:else>
+                <div class={settlementBanner.className}><c-sab-icon name={settlementBanner.icon}></c-sab-icon>
+                    <div><b>{settlementBanner.title}</b><div class="small">{settlementBanner.text}</div></div></div>
+                <div class="split lower">
+                    <section class="panel sab-settlement">
+                        <div class="panel-h"><div><h2>Settlement</h2><div class="sub">Net pay per employee and what has been paid</div></div></div>
+                        <div class="panel-b flush">
+                            <template lwc:if={hasSettlementRows}>
+                                <div class="tbl-wrap"><table class="tbl">
+                                    <thead><tr><th>Employee</th><th class="n">Net pay</th><th class="n">Paid</th><th class="n">Outstanding</th><th>Status</th><th><span class="sr">Actions</span></th></tr></thead>
+                                    <tbody><template for:each={settlementRows} for:item="l"><tr key={l.lineId}><td>{l.employeeReference}</td><td class="n num">{l.netText}</td>
+                                        <td class="n num">{l.settledText}</td><td class="n num">{l.outstandingText}</td><td><span class={l.chip}><span class="dot"></span>{l.statusText}</span></td>
+                                        <td class="act"><template lwc:if={l.canReturn}><button class="btn ghost sm sab-return" type="button" data-id={l.effectiveSettlementId} onclick={handleReturnLine}>Bank return</button></template></td></tr></template></tbody>
+                                </table></div>
+                            </template>
+                            <template lwc:else><div class="panel-b muted">Hidden for your role.</div></template>
+                        </div>
+                    </section>
+                    <section class="panel sab-payment">
+                        <div class="panel-h"><div><h2>Net pay payment</h2></div></div>
+                        <div class="panel-b">
+                            <template lwc:if={paymentView.hasPayment}>
+                                <dl class="kv"><template for:each={paymentView.facts} for:item="f"><dt key={f.key}>{f.label}</dt><dd key={f.valueKey}>{f.value}</dd></template></dl>
+                                <div class="row pay-actions">
+                                    <template lwc:if={paymentView.showAuthorize}><button class="btn primary sm sab-authorize" type="button" disabled={paymentView.authorizeDisabled}
+                                        title={paymentView.authorizeTitle} onclick={handleAuthorize}>Authorise</button></template>
+                                    <template lwc:if={paymentView.showSubmit}><button class="btn primary sm sab-release" type="button" disabled={paymentView.submitDisabled}
+                                        title={paymentView.submitTitle} onclick={handleSubmitPayment}>Release net pay</button></template>
+                                    <template lwc:if={paymentView.showResult}>
+                                        <button class="btn ghost sm sab-failed" type="button" disabled={paymentView.resultDisabled} title={paymentView.resultTitle} onclick={handleFailed}>Mark failed</button>
+                                        <button class="btn primary sm sab-succeeded" type="button" disabled={paymentView.resultDisabled} title={paymentView.resultTitle} onclick={handleSucceeded}>Mark as paid</button>
+                                    </template>
+                                </div>
+                            </template>
+                            <template lwc:elseif={paymentView.showPrepare}>
+                                <p class="small muted">No payment prepared yet.</p>
+                                <div class="row pay-actions"><button class="btn primary sm sab-prepare" type="button" disabled={paymentView.prepareDisabled}
+                                    title={paymentView.prepareTitle} onclick={handlePrepare}>Prepare payment</button></div>
+                            </template>
+                            <template lwc:else><p class="small muted">Net pay can be paid once the run is posted.</p></template>
+                        </div>
+                    </section>
+                </div>
+            </template>
+        </template>
+        <template lwc:else>
+            <section class="panel"><div class="empty"><div class="ill"><c-sab-icon name="people" size="30"></c-sab-icon></div>
+                <h3>No payroll runs yet</h3><p>Create a run for the pay period, calculate it from approved pay components, then submit it for approval.</p>
+                <div class="row center"><button class="btn primary sab-new-run" type="button" disabled={newRunDisabled} title={newRunTitle} onclick={handleNewRun}>
+                    <c-sab-icon name="plus" size="16"></c-sab-icon>New payroll run</button></div></div></section>
+        </template>
+    </template>
+
+    <c-sab-modal open={modalOpen} heading={modalHeading} subheading={modalSub} onclose={handleCloseModal}>
+        <template lwc:if={formError}><div class="banner t-bad form-error" role="alert"><c-sab-icon name="alert"></c-sab-icon><div>{formError}</div></div></template>
+        <template lwc:if={isNewModal}>
+            <div class="grid g2 form">
+                <label class="field"><span>Period start</span><input class="input" type="date" data-field="periodStart" value={form.periodStart} oninput={handleField} /></label>
+                <label class="field"><span>Period end</span><input class="input" type="date" data-field="periodEnd" value={form.periodEnd} oninput={handleField} /></label>
+            </div>
+        </template>
+        <template lwc:if={isPostModal}>
+            <div class="grid g2 form">
+                <label class="field"><span>Accounting period</span><select class="select" data-field="periodId" onchange={handleField}><option value="">Select</option>
+                    <template for:each={periodOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+                <label class="field"><span>Accounting date</span><input class="input" type="date" data-field="accountingDate" value={form.accountingDate} oninput={handleField} /></label>
+                <label class="field"><span>Payroll payable account</span><select class="select" data-field="payableAccountId" onchange={handleField}><option value="">Select</option>
+                    <template for:each={payableOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+            </div>
+        </template>
+        <template lwc:if={isPrepareModal}>
+            <div class="grid g2 form">
+                <label class="field"><span>Bank account</span><select class="select" data-field="bankAccountId" onchange={handleField}><option value="">Select</option>
+                    <template for:each={bankOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+                <label class="field"><span>Payment date</span><input class="input" type="date" data-field="paymentDate" value={form.paymentDate} oninput={handleField} /></label>
+                <label class="field"><span>Method</span><select class="select" data-field="method" onchange={handleField}>
+                    <template for:each={methodOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+                <label class="field"><span>Reference</span><input class="input" data-field="reference" value={form.reference} oninput={handleField} /></label>
+            </div>
+        </template>
+        <template lwc:if={isReasonModal}>
+            <template lwc:if={isReturnModal}>
+                <label class="field return-date"><span>Return date</span><input class="input" type="date" data-field="returnDate" value={form.returnDate} oninput={handleField} /></label>
+            </template>
+            <label class="field"><span>Reason</span><input class="input sab-reason" data-field="reason" value={form.reason} oninput={handleField} /></label>
+        </template>
+        <button slot="footer" class="btn ghost sab-modal-close" type="button" onclick={handleCloseModal}>Close</button>
+        <button slot="footer" class={saveClass} type="button" disabled={busy} onclick={handleSave}>{saveLabel}</button>
+    </c-sab-modal>
+</template>

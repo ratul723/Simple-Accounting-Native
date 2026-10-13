@@ -3,7 +3,6 @@
     <fullName>Is_Active__c</fullName>
     <defaultValue>true</defaultValue>
     <description>Only active rules are used by payroll calculation.</description>
-    <externalId>false</externalId>
     <fieldManageability>SubscriberControlled</fieldManageability>
     <label>Active</label>
     <type>Checkbox</type>

@@ -7,5 +7,7 @@
     <referenceTo>Accounting_Event__c</referenceTo>
     <relationshipLabel>Realized FX Reversal Event Allocations</relationshipLabel>
     <relationshipName>Realized_FX_Reversal_Event_Allocations</relationshipName>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
     <type>Lookup</type>
 </CustomField>

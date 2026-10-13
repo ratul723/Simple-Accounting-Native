@@ -3,5 +3,9 @@
     <fullName>Approved_At__c</fullName>
     <description>Date/time when the FX Revaluation preview was approved.</description>
     <label>Approved At</label>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
     <type>DateTime</type>
 </CustomField>

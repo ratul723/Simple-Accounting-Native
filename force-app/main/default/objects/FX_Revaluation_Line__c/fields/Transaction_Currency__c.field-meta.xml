@@ -2,8 +2,12 @@
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Transaction_Currency__c</fullName>
     <description>Foreign transaction currency of the open monetary item at the revaluation date.</description>
+    <externalId>false</externalId>
     <label>Transaction Currency</label>
     <length>3</length>
     <required>true</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
     <type>Text</type>
+    <unique>false</unique>
 </CustomField>

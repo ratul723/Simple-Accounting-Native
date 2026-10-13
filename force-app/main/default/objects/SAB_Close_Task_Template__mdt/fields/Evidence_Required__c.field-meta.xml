@@ -3,7 +3,6 @@
     <fullName>Evidence_Required__c</fullName>
     <defaultValue>false</defaultValue>
     <description>Completing the task needs an evidence reference.</description>
-    <externalId>false</externalId>
     <fieldManageability>SubscriberControlled</fieldManageability>
     <label>Evidence Required</label>
     <type>Checkbox</type>

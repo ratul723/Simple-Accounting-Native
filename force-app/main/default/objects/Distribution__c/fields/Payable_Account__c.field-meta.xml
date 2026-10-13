@@ -8,5 +8,7 @@
     <relationshipLabel>Distributions (Payable)</relationshipLabel>
     <relationshipName>SAB_Distribution_Payable_Account</relationshipName>
     <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
     <type>Lookup</type>
 </CustomField>

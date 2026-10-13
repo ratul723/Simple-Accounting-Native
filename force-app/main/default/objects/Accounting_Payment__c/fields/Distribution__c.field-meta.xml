@@ -8,5 +8,6 @@
     <relationshipLabel>Distribution Payments</relationshipLabel>
     <relationshipName>SAB_Distribution_Payments</relationshipName>
     <required>false</required>
+    <trackTrending>false</trackTrending>
     <type>Lookup</type>
 </CustomField>

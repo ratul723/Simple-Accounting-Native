@@ -3,6 +3,8 @@
     <fullName>Realized_FX_State__c</fullName>
     <description>System-managed realized FX processing state for the Payment Allocation.</description>
     <label>Realized FX State</label>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
     <type>Picklist</type>
     <valueSet>
         <restricted>true</restricted>

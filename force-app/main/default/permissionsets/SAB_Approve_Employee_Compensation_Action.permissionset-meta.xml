@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <customPermissions>
+        <enabled>true</enabled>
+        <name>SAB_Approve_Employee_Compensation</name>
+    </customPermissions>
     <description>G10A action permission for approving compensation assignments and benefit awards.</description>
     <hasActivationRequired>false</hasActivationRequired>
     <label>SAB Approve Employee Compensation Action</label>
-    <customPermissions><enabled>true</enabled><name>SAB_Approve_Employee_Compensation</name></customPermissions>
 </PermissionSet>

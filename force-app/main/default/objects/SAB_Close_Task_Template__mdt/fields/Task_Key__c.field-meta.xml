@@ -6,7 +6,7 @@
     <fieldManageability>SubscriberControlled</fieldManageability>
     <label>Task Key</label>
     <length>80</length>
-    <unique>false</unique>
     <required>true</required>
     <type>Text</type>
+    <unique>false</unique>
 </CustomField>

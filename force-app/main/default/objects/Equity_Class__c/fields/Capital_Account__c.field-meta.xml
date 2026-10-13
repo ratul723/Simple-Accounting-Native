@@ -8,5 +8,7 @@
     <relationshipLabel>Equity Classes (Capital)</relationshipLabel>
     <relationshipName>SAB_Equity_Class_Capital_Account</relationshipName>
     <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
     <type>Lookup</type>
 </CustomField>

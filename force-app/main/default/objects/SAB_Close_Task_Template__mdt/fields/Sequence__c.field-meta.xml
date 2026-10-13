@@ -6,8 +6,8 @@
     <fieldManageability>SubscriberControlled</fieldManageability>
     <label>Sequence</label>
     <precision>4</precision>
-    <scale>0</scale>
-    <unique>false</unique>
     <required>true</required>
+    <scale>0</scale>
     <type>Number</type>
+    <unique>false</unique>
 </CustomField>

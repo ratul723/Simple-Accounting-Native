@@ -3,5 +3,7 @@
     <fullName>Realized_FX_Reversed_At__c</fullName>
     <description>Date/time when the realized FX settlement result was reversed.</description>
     <label>Realized FX Reversed At</label>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
     <type>DateTime</type>
 </CustomField>

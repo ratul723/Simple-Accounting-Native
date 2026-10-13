@@ -7,5 +7,7 @@
     <referenceTo>Exchange_Rate__c</referenceTo>
     <relationshipLabel>Accounting Payments Using Exchange Rate</relationshipLabel>
     <relationshipName>Accounting_Payments_Using_Exchange_Rate</relationshipName>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
     <type>Lookup</type>
 </CustomField>

@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
+<?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Approval_Request__c</fullName>
     <deleteConstraint>SetNull</deleteConstraint>
@@ -7,5 +7,8 @@
     <referenceTo>Approval_Request__c</referenceTo>
     <relationshipLabel>Expense Claim Approval Request</relationshipLabel>
     <relationshipName>Expense_Claim_Approval_Request</relationshipName>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
     <type>Lookup</type>
 </CustomField>

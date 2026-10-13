@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomTab xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Created by Lightning App Builder</description>
+    <flexiPage>Simple_Accounting_Workspace1</flexiPage>
+    <label>Simple Accounting Workspace</label>
+    <motif>Custom51: Apple</motif>
+</CustomTab>

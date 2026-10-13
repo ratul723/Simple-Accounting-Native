@@ -4,13 +4,23 @@
     <description>G16: Annuity = level instalments; Equal Principal = equal principal plus interest on the balance.</description>
     <label>Schedule Method</label>
     <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
     <type>Picklist</type>
     <valueSet>
         <restricted>true</restricted>
         <valueSetDefinition>
             <sorted>false</sorted>
-            <value><fullName>Annuity</fullName><default>true</default><label>Annuity</label></value>
-            <value><fullName>Equal Principal</fullName><default>false</default><label>Equal Principal</label></value>
+            <value>
+                <fullName>Annuity</fullName>
+                <default>true</default>
+                <label>Annuity</label>
+            </value>
+            <value>
+                <fullName>Equal Principal</fullName>
+                <default>false</default>
+                <label>Equal Principal</label>
+            </value>
         </valueSetDefinition>
     </valueSet>
 </CustomField>

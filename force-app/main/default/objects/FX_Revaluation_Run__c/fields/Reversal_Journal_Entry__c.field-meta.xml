@@ -7,5 +7,9 @@
     <referenceTo>Journal_Entry__c</referenceTo>
     <relationshipLabel>FX Revaluation Reversal Runs</relationshipLabel>
     <relationshipName>FX_Revaluation_Reversal_Runs</relationshipName>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
     <type>Lookup</type>
 </CustomField>

@@ -8,5 +8,7 @@
     <relationshipLabel>Purchase Orders Approved</relationshipLabel>
     <relationshipName>SAB_PO_Approved_By</relationshipName>
     <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
     <type>Lookup</type>
 </CustomField>

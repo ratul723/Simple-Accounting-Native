@@ -8,5 +8,6 @@
     <relationshipLabel>Payroll Payments</relationshipLabel>
     <relationshipName>SAB_Payroll_Payments</relationshipName>
     <required>false</required>
+    <trackTrending>false</trackTrending>
     <type>Lookup</type>
 </CustomField>

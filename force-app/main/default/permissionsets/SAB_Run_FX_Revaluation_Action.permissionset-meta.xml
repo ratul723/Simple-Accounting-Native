@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
-    <description>Protected action permission for G7A FX Revaluation preview.</description>
-    <hasActivationRequired>false</hasActivationRequired>
-    <label>SAB Run FX Revaluation Action</label>
     <classAccesses>
         <apexClass>SABFXRevaluationPreviewService</apexClass>
         <enabled>true</enabled>
@@ -11,4 +8,7 @@
         <enabled>true</enabled>
         <name>SAB_Run_FX_Revaluation</name>
     </customPermissions>
+    <description>Protected action permission for G7A FX Revaluation preview.</description>
+    <hasActivationRequired>false</hasActivationRequired>
+    <label>SAB Run FX Revaluation Action</label>
 </PermissionSet>

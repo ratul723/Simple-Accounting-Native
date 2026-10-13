@@ -7,5 +7,8 @@
     <referenceTo>Tax_Rate__c</referenceTo>
     <relationshipLabel>Expense Claim Lines - Tax Rate</relationshipLabel>
     <relationshipName>Expense_Claim_Line_Tax_Rate</relationshipName>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
     <type>Lookup</type>
 </CustomField>

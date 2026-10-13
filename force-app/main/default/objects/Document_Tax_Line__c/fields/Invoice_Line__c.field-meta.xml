@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
+<?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Invoice_Line__c</fullName>
     <deleteConstraint>SetNull</deleteConstraint>
@@ -7,5 +7,8 @@
     <referenceTo>Invoice_Line__c</referenceTo>
     <relationshipLabel>Document Tax Line Invoice Line</relationshipLabel>
     <relationshipName>Document_Tax_Line_Invoice_Line</relationshipName>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
     <type>Lookup</type>
 </CustomField>

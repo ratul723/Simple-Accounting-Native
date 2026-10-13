@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
-    <description>Allows access to the SAB Bank Reconciliation Workspace controller and Bank Detail view. Import, matching and finalization actions remain protected by separate action permission sets.</description>
-    <hasActivationRequired>false</hasActivationRequired>
-    <label>SAB Bank Reconciliation Workspace User</label>
     <classAccesses>
         <apexClass>SABBankReconciliationWorkspaceController</apexClass>
         <enabled>true</enabled>
@@ -11,4 +8,7 @@
         <enabled>true</enabled>
         <name>SAB_View_Bank_Detail</name>
     </customPermissions>
+    <description>Allows access to the SAB Bank Reconciliation Workspace controller and Bank Detail view. Import, matching and finalization actions remain protected by separate action permission sets.</description>
+    <hasActivationRequired>false</hasActivationRequired>
+    <label>SAB Bank Reconciliation Workspace User</label>
 </PermissionSet>

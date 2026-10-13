@@ -8,5 +8,7 @@
     <relationshipLabel>FX Revaluation Lines - Source GL Account</relationshipLabel>
     <relationshipName>FX_Revaluation_Line_Source_GL_Account</relationshipName>
     <required>true</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
     <type>Lookup</type>
 </CustomField>

@@ -3,5 +3,9 @@
     <fullName>Posted_At__c</fullName>
     <description>Date/time when the FX Revaluation journal was posted.</description>
     <label>Posted At</label>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
     <type>DateTime</type>
 </CustomField>

@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
-    <description>G6D protected Tax Return lifecycle action.</description>
-    <hasActivationRequired>false</hasActivationRequired>
-    <label>SAB Review Tax Return Action</label>
     <classAccesses>
         <apexClass>SABTaxReturnLifecycleService</apexClass>
         <enabled>true</enabled>
@@ -11,4 +8,7 @@
         <enabled>true</enabled>
         <name>SAB_Review_Tax_Return</name>
     </customPermissions>
+    <description>G6D protected Tax Return lifecycle action.</description>
+    <hasActivationRequired>false</hasActivationRequired>
+    <label>SAB Review Tax Return Action</label>
 </PermissionSet>

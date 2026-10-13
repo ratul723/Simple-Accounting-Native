@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
-    <description>Allows controlled Fixed Asset registration. Later asset lifecycle permissions remain separate.</description>
-    <hasActivationRequired>false</hasActivationRequired>
-    <label>SAB Fixed Asset Manager</label>
     <classAccesses>
         <apexClass>SABFixedAssetRegisterService</apexClass>
         <enabled>true</enabled>
@@ -11,4 +8,7 @@
         <enabled>true</enabled>
         <name>SAB_Manage_Fixed_Assets</name>
     </customPermissions>
+    <description>Allows controlled Fixed Asset registration. Later asset lifecycle permissions remain separate.</description>
+    <hasActivationRequired>false</hasActivationRequired>
+    <label>SAB Fixed Asset Manager</label>
 </PermissionSet>

@@ -1,23 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ApexTestSuite xmlns="http://soap.sforce.com/2006/04/metadata">
-    <testClassName>SABSecurityHardeningTest</testClassName>
-    <testClassName>SABCompanyAccessServiceTest</testClassName>
-    <testClassName>SABCompanySharingServiceTest</testClassName>
-    <testClassName>SABCompanyRecordSharingServiceTest</testClassName>
-    <testClassName>SABCompanyRecordSharingOwnerGuardTest</testClassName>
-    <testClassName>SABCompanySharingReconciliationBatchTest</testClassName>
     <testClassName>SABAccessControlServiceTest</testClassName>
-    <testClassName>SABCrossCompanyGuardServiceTest</testClassName>
     <testClassName>SABAccountingEventServiceTest</testClassName>
+    <testClassName>SABCompanyAccessServiceTest</testClassName>
+    <testClassName>SABCompanyRecordSharingOwnerGuardTest</testClassName>
+    <testClassName>SABCompanyRecordSharingServiceTest</testClassName>
+    <testClassName>SABCompanySetupServiceTest</testClassName>
+    <testClassName>SABCompanySharingReconciliationBatchTest</testClassName>
+    <testClassName>SABCompanySharingServiceTest</testClassName>
+    <testClassName>SABConfigProtectionServiceTest</testClassName>
+    <testClassName>SABCrossCompanyGuardServiceTest</testClassName>
+    <testClassName>SABCurrencyGuardServiceTest</testClassName>
+    <testClassName>SABExchangeRateServiceTest</testClassName>
+    <testClassName>SABJournalImmutabilityServiceTest</testClassName>
     <testClassName>SABJournalValidationServiceTest</testClassName>
+    <testClassName>SABMoneyServiceTest</testClassName>
+    <testClassName>SABPeriodServiceTest</testClassName>
     <testClassName>SABPostingServiceTest</testClassName>
     <testClassName>SABReversalServiceTest</testClassName>
-    <testClassName>SABPeriodServiceTest</testClassName>
-    <testClassName>SABJournalImmutabilityServiceTest</testClassName>
-    <testClassName>SABConfigProtectionServiceTest</testClassName>
-    <testClassName>SABMoneyServiceTest</testClassName>
-    <testClassName>SABExchangeRateServiceTest</testClassName>
-    <testClassName>SABCurrencyGuardServiceTest</testClassName>
+    <testClassName>SABSecurityHardeningTest</testClassName>
     <testClassName>SABSequenceServiceTest</testClassName>
-    <testClassName>SABCompanySetupServiceTest</testClassName>
 </ApexTestSuite>

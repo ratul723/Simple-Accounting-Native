@@ -2,9 +2,13 @@
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Outstanding_Amount__c</fullName>
     <description>Outstanding source amount in transaction currency at the revaluation date.</description>
+    <externalId>false</externalId>
     <label>Outstanding Amount</label>
     <precision>18</precision>
     <required>true</required>
     <scale>4</scale>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
     <type>Number</type>
+    <unique>false</unique>
 </CustomField>

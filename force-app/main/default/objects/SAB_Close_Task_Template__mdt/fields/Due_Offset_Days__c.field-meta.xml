@@ -6,8 +6,8 @@
     <fieldManageability>SubscriberControlled</fieldManageability>
     <label>Due Offset Days</label>
     <precision>3</precision>
-    <scale>0</scale>
-    <unique>false</unique>
     <required>false</required>
+    <scale>0</scale>
     <type>Number</type>
+    <unique>false</unique>
 </CustomField>

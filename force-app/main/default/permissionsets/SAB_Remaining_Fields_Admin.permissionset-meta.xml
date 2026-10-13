@@ -1,7 +1,36 @@
-<?xml version='1.0' encoding='UTF-8'?>
-<PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata"><description>Development/admin access to remaining Simple Accounting Books metadata (Accounting Company fields and object permission excluded). Use for implementation and testing, not as the final least-privilege production role model.</description>
-    <hasActivationRequired>false</hasActivationRequired>
-    <label>SAB - Remaining Fields Admin</label>
+<?xml version="1.0" encoding="UTF-8"?>
+<PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Development/admin access to remaining Simple Accounting Books metadata (Accounting Company fields and object permission excluded). Use for implementation and testing, not as the final least-privilege production role model.</description>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Accounting_Company__c.Country_Code__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Accounting_Company__c.Country_Pack_Version__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Accounting_Company__c.Created_Setup_Version__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Accounting_Company__c.Default_Rounding_Account__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Accounting_Company__c.Is_Active__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Accounting_Company__c.Reporting_Policy__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
         <field>Accounting_Event__c.Created_Request_Key__c</field>
@@ -65,6 +94,16 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>Accounting_Payment__c.Reference__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Accounting_Period_Action__c.Performed_By__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Accounting_Period_Action__c.Reason__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -429,6 +468,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>Business_Action__c.Actor__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>Business_Action__c.Company__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -525,6 +569,11 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>Company_User_Access__c.Is_Active__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Company_User_Access__c.User__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -754,11 +803,6 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>Employee_Pay_Component__c.Status__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
         <field>Employee__c.Status__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -884,12 +928,47 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>FX_Revaluation_Run__c.Approved_At__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FX_Revaluation_Run__c.Approved_By__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FX_Revaluation_Run__c.Approved_Snapshot_Hash__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>FX_Revaluation_Run__c.Journal_Entry__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>FX_Revaluation_Run__c.Posted_At__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FX_Revaluation_Run__c.Reversal_Accounting_Event__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FX_Revaluation_Run__c.Reversal_Journal_Entry__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>FX_Revaluation_Run__c.Reversal_Policy__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FX_Revaluation_Run__c.Reversed_At__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -1818,6 +1897,11 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
+        <editable>false</editable>
+        <field>Report_Mapping__c.Row_Key__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
         <editable>true</editable>
         <field>Report_Mapping__c.Sign_Multiplier__c</field>
         <readable>true</readable>
@@ -2027,874 +2111,930 @@
         <field>Tax_Return__c.Status__c</field>
         <readable>true</readable>
     </fieldPermissions>
+    <hasActivationRequired>false</hasActivationRequired>
+    <label>SAB - Remaining Fields Admin</label>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
+        <object>Accounting_Company__c</object>
+        <viewAllFields>true</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
+    </objectPermissions>
+    <objectPermissions>
+        <allowCreate>true</allowCreate>
+        <allowDelete>true</allowDelete>
+        <allowEdit>true</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>true</modifyAllRecords>
         <object>Accounting_Event__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Accounting_Payment__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Accounting_Period_Action__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Accounting_Period__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Allocation_Rule_Line__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Allocation_Rule__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Allocation_Run__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Approval_Request__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Approval_Step__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Asset_Category__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Asset_Movement__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Asset_Schedule_Line__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Bank_Account__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Bank_Reconciliation__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Bank_Statement_Line__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Bank_Statement__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Benefit_Award__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Bill_Line__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Budget_Line__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Budget__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Business_Action__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Claim_Settlement__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Close_Task__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Company_Feature__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Company_User_Access__c</object>
+        <viewAllFields>true</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Consolidation_Adjustment__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Consolidation_Group__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Consolidation_Member__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Consolidation_Run__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Cost_Center__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Credit_Application__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Department__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Distribution_Line__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Distribution_Settlement__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Distribution__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Document_Sequence__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Document_Tax_Line__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Employee_Pay_Component__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Employee__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Employment__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Equity_Class__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Equity_Transaction__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Exchange_Rate__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Expense_Claim_Line__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Expense_Claim__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>FX_Revaluation_Line__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>FX_Revaluation_Run__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Fixed_Asset__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>GL_Account__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Goods_Receipt_Line__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Goods_Receipt__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Import_Job__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Import_Row__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Integration_Request__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Intercompany_Transaction__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Investment_Transaction__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Investment__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Invoice_Line__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Invoice__c</object>
+        <viewAllFields>true</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Journal_Entry_Line__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Journal_Entry__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Loan_Schedule_Line__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Loan__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Party_Accounting_Profile__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Pay_Component__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Payment_Allocation__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Payment_Term__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Payroll_Component_Line__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Payroll_Line__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Payroll_Run__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Payroll_Settlement__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Processing_Run__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Project__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Purchase_Order_Line__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Purchase_Order__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Reconciliation_Match__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Recurring_Schedule__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Report_Definition__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Report_Mapping__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Report_Run__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Stakeholder__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Supplier_Bill__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Tax_Code__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Tax_Rate__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Tax_Registration__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Tax_Return_Line__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>true</modifyAllRecords>
-        <viewAllFields>false</viewAllFields>
         <object>Tax_Return__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
-    </PermissionSet>
+    <tabSettings>
+        <tab>Accounting_Company__c</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
+        <tab>Accounting_Payment__c</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
+        <tab>Company_Feature__c</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
+        <tab>Company_User_Access__c</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
+        <tab>Employee_Pay_Component__c</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
+        <tab>Employment__c</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
+        <tab>FX_Revaluation_Run__c</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
+        <tab>GL_Account__c</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
+        <tab>Invoice__c</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
+        <tab>Report_Definition__c</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
+        <tab>Report_Mapping__c</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+</PermissionSet>

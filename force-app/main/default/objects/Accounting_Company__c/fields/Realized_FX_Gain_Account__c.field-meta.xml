@@ -7,5 +7,8 @@
     <referenceTo>GL_Account__c</referenceTo>
     <relationshipLabel>Companies Using Realized FX Gain Account</relationshipLabel>
     <relationshipName>Companies_Realized_FX_Gain</relationshipName>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
     <type>Lookup</type>
 </CustomField>

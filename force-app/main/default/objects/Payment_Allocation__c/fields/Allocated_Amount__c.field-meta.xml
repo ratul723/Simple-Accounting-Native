@@ -3,6 +3,8 @@
     <fullName>Allocated_Amount__c</fullName>
     <label>Allocated Amount</label>
     <precision>16</precision>
+    <required>false</required>
     <scale>2</scale>
+    <trackTrending>false</trackTrending>
     <type>Currency</type>
 </CustomField>

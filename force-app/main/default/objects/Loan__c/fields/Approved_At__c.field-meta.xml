@@ -4,5 +4,7 @@
     <description>G16: maintained by the loan service; changes only through SABLoanService.</description>
     <label>Approved At</label>
     <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
     <type>DateTime</type>
 </CustomField>

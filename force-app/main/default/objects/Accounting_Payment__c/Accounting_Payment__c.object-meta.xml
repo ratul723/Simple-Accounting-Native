@@ -156,11 +156,11 @@
     <label>Payment</label>
     <nameField>
         <displayFormat>PMT-{000000}</displayFormat>
-        <label>Payment  Name</label>
+        <label>Payment Name</label>
         <type>AutoNumber</type>
     </nameField>
     <pluralLabel>Payments</pluralLabel>
     <searchLayouts></searchLayouts>
-    <sharingModel>ReadWrite</sharingModel>
+    <sharingModel>Private</sharingModel>
     <visibility>Public</visibility>
 </CustomObject>
