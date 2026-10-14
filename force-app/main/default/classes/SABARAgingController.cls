@@ -74,7 +74,7 @@ public with sharing class SABARAgingController {
         @AuraEnabled public List<CustomerSummaryDTO> customers { get; set; }
     }
 
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled
     public static List<CustomerOptionDTO> getCustomers(
         Id companyId
     ) {

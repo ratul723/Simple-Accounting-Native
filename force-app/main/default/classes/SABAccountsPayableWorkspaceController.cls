@@ -89,7 +89,7 @@ public with sharing class SABAccountsPayableWorkspaceController {
         @AuraEnabled public String bankAccountName { get; set; }
     }
 
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled
     public static WorkspaceDTO getWorkspace(
         Id companyId,
         Date asOfDate,

@@ -5,6 +5,7 @@ import saveInvoice from '@salesforce/apex/SABDocumentEntryService.saveInvoice';
 import saveBill from '@salesforce/apex/SABDocumentEntryService.saveBill';
 import savePayment from '@salesforce/apex/SABDocumentEntryService.savePayment';
 import saveExpenseClaim from '@salesforce/apex/SABDocumentEntryService.saveExpenseClaim';
+import saveParty from '@salesforce/apex/SABSetupActionService.saveParty';
 import { formatNumber } from 'c/sabFormat';
 import { reduceError, newKey, todayIso, toast } from 'c/sabMoneyShared';
 
@@ -20,7 +21,7 @@ const KINDS = {
 
 let lineSequence = 0;
 const blankLine = () => ({ key: `d${++lineSequence}`, description: '', quantity: '1', unitPrice: '', discount: '', amount: '', accountId: '', taxCodeId: '', departmentId: '',
-    costCenterId: '', category: '', expenseDate: '' });
+    costCenterId: '', projectId: '', category: '', expenseDate: '' });
 
 function addDays(iso, days) {
     const d = new Date(`${iso}T00:00:00`);
@@ -45,6 +46,10 @@ export default class SabDocumentEditor extends LightningElement {
     saving = false;
     requestKey;
     loadedType;
+    partyFormOpen = false;
+    newPartyName = '';
+    partyError;
+    partySaving = false;
     isOpen = false;
 
     @api
@@ -66,6 +71,7 @@ export default class SabDocumentEditor extends LightningElement {
 
     async start() {
         this.formError = undefined;
+        this.partyFormOpen = false;
         this.loadedType = undefined;
         this.loading = true;
         this.requestKey = newKey(`DOC-${this.kind}`, this.recordId);
@@ -105,7 +111,7 @@ export default class SabDocumentEditor extends LightningElement {
             const c = view.claim;
             this.form = { employmentId: str(c.employmentId), documentDate: c.claimDate, currencyCode: c.currencyCode };
             this.lines = (c.lines || []).map((l) => ({ ...blankLine(), description: str(l.description), amount: str(l.amount), accountId: str(l.accountId),
-                taxCodeId: str(l.taxCodeId), departmentId: str(l.departmentId), category: str(l.category), expenseDate: str(l.expenseDate) }));
+                taxCodeId: str(l.taxCodeId), departmentId: str(l.departmentId), projectId: str(l.projectId), category: str(l.category), expenseDate: str(l.expenseDate) }));
             return;
         }
         const d = view.document;
@@ -113,7 +119,7 @@ export default class SabDocumentEditor extends LightningElement {
         this.form = { partyProfileId: str(d.partyProfileId), documentDate: d.documentDate, dueDate: d.dueDate, reference: str(d.reference),
             originalInvoiceId: str(d.originalInvoiceId), currencyCode: d.currencyCode, exchangeRate: str(d.exchangeRate) };
         this.lines = (d.lines || []).map((l) => ({ ...blankLine(), description: str(l.description), quantity: str(l.quantity), unitPrice: str(l.unitPrice), discount: str(l.discount),
-            accountId: str(l.accountId), taxCodeId: str(l.taxCodeId), departmentId: str(l.departmentId), costCenterId: str(l.costCenterId) }));
+            accountId: str(l.accountId), taxCodeId: str(l.taxCodeId), departmentId: str(l.departmentId), costCenterId: str(l.costCenterId), projectId: str(l.projectId) }));
     }
 
     // ---------- view ----------
@@ -154,6 +160,23 @@ export default class SabDocumentEditor extends LightningElement {
 
     get showDiscount() {
         return this.kind === 'invoice' || this.kind === 'credit';
+    }
+
+    get showProjects() {
+        return Boolean(this.options && (this.options.projects || []).length);
+    }
+
+    get showCostCenter() {
+        return !this.isClaim;
+    }
+
+    get noEmployees() {
+        return this.isClaim && Boolean(this.options) && !(this.options.employments || []).length;
+    }
+
+    handleOpenPeople() {
+        this.dispatchEvent(new CustomEvent('close'));
+        this.dispatchEvent(new CustomEvent('sabnavigate', { detail: { workspace: 'payroll' }, bubbles: true, composed: true }));
     }
 
     get partyLabel() {
@@ -209,7 +232,8 @@ export default class SabDocumentEditor extends LightningElement {
                 accountOptions: this.choices(o[this.config.accounts], l.accountId),
                 taxOptions: this.choices(o.taxCodes, l.taxCodeId),
                 departmentOptions: this.choices(o.departments, l.departmentId),
-                costCenterOptions: this.choices(o.costCenters, l.costCenterId)
+                costCenterOptions: this.choices(o.costCenters, l.costCenterId),
+                projectOptions: this.choices(o.projects, l.projectId)
             };
         });
     }
@@ -225,6 +249,43 @@ export default class SabDocumentEditor extends LightningElement {
 
     get saveDisabled() {
         return this.saving || this.loading || !this.options;
+    }
+
+    // ---------- new customer or supplier ----------
+
+    get newPartyLabel() {
+        return `New ${this.config.party ? this.config.party.toLowerCase() : 'party'}`;
+    }
+
+    handleTogglePartyForm() {
+        this.partyFormOpen = !this.partyFormOpen;
+        this.partyError = undefined;
+        this.newPartyName = '';
+    }
+
+    handlePartyName(event) {
+        this.newPartyName = event.target.value;
+    }
+
+    async handleSaveParty() {
+        if (this.partySaving) {
+            return;
+        }
+        const supplier = this.config.partyList === 'suppliers';
+        this.partySaving = true;
+        this.partyError = undefined;
+        try {
+            const profileId = await saveParty({ request: { companyId: this.companyId, name: this.newPartyName, isCustomer: !supplier, isSupplier: supplier },
+                requestKey: newKey('PARTY', this.companyId) });
+            this.options = await getEntryOptions({ companyId: this.companyId });
+            this.form = { ...this.form, partyProfileId: profileId };
+            this.partyFormOpen = false;
+            toast(this, `${this.newPartyName} added`);
+        } catch (error) {
+            this.partyError = reduceError(error);
+        } finally {
+            this.partySaving = false;
+        }
     }
 
     // ---------- input ----------
@@ -267,6 +328,7 @@ export default class SabDocumentEditor extends LightningElement {
         return this.lines.filter((l) => l.description || l.unitPrice || l.amount || l.accountId).map((l) => ({
             description: l.description || null, quantity: this.num(l.quantity), unitPrice: this.num(l.unitPrice), discount: this.num(l.discount), amount: this.num(l.amount),
             accountId: l.accountId || null, taxCodeId: l.taxCodeId || null, departmentId: l.departmentId || null, costCenterId: l.costCenterId || null,
+            projectId: l.projectId || null,
             category: l.category || null, expenseDate: l.expenseDate || null
         }));
     }

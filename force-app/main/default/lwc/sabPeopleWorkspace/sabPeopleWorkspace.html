@@ -8,6 +8,10 @@
         </div>
     </c-sab-workspace-header>
 
+    <template lwc:if={isStaff}>
+        <c-sab-employees company-id={companyId} persona={persona} onchanged={handleStaffChanged}></c-sab-employees>
+    </template>
+    <template lwc:else>
     <template lwc:if={errorMessage}>
         <section class="panel"><div class="empty"><div class="ill"><c-sab-icon name="alert" size="30"></c-sab-icon></div>
             <h3>Payroll could not be loaded</h3><p>{errorMessage}</p>
@@ -205,6 +209,8 @@
                 <div class="row center"><button class="btn primary sab-new-run" type="button" disabled={newRunDisabled} title={newRunTitle} onclick={handleNewRun}>
                     <c-sab-icon name="plus" size="16"></c-sab-icon>New payroll run</button></div></div></section>
         </template>
+    </template>
+
     </template>
 
     <c-sab-modal open={modalOpen} heading={modalHeading} subheading={modalSub} onclose={handleCloseModal}>

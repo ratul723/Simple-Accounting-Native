@@ -45,6 +45,8 @@ private class SABApprovalsCloseWorkspaceCtrlTest {
         System.assertEquals(1, requesterView.myRequests.size(), 'The pending request is listed.');
         System.assertEquals('Pending', requesterView.myRequests[0].status, 'Pending.');
         System.assertNotEquals(null, requesterView.myRequests[0].nextApprover, 'Next approver is named.');
+        System.assertEquals(1, approverView.pendingRequests.size(), 'The approver sees the company request too.');
+        System.assert(!approverView.pendingRequests[0].mine && !approverView.pendingRequests[0].unassigned, 'Not theirs, and assigned.');
         System.assertEquals(2, requesterView.periods.size(), 'January and February periods.');
         System.assertNotEquals(null, requesterView.currentPeriodId, 'A default period is chosen.');
     }

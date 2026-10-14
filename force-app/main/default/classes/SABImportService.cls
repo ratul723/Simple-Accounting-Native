@@ -10,6 +10,11 @@
  *   Chart of Accounts   account_code, name, account_type [, normal_balance] [, is_active]       -> GL accounts
  *   Journal Entries     journal_key, accounting_date (yyyy-mm-dd), account_code, debit, credit [, description] [, explanation]
  *   Opening Balances    same columns as Journal Entries
+ *   Customers           name [, tax_number] [, credit_limit]                                    -> account + customer profile
+ *   Suppliers           name [, tax_number]                                                     -> account + supplier profile
+ *   Budgets             budget_name, fiscal_year, period_key, account_code, amount [, department_code] [, cost_center_code]
+ *                       -> one Draft budget version per budget_name and fiscal_year, through SABBudgetService.saveDraft
+ * Party imports use the company's first active AR or AP control account and skip names that already have a profile.
  * Journal imports create Draft journals (Manual or Opening) grouped by journal_key: each must balance, fall in an Open period
  * and avoid control accounts. Posting stays with the journal workspace and its controls. Limits: 2,000 rows, 500,000 characters.
  */
@@ -24,7 +29,12 @@ public with sharing class SABImportService {
     private static final Map<String, List<String>> REQUIRED_COLUMNS = new Map<String, List<String>>{
         'Chart of Accounts' => new List<String>{'account_code', 'name', 'account_type'},
         'Journal Entries' => new List<String>{'journal_key', 'accounting_date', 'account_code', 'debit', 'credit'},
-        'Opening Balances' => new List<String>{'journal_key', 'accounting_date', 'account_code', 'debit', 'credit'}};
+        'Opening Balances' => new List<String>{'journal_key', 'accounting_date', 'account_code', 'debit', 'credit'},
+        'Customers' => new List<String>{'name'},
+        'Suppliers' => new List<String>{'name'},
+        'Budgets' => new List<String>{'budget_name', 'fiscal_year', 'period_key', 'account_code', 'amount'}};
+    private static final Map<String, String> KEY_COLUMNS = new Map<String, String>{
+        'Chart of Accounts' => 'account_code', 'Customers' => 'name', 'Suppliers' => 'name', 'Budgets' => 'budget_name'};
     private static final Set<String> ACCOUNT_TYPES = new Set<String>{'Asset', 'Liability', 'Equity', 'Revenue', 'Expense'};
 
     public class ActionResult {
@@ -47,7 +57,7 @@ public with sharing class SABImportService {
         }
         SABCompanyAccessService.assertCompanyAccess(companyId);
         if (!REQUIRED_COLUMNS.containsKey(importType)) {
-            throw new ImportException('G20 imports Chart of Accounts, Journal Entries and Opening Balances.');
+            throw new ImportException('Supported import types: ' + String.join(new List<String>(REQUIRED_COLUMNS.keySet()), ', ') + '.');
         }
         if (csvText.length() > MAX_CHARS) {
             throw new ImportException('Import files cannot exceed ' + MAX_CHARS + ' characters.');
@@ -80,7 +90,7 @@ public with sharing class SABImportService {
             }
         }
         List<Import_Row__c> rows = new List<Import_Row__c>();
-        String keyColumn = importType == 'Chart of Accounts' ? 'account_code' : 'journal_key';
+        String keyColumn = KEY_COLUMNS.containsKey(importType) ? KEY_COLUMNS.get(importType) : 'journal_key';
         for (Integer r = 1; r < table.size(); r++) {
             Map<String, String> values = new Map<String, String>();
             for (Integer c = 0; c < header.size(); c++) {
@@ -121,6 +131,91 @@ public with sharing class SABImportService {
         return result(job, false);
     }
 
+    private static void checkParties(Import_Job__c job, List<Import_Row__c> rows, Store store) {
+        Boolean customers = job.Import_Type__c == 'Customers';
+        Id control = store.controlAccount(job.Company__c, customers ? 'AR' : 'AP');
+        Set<String> existing = store.partyNames(job.Company__c, customers);
+        Map<String, Integer> inFile = new Map<String, Integer>();
+        for (Import_Row__c row : rows) {
+            String name = values(row).get('name');
+            if (String.isNotBlank(name)) {
+                String key = name.trim().toLowerCase();
+                inFile.put(key, (inFile.containsKey(key) ? inFile.get(key) : 0) + 1);
+            }
+        }
+        for (Import_Row__c row : rows) {
+            Map<String, String> v = values(row);
+            List<String> errors = new List<String>();
+            String name = v.get('name');
+            if (control == null) {
+                errors.add('add an active ' + (customers ? 'AR' : 'AP') + ' control account before importing ' + job.Import_Type__c.toLowerCase());
+            }
+            if (String.isBlank(name) || name.length() > 255) {
+                errors.add('name is required (up to 255 characters)');
+            } else if (inFile.get(name.trim().toLowerCase()) > 1) {
+                errors.add('name appears more than once in the file');
+            } else if (existing.contains(name.trim().toLowerCase())) {
+                errors.add((customers ? 'a customer' : 'a supplier') + ' with this name already exists');
+            }
+            if (customers && String.isNotBlank(v.get('credit_limit')) && (parseAmount(v.get('credit_limit')) == null || parseAmount(v.get('credit_limit')) < 0)) {
+                errors.add('credit_limit must be a positive number');
+            }
+            mark(row, errors);
+        }
+    }
+
+    private static void checkBudgets(Import_Job__c job, List<Import_Row__c> rows, Map<String, GL_Account__c> accounts, Store store) {
+        Map<String, Accounting_Period__c> periods = store.periodsByKey(job.Company__c);
+        Map<String, Id> departments = store.dimensionsByCode(job.Company__c, 'Department__c');
+        Map<String, Id> costCenters = store.dimensionsByCode(job.Company__c, 'Cost_Center__c');
+        Set<String> seen = new Set<String>();
+        for (Import_Row__c row : rows) {
+            Map<String, String> v = values(row);
+            List<String> errors = new List<String>();
+            if (String.isBlank(v.get('budget_name'))) {
+                errors.add('budget_name is required');
+            }
+            Integer year = parseYear(v.get('fiscal_year'));
+            if (year == null) {
+                errors.add('fiscal_year must be a four-digit year');
+            }
+            Accounting_Period__c period = periods.get(v.get('period_key'));
+            if (period == null) {
+                errors.add('period_key is not a period of the company');
+            } else if (year != null && period.Fiscal_Year__c != year) {
+                errors.add('period_key is not in fiscal year ' + year);
+            }
+            GL_Account__c account = accounts.get(v.get('account_code'));
+            if (account == null || account.Is_Active__c != true) {
+                errors.add('account_code is not an active account of the company');
+            }
+            Decimal amount = parseAmount(v.get('amount'));
+            if (amount == null) {
+                errors.add('amount must be a number');
+            }
+            String department = v.get('department_code');
+            if (String.isNotBlank(department) && !departments.containsKey(department)) {
+                errors.add('department_code is not a department of the company');
+            }
+            String costCenter = v.get('cost_center_code');
+            if (String.isNotBlank(costCenter) && !costCenters.containsKey(costCenter)) {
+                errors.add('cost_center_code is not a cost center of the company');
+            }
+            String key = String.join(new List<String>{ v.get('budget_name'), v.get('fiscal_year'), v.get('period_key'), v.get('account_code'),
+                department == null ? '' : department, costCenter == null ? '' : costCenter }, '|');
+            if (seen.contains(key)) {
+                errors.add('the same budget, period, account and dimensions appear more than once');
+            }
+            seen.add(key);
+            mark(row, errors);
+        }
+    }
+
+    @TestVisible
+    private static Integer parseYear(String value) {
+        return String.isNotBlank(value) && Pattern.matches('\\d{4}', value.trim()) ? Integer.valueOf(value.trim()) : null;
+    }
+
     // ---------------------------------------------------------------- commit
 
     @AuraEnabled
@@ -158,6 +253,10 @@ public with sharing class SABImportService {
         try {
             if (job.Import_Type__c == 'Chart of Accounts') {
                 commitAccounts(job, valid);
+            } else if (job.Import_Type__c == 'Customers' || job.Import_Type__c == 'Suppliers') {
+                commitParties(job, valid, store);
+            } else if (job.Import_Type__c == 'Budgets') {
+                commitBudgets(job, valid, store);
             } else {
                 commitJournals(job, valid, store);
             }
@@ -187,6 +286,10 @@ public with sharing class SABImportService {
         Map<String, GL_Account__c> accounts = store.accountsByCode(job.Company__c);
         if (job.Import_Type__c == 'Chart of Accounts') {
             checkAccounts(rows, accounts);
+        } else if (job.Import_Type__c == 'Customers' || job.Import_Type__c == 'Suppliers') {
+            checkParties(job, rows, store);
+        } else if (job.Import_Type__c == 'Budgets') {
+            checkBudgets(job, rows, accounts, store);
         } else {
             checkJournals(job, rows, accounts, store);
         }
@@ -327,6 +430,68 @@ public with sharing class SABImportService {
         }
     }
 
+    private static void commitParties(Import_Job__c job, List<Import_Row__c> valid, Store store) {
+        Boolean customers = job.Import_Type__c == 'Customers';
+        Id control = store.controlAccount(job.Company__c, customers ? 'AR' : 'AP');
+        List<Account> accounts = new List<Account>();
+        for (Import_Row__c row : valid) {
+            accounts.add(new Account(Name = values(row).get('name').trim()));
+        }
+        new Writer().insertRecords(accounts);
+        List<Party_Accounting_Profile__c> profiles = new List<Party_Accounting_Profile__c>();
+        for (Integer i = 0; i < valid.size(); i++) {
+            Map<String, String> v = values(valid[i]);
+            profiles.add(new Party_Accounting_Profile__c(Company__c = job.Company__c, Account__c = accounts[i].Id, Is_Customer__c = customers,
+                Is_Supplier__c = !customers, Is_Active__c = true, Profile_Key__c = (String.valueOf(job.Company__c) + '-' + accounts[i].Id).left(80),
+                AR_Control_Account__c = customers ? control : null, AP_Control_Account__c = customers ? null : control,
+                Tax_Registration_Number__c = String.isBlank(v.get('tax_number')) ? null : v.get('tax_number'),
+                Credit_Limit__c = customers && String.isNotBlank(v.get('credit_limit')) ? parseAmount(v.get('credit_limit')) : null));
+        }
+        new Writer().insertRecords(profiles);
+        for (Integer i = 0; i < valid.size(); i++) {
+            valid[i].Validation_Status__c = 'Committed';
+            valid[i].Committed_Record_Id__c = profiles[i].Id;
+        }
+    }
+
+    // Budget lines go through SABBudgetService.saveDraft, so its permission, period and account rules apply.
+    private static void commitBudgets(Import_Job__c job, List<Import_Row__c> valid, Store store) {
+        Map<String, Accounting_Period__c> periods = store.periodsByKey(job.Company__c);
+        Map<String, GL_Account__c> accounts = store.accountsByCode(job.Company__c);
+        Map<String, Id> departments = store.dimensionsByCode(job.Company__c, 'Department__c');
+        Map<String, Id> costCenters = store.dimensionsByCode(job.Company__c, 'Cost_Center__c');
+        Map<String, SABBudgetService.BudgetRequest> budgets = new Map<String, SABBudgetService.BudgetRequest>();
+        Map<String, List<Import_Row__c>> rowsByBudget = new Map<String, List<Import_Row__c>>();
+        for (Import_Row__c row : valid) {
+            Map<String, String> v = values(row);
+            String key = v.get('budget_name') + '|' + v.get('fiscal_year');
+            if (!budgets.containsKey(key)) {
+                SABBudgetService.BudgetRequest request = new SABBudgetService.BudgetRequest();
+                request.companyId = job.Company__c;
+                request.fiscalYear = parseYear(v.get('fiscal_year'));
+                request.name = v.get('budget_name').left(80);
+                request.lines = new List<SABBudgetService.LineRequest>();
+                budgets.put(key, request);
+                rowsByBudget.put(key, new List<Import_Row__c>());
+            }
+            SABBudgetService.LineRequest line = new SABBudgetService.LineRequest();
+            line.accountingPeriodId = periods.get(v.get('period_key')).Id;
+            line.glAccountId = accounts.get(v.get('account_code')).Id;
+            line.departmentId = String.isBlank(v.get('department_code')) ? null : departments.get(v.get('department_code'));
+            line.costCenterId = String.isBlank(v.get('cost_center_code')) ? null : costCenters.get(v.get('cost_center_code'));
+            line.amount = parseAmount(v.get('amount'));
+            budgets.get(key).lines.add(line);
+            rowsByBudget.get(key).add(row);
+        }
+        for (String key : budgets.keySet()) {
+            Id budgetId = SABBudgetService.saveDraft(budgets.get(key));
+            for (Import_Row__c row : rowsByBudget.get(key)) {
+                row.Validation_Status__c = 'Committed';
+                row.Committed_Record_Id__c = budgetId;
+            }
+        }
+    }
+
     private static void commitJournals(Import_Job__c job, List<Import_Row__c> valid, Store store) {
         Map<String, GL_Account__c> accounts = store.accountsByCode(job.Company__c);
         String currencyCode = store.functionalCurrency(job.Company__c);
@@ -446,6 +611,41 @@ public with sharing class SABImportService {
             return [SELECT Id, Row_Number__c, Parsed_Value_JSON__c, External_Key__c, Validation_Status__c, Validation_Message__c,
                 Committed_Record_Id__c FROM Import_Row__c WHERE Import_Job__c = :jobId WITH SYSTEM_MODE ORDER BY Row_Number__c LIMIT 2001];
         }
+        Id controlAccount(Id companyId, String controlType) {
+            List<GL_Account__c> rows = [SELECT Id FROM GL_Account__c WHERE Company__c = :companyId AND Is_Active__c = true AND Control_Type__c = :controlType
+                WITH SYSTEM_MODE ORDER BY Account_Code__c LIMIT 1];
+            return rows.isEmpty() ? null : rows[0].Id;
+        }
+
+        Set<String> partyNames(Id companyId, Boolean customers) {
+            Set<String> names = new Set<String>();
+            for (Party_Accounting_Profile__c p : [SELECT Account__r.Name, Is_Customer__c, Is_Supplier__c FROM Party_Accounting_Profile__c
+                    WHERE Company__c = :companyId WITH SYSTEM_MODE LIMIT 5000]) {
+                Boolean sameKind = customers ? p.Is_Customer__c == true : p.Is_Supplier__c == true;
+                if (sameKind && p.Account__r != null && p.Account__r.Name != null) {
+                    names.add(p.Account__r.Name.trim().toLowerCase());
+                }
+            }
+            return names;
+        }
+
+        Map<String, Accounting_Period__c> periodsByKey(Id companyId) {
+            Map<String, Accounting_Period__c> rows = new Map<String, Accounting_Period__c>();
+            for (Accounting_Period__c p : [SELECT Id, Period_Key__c, Fiscal_Year__c FROM Accounting_Period__c WHERE Company__c = :companyId WITH SYSTEM_MODE LIMIT 2000]) {
+                rows.put(p.Period_Key__c, p);
+            }
+            return rows;
+        }
+
+        Map<String, Id> dimensionsByCode(Id companyId, String objectName) {
+            Map<String, Id> rows = new Map<String, Id>();
+            for (SObject d : Database.queryWithBinds('SELECT Id, Code__c FROM ' + objectName + ' WHERE Company__c = :companyId LIMIT 2000',
+                    new Map<String, Object>{ 'companyId' => companyId }, AccessLevel.SYSTEM_MODE)) {
+                rows.put((String) d.get('Code__c'), d.Id);
+            }
+            return rows;
+        }
+
         Map<String, GL_Account__c> accountsByCode(Id companyId) {
             Map<String, GL_Account__c> result = new Map<String, GL_Account__c>();
             for (GL_Account__c a : [SELECT Id, Account_Code__c, Is_Active__c, Is_Control_Account__c FROM GL_Account__c WHERE Company__c = :companyId

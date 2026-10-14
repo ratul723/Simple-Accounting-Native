@@ -1,7 +1,6 @@
 <template>
     <c-sab-workspace-header company-name={companyName} group="Administration" heading="Company setup"
         description="Company profile, functional currency, fiscal calendar, periods, defaults and document numbering.">
-        <button slot="actions" class="btn validate" type="button" onclick={handleValidate}><c-sab-icon name="check" size="16"></c-sab-icon>Validate setup</button>
         <template lwc:if={showContinue}>
             <button slot="actions" class="btn primary continue" type="button" onclick={handleContinue}>Continue setup</button>
         </template>
@@ -79,7 +78,7 @@
                                         <td>{c.functionalCurrency}</td>
                                         <td><span class={c.chip}><span class="dot"></span>{c.setupStatus}</span></td>
                                         <td class="act"><template lwc:if={c.isCurrent}><span class="tag">Current</span></template>
-                                            <template lwc:else><button class="btn sm switch" type="button" data-id={c.companyId} onclick={handleSwitch}>Switch</button></template></td>
+                                            <template lwc:else><button class="btn sm sab-switch-company" type="button" data-id={c.companyId} onclick={handleSwitch}>Switch to this company</button></template></td>
                                     </tr>
                                 </template>
                             </tbody>

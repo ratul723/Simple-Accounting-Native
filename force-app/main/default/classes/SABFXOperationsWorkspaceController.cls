@@ -171,7 +171,7 @@ public with sharing class SABFXOperationsWorkspaceController {
         @AuraEnabled public List<AllocationDTO> allocations { get; set; }
     }
 
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled
     public static DashboardDTO getDashboard(
         Id companyId
     ) {
@@ -306,7 +306,7 @@ public with sharing class SABFXOperationsWorkspaceController {
         }
     }
 
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled
     public static List<SettlementTargetDTO> getEligibleSettlementTargets(
         Id paymentId
     ) {

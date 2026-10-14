@@ -208,7 +208,7 @@ describe('c-sab-approvals-workspace', () => {
         await flush();
         const root = el.shadowRoot;
         expect(root.querySelector('.inbox h3').textContent).toBe('Nothing waiting for you');
-        expect(root.querySelector('.mine .panel-b.muted').textContent).toBe('You have no pending requests in this company.');
+        expect(root.querySelector('.mine .panel-b.muted').textContent).toBe('Nothing is waiting for approval in this company.');
         const nav = jest.fn();
         el.addEventListener('sabnavigate', nav);
         root.querySelector('.open-close').click();
@@ -256,5 +256,22 @@ describe('c-sab-approvals-workspace', () => {
         el.shadowRoot.querySelector('.cancel').click();
         await flush();
         expect(el.shadowRoot.querySelector('c-sab-modal').open).toBe(false);
+    });
+
+    it('lists every pending request with its next approver', async () => {
+        getWorkspace.mockResolvedValue(workspace({ pendingRequests: [
+            { approvalRequestId: 'P1', name: 'APR-000001', sourceLabel: 'Pay component', sourceBusinessKey: 'PC-1', status: 'Pending', requestedByName: 'Priya',
+                mine: false, waitingOnMe: false, unassigned: false, nextApprover: 'Daniel Okafor' },
+            { approvalRequestId: 'P2', name: 'APR-000002', status: 'Pending', mine: true, waitingOnMe: true, unassigned: false, nextApprover: 'Alex' },
+            { approvalRequestId: 'P3', name: 'APR-000003', status: 'Pending', mine: false, waitingOnMe: false, unassigned: true }] }));
+        const el = mount();
+        await flush();
+        const rows = el.shadowRoot.querySelectorAll('.mine tbody tr');
+        expect(rows[0].textContent).toContain('Priya');
+        expect(rows[0].textContent).toContain('Daniel Okafor');
+        expect(rows[0].querySelector('.cancel-request')).toBeNull();
+        expect(rows[1].querySelector('.strong').textContent).toBe('You');
+        expect(rows[1].querySelector('.cancel-request')).not.toBeNull();
+        expect(rows[2].querySelector('.down').textContent).toBe('No approver assigned');
     });
 });

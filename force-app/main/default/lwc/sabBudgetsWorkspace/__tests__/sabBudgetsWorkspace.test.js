@@ -100,7 +100,9 @@ describe('c-sab-budgets-workspace', () => {
         root.querySelectorAll('.sab-versions button')[0].click();
         await flush();
         expect(root.querySelector('.sab-revise')).not.toBeNull();
-        const dept = root.querySelector('.sab-department');
+        root.querySelectorAll('.sab-group button')[1].click();
+        await flush();
+        const dept = root.querySelector('.sab-dimension');
         dept.value = 'D1';
         dept.dispatchEvent(new CustomEvent('change'));
         await flush();
@@ -206,5 +208,76 @@ describe('c-sab-budgets-workspace', () => {
         el3.shadowRoot.querySelector('.sab-new-budget').click();
         await flush();
         el3.shadowRoot.querySelector('.sab-modal-close').click();
+    });
+
+    it('reviews the approved version by period range and dimension for directors', async () => {
+        getWorkspace.mockResolvedValue(ws({ budgets: [{ budgetId: 'B1', name: 'FY27', fiscalYear: 2027, version: 1, status: 'Approved', currencyCode: 'AUD', lineCount: 4,
+            approvedByName: 'Daniel', approvedAt: '2026-07-02T01:00:00.000Z' }, { budgetId: 'B2', name: 'FY27', fiscalYear: 2027, version: 2, status: 'Draft' }] }));
+        const el = mount({ persona: { key: 'DIRECTOR', label: 'Director' } });
+        await flush();
+        const root = el.shadowRoot;
+        expect(getBudgetVsActual.mock.calls[0][0]).toMatchObject({ budgetId: 'B1', periodIds: null, groupBy: 'ACCOUNT' });
+        expect(root.querySelector('.sab-version-facts').textContent).toContain('Daniel');
+        expect(root.querySelector('.sab-approved-version')).toBeNull();
+        const to = root.querySelector('.sab-to');
+        to.value = 'P1';
+        to.dispatchEvent(new CustomEvent('change'));
+        await flush();
+        expect(getBudgetVsActual.mock.calls.find((c) => Array.isArray(c[0].periodIds) && c[0].periodIds.join() === 'P1')).toBeDefined();
+        root.querySelectorAll('.sab-group button')[2].click();
+        await flush();
+        expect(getBudgetVsActual.mock.calls.find((c) => c[0].groupBy === 'ACCOUNT_COST_CENTER')).toBeDefined();
+        expect(root.querySelector('.sab-dimension option:nth-child(2)').textContent).toBe('CC-1');
+        root.querySelectorAll('.sab-versions button')[1].click();
+        await flush();
+        root.querySelector('.sab-approved-version').click();
+        await flush();
+        expect(root.querySelectorAll('.sab-versions button')[0].className).toBe('on');
+    });
+
+    it('creates a budget by copying a version and spreads an annual amount', async () => {
+        getBudgetDetail.mockResolvedValue({ total: 1500, lines: [{ accountingPeriodId: 'P1', glAccountId: 'G1', amount: 1000 }, { accountingPeriodId: 'PX', glAccountId: 'G2', amount: 5 }] });
+        const el = mount();
+        await flush();
+        const root = el.shadowRoot;
+        root.querySelector('.sab-new-budget').click();
+        await flush();
+        expect(root.querySelector('c-sab-modal .ro').textContent).toBe('AUD');
+        setModal(root, 'name', 'FY27 Stretch');
+        setModal(root, 'copyFrom', 'B1');
+        setModal(root, 'adjustPercent', '10');
+        root.querySelector('.sab-modal-save').click();
+        await flush();
+        const request = saveDraft.mock.calls[0][0].request;
+        expect(request.lines).toEqual([{ accountingPeriodId: 'P1', glAccountId: 'G1', departmentId: null, costCenterId: null, amount: 1100 }]);
+        root.querySelector('.sab-edit-lines').click();
+        await flush();
+        root.querySelector('.sab-spread').click();
+        await flush();
+        root.querySelector('.sab-spread-apply').click();
+        await flush();
+        expect(root.querySelector('.form-error').textContent).toContain('annual amount');
+        const spread = root.querySelector('.spread');
+        const account = spread.querySelector('[data-field="glAccountId"]');
+        account.value = 'G2';
+        account.dispatchEvent(new CustomEvent('change'));
+        const amount = spread.querySelector('.sab-spread-amount');
+        amount.value = '1000.01';
+        amount.dispatchEvent(new CustomEvent('input'));
+        root.querySelector('.sab-spread-apply').click();
+        await flush();
+        const amounts = Array.from(root.querySelectorAll('.sab-lines [data-field="amount"]')).map((i) => i.value);
+        expect(amounts.slice(-2)).toEqual(['500', '500.01']);
+
+        getWorkspace.mockResolvedValue(ws({ periods: [{ value: 'P1', label: 'Jul 2026', fiscalYear: 2027 }] }));
+        const el2 = mount();
+        await flush();
+        el2.shadowRoot.querySelector('.sab-new-budget').click();
+        await flush();
+        setModal(el2.shadowRoot, 'fiscalYear', '2030');
+        setModal(el2.shadowRoot, 'copyFrom', 'B1');
+        el2.shadowRoot.querySelector('.sab-modal-save').click();
+        await flush();
+        expect(el2.shadowRoot.querySelector('.form-error').textContent).toContain('FY 2030 has no accounting periods');
     });
 });

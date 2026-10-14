@@ -40,7 +40,7 @@ public with sharing class SABAuditTimelineController {
         @AuraEnabled public Integer accountingEventCount { get; set; }
     }
 
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled
     public static TimelineDTO getTimeline(
         Id companyId
     ) {

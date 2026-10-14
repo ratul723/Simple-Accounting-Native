@@ -119,7 +119,7 @@ public with sharing class SABEmployeeCompensationService {
         @AuraEnabled public String reason { get; set; }
     }
 
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled
     public static List<EmploymentDTO> getEmployments(
         Id companyId,
         Boolean includeEnded
@@ -195,7 +195,7 @@ public with sharing class SABEmployeeCompensationService {
         return result;
     }
 
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled
     public static List<CompensationDTO> getCurrentCompensation(
         Id companyId,
         Date asOfDate

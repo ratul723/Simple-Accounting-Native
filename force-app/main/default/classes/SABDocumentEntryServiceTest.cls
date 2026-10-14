@@ -111,6 +111,7 @@ private class SABDocumentEntryServiceTest {
         System.assertNotEquals(null, o.myEmploymentId, 'The running user has an employment.');
         System.assert(o.canCreateInvoice && o.canCreateClaim, 'The running user can enter documents.');
         System.assert(!o.methods.isEmpty(), 'Payment methods from the picklist.');
+        System.assertNotEquals(null, o.projects, 'Projects are offered as an optional dimension.');
     }
 
     @IsTest

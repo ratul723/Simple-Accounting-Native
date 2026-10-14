@@ -23,6 +23,10 @@ jest.mock('@salesforce/apex/SABForeignCurrencySettlementService.submitForeignPay
 jest.mock('@salesforce/apex/SABForeignCurrencySettlementService.postForeignPayment', () => ({ default: jest.fn() }), { virtual: true });
 jest.mock('@salesforce/apex/SABForeignCurrencySettlementService.allocateForeignPayment', () => ({ default: jest.fn() }), { virtual: true });
 jest.mock('@salesforce/apex/SABForeignCurrencySettlementService.reverseForeignAllocation', () => ({ default: jest.fn() }), { virtual: true });
+jest.mock('@salesforce/apex/SABSetupActionService.getOptions', () => ({ default: jest.fn() }), { virtual: true });
+jest.mock('@salesforce/apex/SABSetupActionService.saveFxAccounts', () => ({ default: jest.fn() }), { virtual: true });
+import getSetupOptions from '@salesforce/apex/SABSetupActionService.getOptions';
+import saveFxAccounts from '@salesforce/apex/SABSetupActionService.saveFxAccounts';
 
 const run = (id, status, extra = {}) => ({ runId: id, name: `FXR-${id}`, runKey: `KEY-${id}`, accountingPeriodName: '2026-09', rateSetKey: 'RBA', reversalPolicy: 'First Day of Next Period',
     status, lineCount: 2, arLineCount: 1, apLineCount: 1, signedAdjustmentTotal: -120, approvedByName: 'Daniel', postedAt: '2026-09-30T02:00:00.000Z',
@@ -249,5 +253,30 @@ describe('c-sab-fx-workspace', () => {
         el3.shadowRoot.querySelector('.sab-allocate').click();
         await flush();
         expect(el3.shadowRoot.querySelector('.form-error').textContent).toBe('Payment not eligible.');
+    });
+
+    it('sets up FX gain and loss accounts from the banner', async () => {
+        getSetupOptions.mockResolvedValue({ gainAccounts: [{ value: 'G1', label: '4910 Unrealized FX gain' }], lossAccounts: [{ value: 'L1', label: '6910 FX loss' }],
+            unrealizedGainAccountId: 'G1' });
+        saveFxAccounts.mockResolvedValue('CO');
+        const el = mount();
+        await flush();
+        const root = el.shadowRoot;
+        root.querySelector('.sab-fx-setup-banner').click();
+        await flush();
+        const selects = root.querySelectorAll('c-sab-modal select');
+        expect(selects.length).toBe(4);
+        expect(selects[0].value).toBe('G1');
+        selects[3].value = 'L1';
+        selects[3].dispatchEvent(new CustomEvent('change'));
+        expect(root.querySelector('.sab-reason')).toBeNull();
+        root.querySelector('.sab-modal-save').click();
+        await flush();
+        expect(saveFxAccounts.mock.calls[0][0].request).toEqual({ companyId: 'a01000000000001AAA', unrealizedGainAccountId: 'G1', unrealizedLossAccountId: null,
+            realizedGainAccountId: null, realizedLossAccountId: 'L1', createMissing: true });
+        getSetupOptions.mockRejectedValueOnce({ body: { message: 'No access.' } });
+        root.querySelector('.sab-fx-setup').click();
+        await flush();
+        expect(root.querySelector('.form-error').textContent).toBe('No access.');
     });
 });

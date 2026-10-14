@@ -353,9 +353,14 @@ export default class SabImportsWorkspace extends LightningElement {
     }
 
     get columnsHint() {
-        return this.form.importType === 'Chart of Accounts'
-            ? 'Columns: account_code, name, account_type, optional normal_balance and is_active.'
-            : 'Columns: journal_key, accounting_date (yyyy-mm-dd), account_code, debit, credit, optional description and explanation.';
+        const hints = {
+            'Chart of Accounts': 'Columns: account_code, name, account_type, optional normal_balance and is_active.',
+            Customers: 'Columns: name, optional tax_number and credit_limit. Uses your accounts receivable control account.',
+            Suppliers: 'Columns: name, optional tax_number. Uses your accounts payable control account.',
+            Budgets: 'Columns: budget_name, fiscal_year, period_key, account_code, amount, optional department_code and cost_center_code. One draft budget per name and year.'
+        };
+        return hints[this.form.importType]
+            || 'Columns: journal_key, accounting_date (yyyy-mm-dd), account_code, debit, credit, optional description and explanation.';
     }
 
     get stageDisabled() {

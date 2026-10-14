@@ -156,7 +156,7 @@ public with sharing class SABBankReconciliationWorkspaceController {
         @AuraEnabled public String message { get; set; }
     }
 
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled
     public static DashboardDTO getDashboard(Id companyId) {
         try {
             SABPermissionService.assertPermission(
@@ -338,7 +338,7 @@ public with sharing class SABBankReconciliationWorkspaceController {
         }
     }
 
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled
     public static StatementWorkspaceDTO getStatementWorkspace(
         Id bankStatementId
     ) {
@@ -607,7 +607,7 @@ public with sharing class SABBankReconciliationWorkspaceController {
         }
     }
 
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled
     public static List<CandidateDTO> getMatchCandidates(
         Id reconciliationId,
         Id bankStatementLineId,

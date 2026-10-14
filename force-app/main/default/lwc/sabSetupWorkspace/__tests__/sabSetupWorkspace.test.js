@@ -74,7 +74,7 @@ describe('c-sab-setup-workspace', () => {
         expect(editor.open).toBe(false);
     });
 
-    it('continues setup at the first unfinished step and validates', async () => {
+    it('continues setup at the first unfinished step and rechecks readiness after every save', async () => {
         getSetupState.mockResolvedValue({ ...READY, setupStatus: 'In Progress', readyForCoreAccounting: false, openPeriodCount: 0, periodCount: 0,
             errors: ['At least one Open period is required.'] });
         const el = mount();
@@ -85,18 +85,12 @@ describe('c-sab-setup-workspace', () => {
         root.querySelector('.continue').click();
         await flush();
         expect(root.querySelector('c-sab-setup-records').kind).toBe('period');
-        const toast = jest.fn();
-        el.addEventListener('sabtoast', toast);
-        root.querySelector('.validate').click();
-        await flush();
-        expect(toast.mock.calls[0][0].detail).toEqual({ message: 'Core setup still has items to finish', tone: 'bad' });
+        expect(root.querySelector('.validate')).toBeNull();
         getSetupState.mockResolvedValue(READY);
         root.querySelector('c-sab-setup-records').dispatchEvent(new CustomEvent('saved', { detail: {} }));
         await flush();
         expect(root.querySelectorAll('.step.done').length).toBe(6);
-        root.querySelector('.validate').click();
-        await flush();
-        expect(toast.mock.calls[1][0].detail.message).toBe('Core setup checks passed');
+        expect(root.querySelector('.banner').textContent).toContain('Core accounting readiness passed');
     });
 
     it('lists periods, accounts, numbering and features and opens their editors', async () => {
@@ -143,7 +137,7 @@ describe('c-sab-setup-workspace', () => {
         const events = jest.fn();
         el.addEventListener('sabswitchcompany', events);
         el.addEventListener('sabnewcompany', events);
-        rows[1].querySelector('.switch').click();
+        rows[1].querySelector('.sab-switch-company').click();
         root.querySelector('.add-company').click();
         expect(events.mock.calls[0][0].detail.companyId).toBe('a01B');
         expect(events).toHaveBeenCalledTimes(2);

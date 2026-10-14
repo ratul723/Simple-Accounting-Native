@@ -341,7 +341,7 @@ public with sharing class SABAdminWorkspaceController {
             data.canManageProjects = SABPermissionService.hasPermission('SAB_Manage_Projects');
             data.canViewFinancials = SABPermissionService.hasPermission('SAB_View_Project_Financials');
             List<Company_Feature__c> feature = [SELECT Enabled__c FROM Company_Feature__c WHERE Company__c = :companyId AND Feature_Key__c = 'PROJECTS' WITH USER_MODE LIMIT 1];
-            data.projectsEnabled = !feature.isEmpty() && feature[0].Enabled__c == true;
+            data.projectsEnabled = feature.isEmpty() || feature[0].Enabled__c == true;
             data.projects = projects(companyId, data.canViewFinancials);
             data.customers = new List<Option>();
             if (Schema.SObjectType.Party_Accounting_Profile__c.isAccessible()) {
@@ -442,7 +442,8 @@ public with sharing class SABAdminWorkspaceController {
         for (String key : KNOWN_FEATURES) {
             FeatureRow row = new FeatureRow();
             row.featureKey = key;
-            row.enabled = false;
+            // A feature without a row is on: navigation only hides features switched off explicitly.
+            row.enabled = true;
             row.configurationStatus = 'Not Configured';
             byKey.put(key, row);
         }

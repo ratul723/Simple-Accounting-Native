@@ -303,4 +303,19 @@ describe('c-sab-people-workspace', () => {
         await flush();
         expect(el4.shadowRoot.querySelector('.figs')).not.toBeNull();
     });
+
+    it('shows the employees view and reloads when employees change', async () => {
+        const el = mount();
+        await flush();
+        const root = el.shadowRoot;
+        const views = root.querySelectorAll('.sab-views button');
+        views[views.length - 1].click();
+        await flush();
+        const staff = root.querySelector('c-sab-employees');
+        expect(staff).not.toBeNull();
+        const calls = getWorkspace.mock.calls.length;
+        staff.dispatchEvent(new CustomEvent('changed'));
+        await flush();
+        expect(getWorkspace.mock.calls.length).toBeGreaterThan(calls);
+    });
 });

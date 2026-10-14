@@ -144,7 +144,7 @@ export default class SabPurchasesWorkspace extends LightningElement {
             { id: 'sched', label: 'Payment schedule', count: '' },
             { id: 'sup', label: 'Suppliers', count: ((this.extras && this.extras.suppliers) || []).length },
             { id: 'po', label: 'Purchase orders', count: '' }
-        ].map((t) => ({ ...t, hasCount: t.count !== '', className: t.id === this.activeTab ? 'tab active' : 'tab', selected: t.id === this.activeTab ? 'true' : 'false' }));
+        ].filter((t) => t.id !== 'po' || this.purchasingOn).map((t) => ({ ...t, hasCount: t.count !== '', className: t.id === this.activeTab ? 'tab active' : 'tab', selected: t.id === this.activeTab ? 'true' : 'false' }));
     }
 
     handleTab(event) {
@@ -157,6 +157,10 @@ export default class SabPurchasesWorkspace extends LightningElement {
 
     get isSchedule() {
         return this.activeTab === 'sched';
+    }
+
+    get purchasingOn() {
+        return !((this.caps && this.caps.disabledFeatures) || []).includes('PURCHASING');
     }
 
     get isOrders() {

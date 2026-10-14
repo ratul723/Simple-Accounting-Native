@@ -17,6 +17,10 @@ jest.mock('@salesforce/apex/SABSetupRecordService.savePeriod', () => ({ default:
 jest.mock('@salesforce/apex/SABSetupRecordService.saveAccount', () => ({ default: jest.fn() }), { virtual: true });
 jest.mock('@salesforce/apex/SABSetupRecordService.saveSequence', () => ({ default: jest.fn() }), { virtual: true });
 jest.mock('@salesforce/apex/SABSetupRecordService.saveFeature', () => ({ default: jest.fn() }), { virtual: true });
+jest.mock('@salesforce/apex/SABSetupActionService.getOptions', () => ({ default: jest.fn() }), { virtual: true });
+jest.mock('@salesforce/apex/SABSetupActionService.generatePeriods', () => ({ default: jest.fn() }), { virtual: true });
+import getSetupOptions from '@salesforce/apex/SABSetupActionService.getOptions';
+import generatePeriods from '@salesforce/apex/SABSetupActionService.generatePeriods';
 
 const COMPANY = 'a01000000000001AAA';
 
@@ -202,5 +206,80 @@ describe('c-sab-setup-records', () => {
         el.open = false;
         expect(el.open).toBe(false);
         expect(el.kind).toBe('feature');
+    });
+
+    it('creates the first fiscal year with a new company, including custom calendars', async () => {
+        createCompany.mockResolvedValue('a01NEW');
+        generatePeriods.mockResolvedValueOnce(12).mockRejectedValueOnce({ body: { message: 'Periods already exist.' } });
+        const el = mount('newCompany');
+        const toast = jest.fn();
+        el.addEventListener('sabtoast', toast);
+        await flush();
+        const root = el.shadowRoot;
+        expect(root.querySelector('[data-field="createPeriods"]').checked).toBe(true);
+        expect(root.querySelector('[data-field="periodPattern"]')).toBeNull();
+        setField(root, 'fiscalYearStartMonth', '7');
+        await flush();
+        root.querySelector('.save').click();
+        await flush();
+        const first = generatePeriods.mock.calls[0][0];
+        expect(first.request).toMatchObject({ companyId: 'a01NEW', pattern: 'Monthly' });
+        expect(first.request.firstDay).toMatch(/-07-01$/);
+        expect(first.requestKey).toMatch(/-P$/);
+        expect(createCompany.mock.calls[0][0].request.createPeriods).toBeUndefined();
+        expect(toast.mock.calls.map((c) => c[0].detail.message)).toContain('12 accounting periods created');
+
+        const el2 = mount('newCompany');
+        el2.addEventListener('sabtoast', toast);
+        await flush();
+        const root2 = el2.shadowRoot;
+        setField(root2, 'fiscalCalendarType', 'Custom');
+        await flush();
+        setField(root2, 'firstDay', '2027-01-04');
+        setField(root2, 'periodPattern', '4-4-5 weeks');
+        root2.querySelector('.save').click();
+        await flush();
+        expect(generatePeriods.mock.calls[1][0].request).toMatchObject({ firstDay: '2027-01-04', pattern: '4-4-5 weeks' });
+        expect(toast.mock.calls.map((c) => c[0].detail)).toContainEqual({ message: 'Company created, but periods were not: Periods already exist.', tone: 'bad' });
+
+        const el3 = mount('newCompany');
+        await flush();
+        setField(el3.shadowRoot, 'createPeriods', false);
+        await flush();
+        el3.shadowRoot.querySelector('.save').click();
+        await flush();
+        expect(generatePeriods).toHaveBeenCalledTimes(2);
+    });
+
+    it('generates a fiscal year of periods from the period list', async () => {
+        getSetupRecords.mockResolvedValue([]);
+        getSetupOptions.mockResolvedValue({ nextPeriodStart: '2027-07-01' });
+        generatePeriods.mockRejectedValueOnce({ body: { message: 'Periods already exist between 1/07/2027 and 30/06/2028.' } }).mockResolvedValueOnce(13);
+        const el = mount('period');
+        const saved = jest.fn();
+        el.addEventListener('saved', saved);
+        await flush();
+        const root = el.shadowRoot;
+        root.querySelector('.sab-generate-periods').click();
+        await flush();
+        expect(root.querySelector('c-sab-modal').heading).toBe('Generate fiscal year');
+        expect(root.querySelector('[data-field="firstDay"]').value).toBe('2027-07-01');
+        setField(root, 'periodPattern', '13 periods of 4 weeks');
+        root.querySelector('.save').click();
+        await flush();
+        expect(root.querySelector('.form-error').textContent).toContain('Periods already exist');
+        root.querySelector('.save').click();
+        await flush();
+        expect(generatePeriods.mock.calls[1][0].request).toMatchObject({ companyId: COMPANY, firstDay: '2027-07-01', pattern: '13 periods of 4 weeks' });
+        expect(generatePeriods.mock.calls[1][0].requestKey).toBe(generatePeriods.mock.calls[0][0].requestKey);
+        expect(saved).toHaveBeenCalled();
+        expect(root.querySelector('.sab-generate-periods')).not.toBeNull();
+        getSetupOptions.mockRejectedValueOnce({ body: { message: 'No access.' } });
+        root.querySelector('.sab-generate-periods').click();
+        await flush();
+        expect(root.querySelector('.form-error').textContent).toBe('No access.');
+        root.querySelector('.back').click();
+        await flush();
+        expect(root.querySelector('c-sab-modal').heading).toBe('Accounting periods');
     });
 });

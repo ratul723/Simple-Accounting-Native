@@ -337,6 +337,23 @@ describe('c-sab-app-shell', () => {
         expect(editor.open).toBe(false);
     });
 
+    it('reloads its context when a workspace changes features and leaves a hidden workspace', async () => {
+        const el = mount();
+        await settle();
+        const root = el.shadowRoot;
+        root.querySelector('.nav-item[data-id="close"]').click();
+        await settle();
+        getShellContext.mockResolvedValue({ ...SHELL, visibleWorkspaces: ['home', 'journal'], disabledFeatures: ['PURCHASING'] });
+        root.querySelector('main').dispatchEvent(new CustomEvent('sabrefreshshell', { bubbles: true }));
+        await settle();
+        expect(root.querySelector('.nav-item[data-id="close"]')).toBeNull();
+        expect(root.querySelector('.nav-item[data-id="home"]').getAttribute('aria-current')).toBe('page');
+        getShellContext.mockRejectedValueOnce({ body: { message: 'Context failed.' } });
+        root.querySelector('main').dispatchEvent(new CustomEvent('sabrefreshshell', { bubbles: true }));
+        await settle();
+        expect(root.querySelector('c-sab-toast').shadowRoot.querySelector('.toast').textContent).toBe('Context failed.');
+    });
+
     it('loads a sample company from the switcher and the welcome screen', async () => {
         getShellContext.mockResolvedValue({ ...SHELL, canCreateCompany: true });
         const SAMPLE = { companyId: 'a01000000000008AAA', companyName: 'Harbourline Trading (sample 123456)', companyKey: 'SAMPLE-123456', functionalCurrency: 'AUD', setupStatus: 'Active' };

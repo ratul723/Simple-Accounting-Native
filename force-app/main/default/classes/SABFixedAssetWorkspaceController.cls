@@ -149,7 +149,7 @@ public with sharing class SABFixedAssetWorkspaceController {
         @AuraEnabled public ReconciliationDTO reconciliation { get; set; }
     }
 
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled
     public static List<CompanyOptionDTO> getAccessibleCompanies() {
         assertViewPermission();
 
@@ -197,7 +197,7 @@ public with sharing class SABFixedAssetWorkspaceController {
         }
     }
 
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled
     public static DashboardDTO getDashboard(
         Id companyId
     ) {
@@ -553,7 +553,7 @@ public with sharing class SABFixedAssetWorkspaceController {
         }
     }
 
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled
     public static AssetDetailDTO getAssetDetail(
         Id assetId
     ) {

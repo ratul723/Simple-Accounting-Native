@@ -66,22 +66,23 @@
             </section>
 
             <section class="panel mine">
-                <div class="panel-h"><div><h2>Submitted by you</h2><div class="sub">Pending requests you can still cancel</div></div></div>
+                <div class="panel-h"><div><h2>Pending in this company</h2><div class="sub">Every request still waiting, with who has to approve it next</div></div></div>
                 <div class="panel-b flush">
                     <template lwc:if={hasRequests}>
                         <div class="tbl-wrap">
                             <table class="tbl">
-                                <thead><tr><th>Request</th><th>Source</th><th>Next approver</th><th>Submitted</th><th>Status</th><th><span class="sr">Actions</span></th></tr></thead>
+                                <thead><tr><th>Request</th><th>Source</th><th>Requested by</th><th>Next approver</th><th>Submitted</th><th>Status</th><th><span class="sr">Actions</span></th></tr></thead>
                                 <tbody>
                                     <template for:each={requestRows} for:item="r">
                                         <tr key={r.approvalRequestId}>
                                             <td><span class="id">{r.name}</span></td>
                                             <td>{r.sourceBusinessKey}<div class="small muted">{r.sourceLabel}</div></td>
-                                            <td>{r.nextApprover}</td>
+                                            <td>{r.requester}</td>
+                                            <td><span class={r.approverClass}>{r.approverText}</span></td>
                                             <td>{r.requestedText}</td>
                                             <td><span class={r.chip}><span class="dot"></span>{r.status}</span></td>
-                                            <td class="act"><button class="btn ghost sm cancel-request" type="button" data-id={r.approvalRequestId}
-                                                disabled={r.disabled} title={r.title} onclick={handleCancelRequest}>Cancel</button></td>
+                                            <td class="act"><template lwc:if={r.canCancel}><button class="btn ghost sm cancel-request" type="button" data-id={r.approvalRequestId}
+                                                disabled={r.disabled} title={r.title} onclick={handleCancelRequest}>Cancel</button></template></td>
                                         </tr>
                                     </template>
                                 </tbody>
@@ -89,7 +90,7 @@
                         </div>
                     </template>
                     <template lwc:else>
-                        <div class="panel-b muted">You have no pending requests in this company.</div>
+                        <div class="panel-b muted">Nothing is waiting for approval in this company.</div>
                     </template>
                 </div>
             </section>

@@ -49,7 +49,7 @@ public with sharing class SABImportsWorkspaceController {
             data.canManage = SABPermissionService.hasPermission('SAB_Manage_Imports');
             data.canCommit = SABPermissionService.hasPermission('SAB_Commit_Imports');
             data.canViewLog = SABPermissionService.hasPermission('SAB_View_Integration_Log');
-            data.importTypes = new List<String>{ 'Chart of Accounts', 'Journal Entries', 'Opening Balances' };
+            data.importTypes = new List<String>{ 'Chart of Accounts', 'Journal Entries', 'Opening Balances', 'Customers', 'Suppliers', 'Budgets' };
             data.jobs = jobs(companyId);
             data.requests = data.canViewLog ? SABIntegrationLogService.getRequests(companyId, MAX_REQUESTS)
                 : new List<SABIntegrationLogService.LogView>();

@@ -37,7 +37,7 @@ public with sharing class SABAppShellController {
         new WorkspaceRule('payroll', null, Payroll_Run__c.SObjectType, ACCESS_READ, 'PAYROLL'),
         new WorkspaceRule('assets', 'SAB_View_Fixed_Asset_Workspace', null, null, 'FIXED_ASSETS'),
         new WorkspaceRule('budgets', 'SAB_View_Budgets', null, null, 'BUDGETS'),
-        new WorkspaceRule('projects', 'SAB_View_Project_Financials', null, null, null),
+        new WorkspaceRule('projects', 'SAB_View_Project_Financials', null, null, 'PROJECTS'),
         new WorkspaceRule('tax', 'SAB_View_Tax_Returns', null, null, null),
         new WorkspaceRule('reports', 'SAB_View_Management_Reports', null, null, null),
         new WorkspaceRule('equity', 'SAB_View_Equity', null, null, 'EQUITY'),
@@ -60,6 +60,8 @@ public with sharing class SABAppShellController {
         @AuraEnabled public String periodStatus { get; set; }
         @AuraEnabled public Boolean canCreateJournal { get; set; }
         @AuraEnabled public Boolean canCreateInvoice { get; set; }
+        /** Features switched off for the company (Company_Feature__c.Enabled__c = false); a feature with no row counts as on. */
+        @AuraEnabled public List<String> disabledFeatures { get; set; }
         @AuraEnabled public Boolean canCreateCompany { get; set; }
     }
 
@@ -98,7 +100,15 @@ public with sharing class SABAppShellController {
         ShellContext context = new ShellContext();
         context.userId = UserInfo.getUserId();
         context.persona = SABPersonaService.current();
-        context.visibleWorkspaces = visibleWorkspaces(companyId == null ? new Map<String, Boolean>() : featureStates(companyId), companyId != null);
+        Map<String, Boolean> features = companyId == null ? new Map<String, Boolean>() : featureStates(companyId);
+        context.visibleWorkspaces = visibleWorkspaces(features, companyId != null);
+        context.disabledFeatures = new List<String>();
+        for (String featureKey : features.keySet()) {
+            if (features.get(featureKey) == false) {
+                context.disabledFeatures.add(featureKey);
+            }
+        }
+        context.disabledFeatures.sort();
         context.canCreateJournal = Schema.SObjectType.Journal_Entry__c.isCreateable();
         context.canCreateInvoice = Schema.SObjectType.Invoice__c.isCreateable();
         context.canCreateCompany = SABPermissionService.hasPermission('SAB_Create_Accounting_Company');

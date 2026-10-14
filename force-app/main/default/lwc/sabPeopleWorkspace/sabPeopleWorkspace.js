@@ -25,7 +25,8 @@ const STATES = ['Draft', 'Calculated', 'Submitted', 'Approved', 'Posted', 'Settl
 const VIEWS = [
     { id: 'prep', label: 'HR preparation' },
     { id: 'post', label: 'Finance posting' },
-    { id: 'settle', label: 'Treasury settlement' }
+    { id: 'settle', label: 'Treasury settlement' },
+    { id: 'staff', label: 'Employees & pay' }
 ];
 const MASK = '\u2022\u2022\u2022\u2022\u2022\u2022';
 
@@ -184,6 +185,14 @@ export default class SabPeopleWorkspace extends LightningElement {
 
     get isPost() {
         return this.view === 'post';
+    }
+
+    get isStaff() {
+        return this.view === 'staff';
+    }
+
+    handleStaffChanged() {
+        this.load();
     }
 
     get isSettle() {
@@ -457,6 +466,10 @@ export default class SabPeopleWorkspace extends LightningElement {
     handleCalculate() {
         const runId = this.selectedRunId;
         const employmentIds = this.workspace.employments.filter((e) => e.status === 'Active').map((e) => e.employmentId);
+        if (!employmentIds.length) {
+            toast(this, 'No active employees to calculate. Add employees and approved pay in Employees & pay.', 'bad');
+            return;
+        }
         this.execute('CALCULATE', runId, () => calculateRun({ runId, employmentIds, minorUnits: 2 }), 'Payroll calculated');
     }
 

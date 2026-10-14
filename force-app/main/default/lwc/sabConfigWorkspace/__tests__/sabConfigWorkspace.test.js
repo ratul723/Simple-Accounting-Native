@@ -200,4 +200,23 @@ describe('c-sab-config-workspace', () => {
         expect(el2.shadowRoot.querySelector('.form-error').textContent).toBe('Search failed.');
         el2.shadowRoot.querySelector('.sab-modal-close').click();
     });
+
+    it('asks the shell to refresh after a feature or access change', async () => {
+        const el = mount();
+        await flush();
+        const refresh = jest.fn();
+        el.addEventListener('sabrefreshshell', refresh);
+        const root = el.shadowRoot;
+        expect(root.querySelectorAll('.sab-feature')[2].querySelector('.note').textContent).toContain('Off: hidden from navigation.');
+        root.querySelectorAll('.sab-feature')[1].querySelector('.switch').click();
+        await flush();
+        expect(refresh).toHaveBeenCalledTimes(1);
+        root.querySelectorAll('.tab')[1].click();
+        await flush();
+        root.querySelector('.sab-grants tbody tr').click();
+        await flush();
+        root.querySelector('.sab-modal-save').click();
+        await flush();
+        expect(refresh).toHaveBeenCalledTimes(2);
+    });
 });

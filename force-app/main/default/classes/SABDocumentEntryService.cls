@@ -32,6 +32,7 @@ public with sharing class SABDocumentEntryService {
         @AuraEnabled public Id taxCodeId { get; set; }
         @AuraEnabled public Id departmentId { get; set; }
         @AuraEnabled public Id costCenterId { get; set; }
+        @AuraEnabled public Id projectId { get; set; }
         @AuraEnabled public String category { get; set; }
         @AuraEnabled public Date expenseDate { get; set; }
     }
@@ -98,6 +99,7 @@ public with sharing class SABDocumentEntryService {
         @AuraEnabled public List<Option> bankAccounts { get; set; }
         @AuraEnabled public List<Option> departments { get; set; }
         @AuraEnabled public List<Option> costCenters { get; set; }
+        @AuraEnabled public List<Option> projects { get; set; }
         @AuraEnabled public List<Option> methods { get; set; }
         @AuraEnabled public List<Option> employments { get; set; }
         @AuraEnabled public Id myEmploymentId { get; set; }
@@ -159,6 +161,13 @@ public with sharing class SABDocumentEntryService {
             o.costCenters = new List<Option>();
             for (Cost_Center__c c : [SELECT Id, Name FROM Cost_Center__c WHERE Company__c = :companyId WITH USER_MODE ORDER BY Name LIMIT 500]) {
                 o.costCenters.add(new Option(c.Id, c.Name));
+            }
+            o.projects = new List<Option>();
+            if (Schema.SObjectType.Project__c.isAccessible()) {
+                for (Project__c p : [SELECT Id, Project_Code__c, Name FROM Project__c WHERE Company__c = :companyId AND Status__c IN ('Planned', 'Active')
+                        WITH USER_MODE ORDER BY Project_Code__c LIMIT 500]) {
+                    o.projects.add(new Option(p.Id, p.Project_Code__c + ' ' + p.Name));
+                }
             }
             o.methods = new List<Option>();
             for (Schema.PicklistEntry e : Accounting_Payment__c.Method__c.getDescribe().getPicklistValues()) {
@@ -238,7 +247,7 @@ public with sharing class SABDocumentEntryService {
     private static DocumentRequest invoiceDraft(Id companyId, Id invoiceId) {
         Invoice__c i = [
             SELECT Id, Company__c, Status__c, Document_Type__c, Party_Profile__c, Document_Date__c, Due_Date__c, Original_Invoice__c, Transaction_Currency__c, Exchange_Rate__c,
-                   (SELECT Description__c, Quantity__c, Unit_Price__c, Discount_Amount__c, Revenue_Account__c, Tax_Code__c, Department__c, Cost_Center__c
+                   (SELECT Description__c, Quantity__c, Unit_Price__c, Discount_Amount__c, Revenue_Account__c, Tax_Code__c, Department__c, Cost_Center__c, Project__c
                     FROM Invoice_Line_Invoice__r ORDER BY Line_Number__c)
             FROM Invoice__c WHERE Id = :invoiceId WITH USER_MODE LIMIT 1
         ];
@@ -246,7 +255,7 @@ public with sharing class SABDocumentEntryService {
         DocumentRequest r = header(i.Id, companyId, i.Document_Type__c, i.Party_Profile__c, i.Document_Date__c, i.Due_Date__c, null, i.Transaction_Currency__c, i.Exchange_Rate__c);
         r.originalInvoiceId = i.Original_Invoice__c;
         for (Invoice_Line__c l : i.Invoice_Line_Invoice__r) {
-            r.lines.add(line(l.Description__c, l.Quantity__c, l.Unit_Price__c, l.Discount_Amount__c, l.Revenue_Account__c, l.Tax_Code__c, l.Department__c, l.Cost_Center__c));
+            r.lines.add(withProject(line(l.Description__c, l.Quantity__c, l.Unit_Price__c, l.Discount_Amount__c, l.Revenue_Account__c, l.Tax_Code__c, l.Department__c, l.Cost_Center__c), l.Project__c));
         }
         return r;
     }
@@ -254,14 +263,14 @@ public with sharing class SABDocumentEntryService {
     private static DocumentRequest billDraft(Id companyId, Id billId) {
         Supplier_Bill__c b = [
             SELECT Id, Company__c, Status__c, Document_Type__c, Supplier_Profile__c, Document_Date__c, Due_Date__c, Vendor_Reference__c, Transaction_Currency__c, Exchange_Rate__c,
-                   (SELECT Description__c, Quantity__c, Unit_Price__c, Expense_or_Asset_Account__c, Tax_Code__c, Department__c, Cost_Center__c FROM Bill_Line_Supplier_Bill__r ORDER BY Line_Number__c)
+                   (SELECT Description__c, Quantity__c, Unit_Price__c, Expense_or_Asset_Account__c, Tax_Code__c, Department__c, Cost_Center__c, Project__c FROM Bill_Line_Supplier_Bill__r ORDER BY Line_Number__c)
             FROM Supplier_Bill__c WHERE Id = :billId WITH USER_MODE LIMIT 1
         ];
         assertDraft(b.Company__c, companyId, b.Status__c);
         DocumentRequest r = header(b.Id, companyId, b.Document_Type__c, b.Supplier_Profile__c, b.Document_Date__c, b.Due_Date__c, b.Vendor_Reference__c, b.Transaction_Currency__c,
             b.Exchange_Rate__c);
         for (Bill_Line__c l : b.Bill_Line_Supplier_Bill__r) {
-            r.lines.add(line(l.Description__c, l.Quantity__c, l.Unit_Price__c, null, l.Expense_or_Asset_Account__c, l.Tax_Code__c, l.Department__c, l.Cost_Center__c));
+            r.lines.add(withProject(line(l.Description__c, l.Quantity__c, l.Unit_Price__c, null, l.Expense_or_Asset_Account__c, l.Tax_Code__c, l.Department__c, l.Cost_Center__c), l.Project__c));
         }
         return r;
     }
@@ -291,7 +300,7 @@ public with sharing class SABDocumentEntryService {
     private static ClaimRequest claimDraft(Id companyId, Id claimId) {
         Expense_Claim__c c = [
             SELECT Id, Company__c, Status__c, Claimant_Employment__c, Claim_Date__c, Currency__c,
-                   (SELECT Expense_Date__c, Category__c, Description__c, Amount__c, Expense_Account__c, Tax_Code__c, Department__c FROM Expense_Claim_Line_Expense_Claim__r ORDER BY CreatedDate)
+                   (SELECT Expense_Date__c, Category__c, Description__c, Amount__c, Expense_Account__c, Tax_Code__c, Department__c, Project__c FROM Expense_Claim_Line_Expense_Claim__r ORDER BY CreatedDate)
             FROM Expense_Claim__c WHERE Id = :claimId WITH USER_MODE LIMIT 1
         ];
         assertDraft(c.Company__c, companyId, c.Status__c);
@@ -303,7 +312,7 @@ public with sharing class SABDocumentEntryService {
         r.currencyCode = c.Currency__c;
         r.lines = new List<LineRequest>();
         for (Expense_Claim_Line__c l : c.Expense_Claim_Line_Expense_Claim__r) {
-            LineRequest lr = line(l.Description__c, null, null, null, l.Expense_Account__c, l.Tax_Code__c, l.Department__c, null);
+            LineRequest lr = withProject(line(l.Description__c, null, null, null, l.Expense_Account__c, l.Tax_Code__c, l.Department__c, null), l.Project__c);
             lr.amount = l.Amount__c;
             lr.category = l.Category__c;
             lr.expenseDate = l.Expense_Date__c;
@@ -353,7 +362,8 @@ public with sharing class SABDocumentEntryService {
                 Decimal discount = l.discount == null ? 0 : l.discount;
                 rows.add(new Invoice_Line__c(Invoice__c = invoice.Id, Line_Number__c = n++, Description__c = requireText(l.description, 'Line description'),
                     Quantity__c = qty, Unit_Price__c = price, Discount_Amount__c = discount, Net_Amount__c = qty * price - discount,
-                    Revenue_Account__c = requireId(l.accountId, 'Revenue account'), Tax_Code__c = l.taxCodeId, Department__c = l.departmentId, Cost_Center__c = l.costCenterId));
+                    Revenue_Account__c = requireId(l.accountId, 'Revenue account'), Tax_Code__c = l.taxCodeId, Department__c = l.departmentId, Cost_Center__c = l.costCenterId,
+                    Project__c = l.projectId));
             }
             replaceLines([SELECT Id FROM Invoice_Line__c WHERE Invoice__c = :invoice.Id WITH USER_MODE], rows);
             SABInvoiceValidationService.validateLines(invoice, rows);
@@ -451,7 +461,7 @@ public with sharing class SABDocumentEntryService {
                 Decimal price = requireAmount(l.unitPrice, 'Unit price');
                 rows.add(new Bill_Line__c(Supplier_Bill__c = bill.Id, Line_Number__c = n++, Description__c = requireText(l.description, 'Line description'),
                     Quantity__c = qty, Unit_Price__c = price, Net_Amount__c = qty * price, Expense_or_Asset_Account__c = requireId(l.accountId, 'Expense or asset account'),
-                    Tax_Code__c = l.taxCodeId, Department__c = l.departmentId, Cost_Center__c = l.costCenterId));
+                    Tax_Code__c = l.taxCodeId, Department__c = l.departmentId, Cost_Center__c = l.costCenterId, Project__c = l.projectId));
             }
             replaceLines([SELECT Id FROM Bill_Line__c WHERE Supplier_Bill__c = :bill.Id WITH USER_MODE], rows);
             SABDocumentTaxService.materializeSupplierBillTaxes(bill.Id);
@@ -540,7 +550,8 @@ public with sharing class SABDocumentEntryService {
                 }
                 rows.add(new Expense_Claim_Line__c(Expense_Claim__c = claim.Id, Expense_Date__c = l.expenseDate == null ? claimDate : l.expenseDate,
                     Category__c = requireText(l.category, 'Category'), Description__c = requireText(l.description, 'Line description'), Amount__c = amount,
-                    Expense_Account__c = requireId(l.accountId, 'Expense account'), Tax_Code__c = l.taxCodeId, Department__c = l.departmentId));
+                    Expense_Account__c = requireId(l.accountId, 'Expense account'), Tax_Code__c = l.taxCodeId, Department__c = l.departmentId,
+                    Project__c = l.projectId));
             }
             replaceLines([SELECT Id FROM Expense_Claim_Line__c WHERE Expense_Claim__c = :claim.Id WITH USER_MODE], rows);
             new Writer().audit(request.companyId, 'CLAIM_SAVED', key, claim.Id, 'Expense claim draft saved');
@@ -632,6 +643,11 @@ public with sharing class SABDocumentEntryService {
         l.taxCodeId = taxCodeId;
         l.departmentId = departmentId;
         l.costCenterId = costCenterId;
+        return l;
+    }
+
+    private static LineRequest withProject(LineRequest l, Id projectId) {
+        l.projectId = projectId;
         return l;
     }
 

@@ -65,11 +65,14 @@ public with sharing class SABSampleCompanyService {
         if (runId == null) {
             throw auraError('A sample load is required.');
         }
+        // System read limited to the caller's own sample run: users often have no field access to Processing_Run__c,
+        // and the run carries only step counts and step messages for a company the caller just created.
+        Id userId = UserInfo.getUserId();
         List<Processing_Run__c> runs = [
-            SELECT Id, Company__c, Status__c, Processed_Count__c, Failure_Count__c, Cursor__c, CreatedById
-            FROM Processing_Run__c WHERE Id = :runId AND Run_Type__c = :RUN_TYPE WITH USER_MODE LIMIT 1
+            SELECT Id, Company__c, Status__c, Processed_Count__c, Failure_Count__c, Cursor__c
+            FROM Processing_Run__c WHERE Id = :runId AND Run_Type__c = :RUN_TYPE AND CreatedById = :userId WITH SYSTEM_MODE LIMIT 1
         ];
-        if (runs.isEmpty() || runs[0].CreatedById != UserInfo.getUserId()) {
+        if (runs.isEmpty()) {
             throw auraError('The sample load was not found.');
         }
         StatusView view = new StatusView();

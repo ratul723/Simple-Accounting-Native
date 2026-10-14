@@ -1,0 +1,31 @@
+@import 'c/sabStyles';
+
+.emp {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--line);
+}
+
+.emp .row {
+    gap: 10px;
+    align-items: center;
+}
+
+.warn {
+    margin-top: 4px;
+}
+
+.pay {
+    margin-top: 8px;
+}
+
+.act {
+    text-align: right;
+}
+
+.form {
+    gap: 12px 14px;
+}
+
+.form-error {
+    margin-bottom: 14px;
+}

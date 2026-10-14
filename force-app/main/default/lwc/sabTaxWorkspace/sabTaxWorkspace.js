@@ -7,6 +7,8 @@ import reviewReturn from '@salesforce/apex/SABTaxReturnLifecycleService.reviewRe
 import submitReturn from '@salesforce/apex/SABTaxReturnLifecycleService.submitReturn';
 import recordAuthorityOutcome from '@salesforce/apex/SABTaxReturnLifecycleService.recordAuthorityOutcome';
 import createAmendment from '@salesforce/apex/SABTaxReturnLifecycleService.createAmendment';
+import getSetupOptions from '@salesforce/apex/SABSetupActionService.getOptions';
+import saveTaxRegistration from '@salesforce/apex/SABSetupActionService.saveTaxRegistration';
 import { formatNumber, formatDate, formatDateTime, chipClass } from 'c/sabFormat';
 import { reduceError, newKey, toast } from 'c/sabMoneyShared';
 
@@ -43,6 +45,7 @@ export default class SabTaxWorkspace extends LightningElement {
     form = {};
     formError;
     requestKeys = {};
+    frequencies = [];
     loadSequence = 0;
     detailSequence = 0;
     currentCompanyId;
@@ -318,6 +321,27 @@ export default class SabTaxWorkspace extends LightningElement {
         this.openModal('prepare', { registrationId: ((this.data.registrations || [])[0] || {}).value || '', periodStart: iso(quarterStart), periodEnd: iso(quarterEnd) });
     }
 
+    async handleAddRegistration() {
+        this.openModal('registration', { name: 'GST', jurisdiction: '', identifier: '', filingFrequency: 'Quarterly', effectiveFrom: iso(new Date()), effectiveTo: '',
+            countryPackVersion: '' });
+        try {
+            const o = await getSetupOptions({ companyId: this.currentCompanyId });
+            this.frequencies = o.filingFrequencies || [];
+            this.form = { ...this.form, jurisdiction: this.form.jurisdiction || o.countryCode || '', countryPackVersion: this.form.countryPackVersion || o.countryPackVersion || '' };
+        } catch (error) {
+            this.formError = reduceError(error);
+        }
+    }
+
+    get isRegistrationModal() {
+        return this.modal === 'registration';
+    }
+
+    get frequencyOptions() {
+        return (this.frequencies && this.frequencies.length ? this.frequencies : ['Monthly', 'Quarterly', 'Annual'])
+            .map((v) => ({ value: v, label: v, selected: v === this.form.filingFrequency }));
+    }
+
     handleNext(event) {
         const kind = event.currentTarget.dataset.kind;
         this.openModal(kind, { reason: '', filingReference: '', outcome: 'Accepted', acknowledgementReference: '' });
@@ -332,11 +356,12 @@ export default class SabTaxWorkspace extends LightningElement {
     }
 
     get modalHeading() {
-        return { prepare: 'Prepare tax return', review: 'Mark as reviewed', submit: 'Record submission', outcome: 'Record authority outcome', amend: 'Create amendment' }[this.modal];
+        return { registration: 'Add tax registration', prepare: 'Prepare tax return', review: 'Mark as reviewed', submit: 'Record submission', outcome: 'Record authority outcome', amend: 'Create amendment' }[this.modal];
     }
 
     get modalSub() {
         return {
+            registration: 'Returns are prepared per registration and period.',
             prepare: 'Builds the return from posted tax lines for the registration and period.',
             review: 'Locks the source tax lines behind this return.',
             submit: 'Record the filing reference after lodging through the authority portal or your tax agent.',
@@ -346,7 +371,7 @@ export default class SabTaxWorkspace extends LightningElement {
     }
 
     get saveLabel() {
-        return { prepare: 'Prepare return', review: 'Mark as reviewed', submit: 'Record submission', outcome: 'Record outcome', amend: 'Create amendment' }[this.modal];
+        return { registration: 'Save registration', prepare: 'Prepare return', review: 'Mark as reviewed', submit: 'Record submission', outcome: 'Record outcome', amend: 'Create amendment' }[this.modal];
     }
 
     get isPrepareModal() {
@@ -362,7 +387,7 @@ export default class SabTaxWorkspace extends LightningElement {
     }
 
     get needsReason() {
-        return this.modal !== 'prepare';
+        return this.modal !== 'prepare' && this.modal !== 'registration';
     }
 
     get registrationOptions() {
@@ -400,6 +425,29 @@ export default class SabTaxWorkspace extends LightningElement {
             return;
         }
         let ok;
+        if (this.modal === 'registration') {
+            this.busy = true;
+            try {
+                await saveTaxRegistration({ request: { companyId: this.currentCompanyId, name: f.name, jurisdiction: f.jurisdiction, identifier: f.identifier,
+                    filingFrequency: f.filingFrequency, effectiveFrom: f.effectiveFrom || null, effectiveTo: f.effectiveTo || null,
+                    countryPackVersion: f.countryPackVersion || null, active: true }, requestKey: this.keyFor('REGISTRATION', this.currentCompanyId) });
+                toast(this, 'Tax registration added');
+                ok = true;
+            } catch (error) {
+                this.formError = reduceError(error);
+            } finally {
+                this.busy = false;
+            }
+            if (ok) {
+                const keys = { ...this.requestKeys };
+                delete keys[`REGISTRATION|${this.currentCompanyId}`];
+                this.requestKeys = keys;
+                this.modal = undefined;
+                this.activeTab = 'reg';
+                await this.load();
+            }
+            return;
+        }
         if (this.modal === 'prepare') {
             this.busy = true;
             try {

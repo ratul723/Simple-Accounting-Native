@@ -17,6 +17,10 @@ jest.mock('@salesforce/apex/SABTaxReturnLifecycleService.reviewReturn', () => ({
 jest.mock('@salesforce/apex/SABTaxReturnLifecycleService.submitReturn', () => ({ default: jest.fn() }), { virtual: true });
 jest.mock('@salesforce/apex/SABTaxReturnLifecycleService.recordAuthorityOutcome', () => ({ default: jest.fn() }), { virtual: true });
 jest.mock('@salesforce/apex/SABTaxReturnLifecycleService.createAmendment', () => ({ default: jest.fn() }), { virtual: true });
+jest.mock('@salesforce/apex/SABSetupActionService.getOptions', () => ({ default: jest.fn() }), { virtual: true });
+jest.mock('@salesforce/apex/SABSetupActionService.saveTaxRegistration', () => ({ default: jest.fn() }), { virtual: true });
+import getSetupOptions from '@salesforce/apex/SABSetupActionService.getOptions';
+import saveTaxRegistration from '@salesforce/apex/SABSetupActionService.saveTaxRegistration';
 
 const CAN = { prepare: true, review: true, submit: true, recordOutcome: true, amend: true };
 const ret = (id, status, extra = {}) => ({ taxReturnId: id, name: `BAS ${id}`, registrationName: 'GST', jurisdiction: 'AU', periodStart: '2026-07-01', periodEnd: '2026-09-30',
@@ -187,7 +191,7 @@ describe('c-sab-tax-workspace', () => {
         expect(el2.shadowRoot.querySelector('.sab-prepare').title).toBe('Add a tax registration first');
         el2.shadowRoot.querySelectorAll('.tab')[1].click();
         await flush();
-        expect(el2.shadowRoot.querySelector('.panel-b.muted').textContent).toBe('No tax registrations for this company.');
+        expect(el2.shadowRoot.querySelector('.panel-b.muted').textContent).toBe('No tax registrations for this company. Use Add registration to create one.');
 
         getWorkspace.mockResolvedValue(ws());
         getReturnDetail.mockRejectedValueOnce({ body: { message: 'Return not accessible.' } });
@@ -206,5 +210,32 @@ describe('c-sab-tax-workspace', () => {
         el4.shadowRoot.querySelector('.sab-prepare').click();
         await flush();
         el4.shadowRoot.querySelector('.sab-modal-close').click();
+    });
+
+    it('adds a tax registration', async () => {
+        getSetupOptions.mockResolvedValue({ countryCode: 'AU', filingFrequencies: ['Monthly', 'Quarterly', 'Annual', 'Other'] });
+        saveTaxRegistration.mockRejectedValueOnce({ body: { message: 'Registration number is required.' } }).mockResolvedValueOnce('R9');
+        const el = mount();
+        await flush();
+        const root = el.shadowRoot;
+        root.querySelector('.sab-add-registration').click();
+        await flush();
+        expect(root.querySelector('c-sab-modal [data-field="jurisdiction"]').value).toBe('AU');
+        expect(root.querySelectorAll('c-sab-modal [data-field="filingFrequency"] option').length).toBe(4);
+        root.querySelector('.sab-modal-save').click();
+        await flush();
+        expect(root.querySelector('.form-error').textContent).toBe('Registration number is required.');
+        setModal(root, 'identifier', '53 004 085 616');
+        setModal(root, 'filingFrequency', 'Monthly');
+        root.querySelector('.sab-modal-save').click();
+        await flush();
+        expect(saveTaxRegistration.mock.calls[1][0].request).toMatchObject({ name: 'GST', jurisdiction: 'AU', identifier: '53 004 085 616', filingFrequency: 'Monthly', active: true });
+        expect(saveTaxRegistration.mock.calls[1][0].requestKey).toBe(saveTaxRegistration.mock.calls[0][0].requestKey);
+        expect(root.querySelectorAll('.tab')[1].className).toBe('tab active');
+        getSetupOptions.mockRejectedValueOnce({ body: { message: 'Denied.' } });
+        root.querySelector('.sab-add-registration').click();
+        await flush();
+        expect(root.querySelector('.form-error').textContent).toBe('Denied.');
+        expect(root.querySelectorAll('c-sab-modal [data-field="filingFrequency"] option').length).toBe(4);
     });
 });

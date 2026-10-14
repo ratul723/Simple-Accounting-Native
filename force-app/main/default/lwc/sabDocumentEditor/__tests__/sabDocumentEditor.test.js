@@ -13,12 +13,14 @@ jest.mock('@salesforce/apex/SABDocumentEntryService.saveInvoice', () => ({ defau
 jest.mock('@salesforce/apex/SABDocumentEntryService.saveBill', () => ({ default: jest.fn() }), { virtual: true });
 jest.mock('@salesforce/apex/SABDocumentEntryService.savePayment', () => ({ default: jest.fn() }), { virtual: true });
 jest.mock('@salesforce/apex/SABDocumentEntryService.saveExpenseClaim', () => ({ default: jest.fn() }), { virtual: true });
+jest.mock('@salesforce/apex/SABSetupActionService.saveParty', () => ({ default: jest.fn() }), { virtual: true });
+import saveParty from '@salesforce/apex/SABSetupActionService.saveParty';
 
 const OPTIONS = {
     currencyCode: 'AUD', customers: [{ value: 'C1', label: 'Greenfield' }, { value: 'C2', label: 'Coastal' }], suppliers: [{ value: 'S1', label: 'Fuel Co' }],
     revenueAccounts: [{ value: 'R1', label: '4000 Sales' }], expenseAccounts: [{ value: 'E1', label: '6000 Office' }], taxCodes: [{ value: 'T1', label: 'GST Goods and services' }],
     bankAccounts: [{ value: 'B1', label: 'Operating' }], departments: [{ value: 'D1', label: 'Operations' }], costCenters: [{ value: 'K1', label: 'CC-1' }],
-    methods: [{ value: 'Bank Transfer', label: 'Bank Transfer' }, { value: 'Cash', label: 'Cash' }], employments: [{ value: 'M1', label: 'Maya Chen (EMP-1)' }], myEmploymentId: 'M1',
+    methods: [{ value: 'Bank Transfer', label: 'Bank Transfer' }, { value: 'Cash', label: 'Cash' }], projects: [{ value: 'P1', label: 'PRJ-1 Fit-out' }], employments: [{ value: 'M1', label: 'Maya Chen (EMP-1)' }], myEmploymentId: 'M1',
     creditableInvoices: [{ value: 'I1', label: 'INV-000141|C1' }, { value: 'I2', label: 'INV-000150|C2' }]
 };
 
@@ -96,9 +98,9 @@ describe('c-sab-document-editor', () => {
         expect(call.request).toMatchObject({ recordId: null, documentType: 'Invoice', partyProfileId: 'C1', currencyCode: 'USD', exchangeRate: 1.52 });
         expect(call.request.lines).toEqual([
             { description: 'Consulting', quantity: 2, unitPrice: 150, discount: 10, amount: null, accountId: 'R1', taxCodeId: 'T1', departmentId: null, costCenterId: null,
-                category: null, expenseDate: null },
+                projectId: null, category: null, expenseDate: null },
             { description: 'Travel', quantity: 1, unitPrice: 50, discount: null, amount: null, accountId: 'R1', taxCodeId: null, departmentId: null, costCenterId: null,
-                category: null, expenseDate: null }]);
+                projectId: null, category: null, expenseDate: null }]);
         expect(saved.mock.calls[0][0].detail).toEqual({ recordId: 'INV9', kind: 'invoice' });
     });
 
@@ -198,5 +200,62 @@ describe('c-sab-document-editor', () => {
         expect(closed).toHaveBeenCalled();
         el.open = false;
         expect(el.open).toBe(false);
+    });
+
+    it('adds a new supplier from the bill and a new customer from a receipt', async () => {
+        saveParty.mockRejectedValueOnce({ body: { message: 'Add an active accounts payable control account in Chart of accounts first.' } }).mockResolvedValueOnce('S9');
+        const el = mount('bill');
+        await flush();
+        const root = el.shadowRoot;
+        expect(root.querySelector('.sab-new-party').textContent).toBe('New supplier');
+        root.querySelector('.sab-new-party').click();
+        await flush();
+        const name = root.querySelector('.sab-party-name');
+        name.value = 'Riverside Property';
+        name.dispatchEvent(new CustomEvent('input'));
+        root.querySelector('.sab-party-save').click();
+        await flush();
+        expect(root.querySelector('.party-error').textContent).toContain('accounts payable control account');
+        getEntryOptions.mockResolvedValueOnce({ ...OPTIONS, suppliers: [...OPTIONS.suppliers, { value: 'S9', label: 'Riverside Property' }] });
+        root.querySelector('.sab-party-save').click();
+        await flush();
+        expect(saveParty.mock.calls[1][0].request).toEqual({ companyId: 'a01000000000001AAA', name: 'Riverside Property', isCustomer: false, isSupplier: true });
+        expect(root.querySelector('[data-field="partyProfileId"]').value).toBe('S9');
+        expect(root.querySelector('.sab-party-name')).toBeNull();
+
+        saveParty.mockResolvedValueOnce('C9');
+        const el2 = mount('receipt');
+        await flush();
+        el2.shadowRoot.querySelector('.sab-new-party').click();
+        await flush();
+        el2.shadowRoot.querySelector('.sab-party-save').click();
+        await flush();
+        expect(saveParty.mock.calls[2][0].request).toMatchObject({ isCustomer: true, isSupplier: false });
+    });
+
+    it('tags lines with a project and cost center and points to People when there are no employees', async () => {
+        const el = mount('invoice');
+        await flush();
+        const root = el.shadowRoot;
+        set(root, '[data-index="0"][data-field="description"]', 'Fit-out');
+        set(root, '[data-index="0"][data-field="unitPrice"]', '100');
+        set(root, '[data-index="0"][data-field="accountId"]', 'R1');
+        set(root, '[data-index="0"][data-field="projectId"]', 'P1');
+        set(root, '[data-index="0"][data-field="costCenterId"]', 'K1');
+        root.querySelector('.sab-doc-save').click();
+        await flush();
+        expect(saveInvoice.mock.calls[0][0].request.lines[0]).toMatchObject({ projectId: 'P1', costCenterId: 'K1' });
+
+        getEntryOptions.mockResolvedValueOnce({ ...OPTIONS, employments: [], myEmploymentId: null });
+        const el2 = mount('claim');
+        await flush();
+        const nav = jest.fn();
+        el2.addEventListener('sabnavigate', nav);
+        const closed = jest.fn();
+        el2.addEventListener('close', closed);
+        expect(el2.shadowRoot.querySelector('[data-field="costCenterId"]')).toBeNull();
+        el2.shadowRoot.querySelector('.sab-open-people').click();
+        expect(nav.mock.calls[0][0].detail.workspace).toBe('payroll');
+        expect(closed).toHaveBeenCalled();
     });
 });

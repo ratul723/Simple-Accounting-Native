@@ -10,6 +10,8 @@ import submitForeignPayment from '@salesforce/apex/SABForeignCurrencySettlementS
 import postForeignPayment from '@salesforce/apex/SABForeignCurrencySettlementService.postForeignPayment';
 import allocateForeignPayment from '@salesforce/apex/SABForeignCurrencySettlementService.allocateForeignPayment';
 import reverseForeignAllocation from '@salesforce/apex/SABForeignCurrencySettlementService.reverseForeignAllocation';
+import getSetupOptions from '@salesforce/apex/SABSetupActionService.getOptions';
+import saveFxAccounts from '@salesforce/apex/SABSetupActionService.saveFxAccounts';
 import { formatNumber, formatDate, chipClass } from 'c/sabFormat';
 import { reduceError, newKey, todayIso, hsteps, toast } from 'c/sabMoneyShared';
 
@@ -41,6 +43,7 @@ export default class SabFxWorkspace extends LightningElement {
     modal;
     form = {};
     targets = [];
+    fxOptions;
     formError;
     requestKeys = {};
     loadSequence = 0;
@@ -131,7 +134,7 @@ export default class SabFxWorkspace extends LightningElement {
         if (!d.realizedAccountsConfigured) {
             missing.push('realized gain and loss accounts (needed to settle foreign payments)');
         }
-        return missing.length ? `Set up the ${missing.join(' and the ')} in Company setup.` : undefined;
+        return missing.length ? `Set up the ${missing.join(' and the ')}.` : undefined;
     }
 
     get tabs() {
@@ -402,6 +405,33 @@ export default class SabFxWorkspace extends LightningElement {
         }
     }
 
+    async handleFxSetup() {
+        this.openModal('fxSetup', { unrealizedGainAccountId: '', unrealizedLossAccountId: '', realizedGainAccountId: '', realizedLossAccountId: '', createMissing: true });
+        try {
+            const o = await getSetupOptions({ companyId: this.currentCompanyId });
+            this.fxOptions = o;
+            this.form = { ...this.form, unrealizedGainAccountId: o.unrealizedGainAccountId || '', unrealizedLossAccountId: o.unrealizedLossAccountId || '',
+                realizedGainAccountId: o.realizedGainAccountId || '', realizedLossAccountId: o.realizedLossAccountId || '' };
+        } catch (error) {
+            this.formError = reduceError(error);
+        }
+    }
+
+    fxChoices(list, selected) {
+        return (list || []).map((o) => ({ ...o, selected: o.value === selected }));
+    }
+
+    get fxSlots() {
+        const o = this.fxOptions || {};
+        return [['unrealizedGainAccountId', 'Unrealized FX gain', o.gainAccounts], ['unrealizedLossAccountId', 'Unrealized FX loss', o.lossAccounts],
+            ['realizedGainAccountId', 'Realized FX gain', o.gainAccounts], ['realizedLossAccountId', 'Realized FX loss', o.lossAccounts]]
+            .map(([field, label, list]) => ({ field, label, options: this.fxChoices(list, this.form[field]) }));
+    }
+
+    get isFxSetupModal() {
+        return this.modal === 'fxSetup';
+    }
+
     handleReverseAllocation(event) {
         this.openModal('reverseAlloc', { allocationId: event.currentTarget.dataset.id, reversalDate: todayIso(), reason: '' });
     }
@@ -411,12 +441,13 @@ export default class SabFxWorkspace extends LightningElement {
     }
 
     get modalHeading() {
-        return { preview: 'New revaluation', approve: 'Approve revaluation', post: 'Post revaluation', reverse: 'Reverse revaluation',
+        return { fxSetup: 'FX gain and loss accounts', preview: 'New revaluation', approve: 'Approve revaluation', post: 'Post revaluation', reverse: 'Reverse revaluation',
             allocate: 'Allocate foreign payment', reverseAlloc: 'Reverse settlement' }[this.modal];
     }
 
     get modalSub() {
         return {
+            fxSetup: 'Choose the accounts revaluations and settlements post to. Leave a slot on "Create" to add a standard account for it.',
             preview: 'Revalues open foreign-currency receivables and payables at the period-end rate. Nothing posts until approved and posted.',
             approve: 'Approves the previewed adjustments for posting.',
             post: 'Posts the unrealized gain or loss journal for the period.',
@@ -427,7 +458,7 @@ export default class SabFxWorkspace extends LightningElement {
     }
 
     get saveLabel() {
-        return { preview: 'Preview run', approve: 'Approve', post: 'Post revaluation', reverse: 'Reverse', allocate: 'Allocate', reverseAlloc: 'Reverse settlement' }[this.modal];
+        return { fxSetup: 'Save accounts', preview: 'Preview run', approve: 'Approve', post: 'Post revaluation', reverse: 'Reverse', allocate: 'Allocate', reverseAlloc: 'Reverse settlement' }[this.modal];
     }
 
     get saveClass() {
@@ -451,7 +482,7 @@ export default class SabFxWorkspace extends LightningElement {
     }
 
     get showReason() {
-        return this.modal !== 'preview';
+        return this.modal !== 'preview' && this.modal !== 'fxSetup';
     }
 
     get reasonLabel() {
@@ -495,7 +526,12 @@ export default class SabFxWorkspace extends LightningElement {
             return;
         }
         let ok;
-        if (this.modal === 'preview') {
+        if (this.modal === 'fxSetup') {
+            ok = await this.execute('FXSETUP', this.currentCompanyId, (requestKey) => saveFxAccounts({ request: { companyId: this.currentCompanyId,
+                unrealizedGainAccountId: f.unrealizedGainAccountId || null, unrealizedLossAccountId: f.unrealizedLossAccountId || null,
+                realizedGainAccountId: f.realizedGainAccountId || null, realizedLossAccountId: f.realizedLossAccountId || null, createMissing: true }, requestKey }),
+                'FX accounts saved');
+        } else if (this.modal === 'preview') {
             ok = await this.execute('PREVIEW', f.runKey, () => previewRevaluation({ request: { companyId: this.currentCompanyId, accountingPeriodId: f.periodId || null,
                 runKey: f.runKey, reversalPolicy: f.reversalPolicy } }), 'Revaluation previewed', (result) => {
                 this.drawer = { kind: 'run', id: result.runId };

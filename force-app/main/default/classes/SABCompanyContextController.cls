@@ -21,7 +21,7 @@ public with sharing class SABCompanyContextController {
         @AuraEnabled public String setupStatus { get; set; }
     }
 
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled
     public static List<CompanyContext> getAccessibleCompanies() {
         assertCompanyReadAccess();
 
@@ -55,7 +55,7 @@ public with sharing class SABCompanyContextController {
         return results;
     }
 
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled
     public static CompanyContext getCompanyContext(
         Id companyId
     ) {

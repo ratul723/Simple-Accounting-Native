@@ -137,7 +137,7 @@ export default class SabConfigWorkspace extends LightningElement {
                 return {
                     ...f,
                     title: meta[0],
-                    note: meta[1],
+                    note: f.enabled ? meta[1] : `${meta[1]} Off: hidden from navigation.`,
                     switchClass: f.enabled ? 'switch on' : 'switch',
                     checked: f.enabled ? 'true' : 'false',
                     disabled: !can || this.busyKey === f.featureKey,
@@ -159,12 +159,17 @@ export default class SabConfigWorkspace extends LightningElement {
             await saveFeature({ request: { featureId: feature.featureId || null, companyId: this.currentCompanyId, featureKey: key, enabled: !feature.enabled,
                 configurationStatus: feature.configurationStatus || 'Not Configured' }, requestKey: newKey('FEATURE', key) });
             toast(this, `${(FEATURES[key] || [sentence(key)])[0]} turned ${feature.enabled ? 'off' : 'on'}`);
+            this.refreshShell();
             await this.load();
         } catch (error) {
             toast(this, reduceError(error), 'bad');
         } finally {
             this.busyKey = undefined;
         }
+    }
+
+    refreshShell() {
+        this.dispatchEvent(new CustomEvent('sabrefreshshell', { bubbles: true, composed: true }));
     }
 
     // ---------- access ----------
@@ -275,6 +280,7 @@ export default class SabConfigWorkspace extends LightningElement {
             await saveGrant({ request: { grantId: f.grantId, companyId: this.currentCompanyId, userId: f.userId || null, role: f.role, effectiveFrom: f.effectiveFrom || null,
                 effectiveTo: f.effectiveTo || null, approvalLimit: f.approvalLimit === '' ? null : Number(f.approvalLimit), active: f.active }, requestKey: this.requestKey });
             toast(this, f.grantId ? 'Access updated' : 'Access granted');
+            this.refreshShell();
             this.modalOpen = false;
             await this.load();
         } catch (error) {

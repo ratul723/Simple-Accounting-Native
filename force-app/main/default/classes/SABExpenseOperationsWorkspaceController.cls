@@ -114,7 +114,7 @@ public with sharing class SABExpenseOperationsWorkspaceController {
         @AuraEnabled public List<PaymentDTO> reimbursementPayments { get; set; }
     }
 
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled
     public static DashboardDTO getDashboard(Id companyId) {
         assertViewPermission();
 
@@ -183,7 +183,7 @@ public with sharing class SABExpenseOperationsWorkspaceController {
         }
     }
 
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled
     public static ClaimDetailDTO getClaimDetail(Id claimId) {
         assertViewPermission();
 

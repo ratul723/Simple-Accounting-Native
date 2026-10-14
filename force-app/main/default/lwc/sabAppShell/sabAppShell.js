@@ -397,7 +397,8 @@ export default class SabAppShell extends NavigationMixin(LightningElement) {
         return {
             canCreateJournal: Boolean(this.shell && this.shell.canCreateJournal),
             canCreateInvoice: Boolean(this.shell && this.shell.canCreateInvoice),
-            canCreateCompany: Boolean(this.shell && this.shell.canCreateCompany)
+            canCreateCompany: Boolean(this.shell && this.shell.canCreateCompany),
+            disabledFeatures: (this.shell && this.shell.disabledFeatures) || []
         };
     }
 
@@ -556,6 +557,25 @@ export default class SabAppShell extends NavigationMixin(LightningElement) {
             this.errorMessage = reduceError(error);
         } finally {
             this.isLoading = false;
+        }
+    }
+
+    /** A workspace changed something the shell shows (features, setup status, grants): reload the shell context in place. */
+    async handleRefreshShell() {
+        const companyId = this.company && this.company.companyId;
+        if (!companyId) {
+            return;
+        }
+        try {
+            const [context, shell] = await Promise.all([getCompanyContext({ companyId }), getShellContext({ companyId })]);
+            this.company = context;
+            this.companies = this.companies.map((c) => (c.companyId === context.companyId ? context : c));
+            this.shell = shell;
+            if (this.workspaceId && !this.isVisible(this.workspaceId)) {
+                this.navigateTo('home');
+            }
+        } catch (error) {
+            this.toast(reduceError(error), 'bad');
         }
     }
 

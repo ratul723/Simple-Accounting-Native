@@ -18,7 +18,7 @@ public with sharing class SABJournalCorrectionService {
         @AuraEnabled public String entryType { get; set; }
     }
 
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled
     public static List<ReversedJournalDTO> getReversedJournals(Id companyId) {
         if (companyId == null) {
             throw new AuraHandledException('Select an Accounting Company first.');

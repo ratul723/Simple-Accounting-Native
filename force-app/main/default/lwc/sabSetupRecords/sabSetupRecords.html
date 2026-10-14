@@ -64,6 +64,9 @@
                 </template>
             </div>
         </template>
+        <template lwc:if={showGenerate}>
+            <button slot="footer" class="btn sab-generate-periods" type="button" disabled={manageDisabled} title={manageReason} onclick={handleGenerate}>Generate fiscal year</button>
+        </template>
         <template lwc:if={showNew}>
             <button slot="footer" class="btn primary new" type="button" disabled={manageDisabled} title={manageReason} onclick={handleNew}>
                 <c-sab-icon name="plus" size="16"></c-sab-icon>New</button>

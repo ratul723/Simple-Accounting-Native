@@ -63,7 +63,7 @@ public with sharing class SABAccountingPeriodWorkspaceController {
         @AuraEnabled public Boolean replay { get; set; }
     }
 
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled
     public static WorkspaceDTO getWorkspace(
         Id companyId
     ) {
@@ -114,7 +114,7 @@ public with sharing class SABAccountingPeriodWorkspaceController {
         return dto;
     }
 
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled
     public static PeriodDetailDTO getPeriodDetail(
         Id periodId
     ) {

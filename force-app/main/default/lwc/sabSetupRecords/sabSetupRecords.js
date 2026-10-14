@@ -7,6 +7,8 @@ import savePeriod from '@salesforce/apex/SABSetupRecordService.savePeriod';
 import saveAccount from '@salesforce/apex/SABSetupRecordService.saveAccount';
 import saveSequence from '@salesforce/apex/SABSetupRecordService.saveSequence';
 import saveFeature from '@salesforce/apex/SABSetupRecordService.saveFeature';
+import getSetupOptions from '@salesforce/apex/SABSetupActionService.getOptions';
+import generatePeriods from '@salesforce/apex/SABSetupActionService.generatePeriods';
 import { formatDate } from 'c/sabFormat';
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
@@ -22,13 +24,41 @@ const PROFILE_FIELDS = [
     { name: 'fiscalCalendarType', label: 'Fiscal calendar', type: 'select', options: opts(['Calendar', 'Custom']) }
 ];
 
+const PATTERNS = opts(['Monthly', '4-4-5 weeks', '4-5-4 weeks', '5-4-4 weeks', '13 periods of 4 weeks']);
+const isCustom = (form) => form.fiscalCalendarType === 'Custom';
+
+/** Extra inputs on New accounting company: periods for the first fiscal year, with the custom calendar choices. */
+const FIRST_YEAR_FIELDS = [
+    { name: 'createPeriods', label: 'Create the first fiscal year of periods', type: 'checkbox', extra: true },
+    { name: 'firstDay', label: 'First day of the fiscal year', type: 'date', extra: true, required: true,
+        showWhen: (form) => form.createPeriods === true && isCustom(form), hint: 'Custom years can start on any day' },
+    { name: 'periodPattern', label: 'Period pattern', type: 'select', extra: true, options: PATTERNS,
+        showWhen: (form) => form.createPeriods === true && isCustom(form), hint: 'Monthly, three 4-4-5 style quarters, or 13 four-week periods' }
+];
+
+/** The Generate fiscal year form on Accounting periods. */
+const GENERATE_FIELDS = [
+    { name: 'firstDay', label: 'First day of the fiscal year', type: 'date', required: true, hint: 'Defaults to the day after the last period' },
+    { name: 'periodPattern', label: 'Period pattern', type: 'select', options: PATTERNS }
+];
+
+/** First day of the fiscal year that contains today, for a calendar company starting in startMonth. */
+function fiscalYearStart(startMonth) {
+    const today = new Date();
+    let year = today.getFullYear();
+    if (today.getMonth() + 1 < startMonth) {
+        year -= 1;
+    }
+    return `${year}-${String(startMonth).padStart(2, '0')}-01`;
+}
+
 const KINDS = {
     newCompany: {
         title: 'New accounting company',
         sub: 'You become its finance manager. Set up periods, accounts and numbering next.',
         single: true,
         fields: [{ name: 'companyKey', label: 'Company key', type: 'text', required: true, hint: 'Short unique code, for example HLT-AU' },
-            ...PROFILE_FIELDS],
+            ...PROFILE_FIELDS, ...FIRST_YEAR_FIELDS],
         save: (request, requestKey) => createCompany({ request, requestKey }),
         saved: 'Accounting company created'
     },
@@ -62,7 +92,8 @@ const KINDS = {
         fromRecord: (r) => ({ periodId: r.Id, periodKey: r.Period_Key__c, startDate: r.Start_Date__c, endDate: r.End_Date__c,
             fiscalYear: r.Fiscal_Year__c, periodNumber: r.Period_Number__c, fiscalQuarter: r.Fiscal_Quarter__c }),
         save: (request, requestKey) => savePeriod({ request, requestKey }),
-        saved: 'Accounting period saved'
+        saved: 'Accounting period saved',
+        canGenerate: true
     },
     account: {
         title: 'Chart of accounts',
@@ -151,6 +182,7 @@ export default class SabSetupRecords extends LightningElement {
     formError;
     listError;
     saving = false;
+    generating = false;
     canManage = false;
     isOpen = false;
     currentKind;
@@ -189,7 +221,7 @@ export default class SabSetupRecords extends LightningElement {
         try {
             this.canManage = this.currentKind === 'newCompany' ? true : await canManageSetup();
             if (this.currentKind === 'newCompany') {
-                this.edit({ fiscalYearStartMonth: '1', fiscalCalendarType: 'Calendar' });
+                this.edit({ fiscalYearStartMonth: '1', fiscalCalendarType: 'Calendar', createPeriods: true, firstDay: fiscalYearStart(1), periodPattern: 'Monthly' });
                 return;
             }
             const records = await getSetupRecords({ companyId: this.companyId, kind: this.currentKind });
@@ -206,6 +238,7 @@ export default class SabSetupRecords extends LightningElement {
     }
 
     edit(values) {
+        this.generating = false;
         this.form = { ...values };
         this.requestKey = newKey(this.currentKind);
         this.formError = undefined;
@@ -217,6 +250,9 @@ export default class SabSetupRecords extends LightningElement {
     }
 
     get heading() {
+        if (this.generating) {
+            return 'Generate fiscal year';
+        }
         if (this.view === 'form' && !this.config.single) {
             return this.form[this.config.idField] ? `Edit ${this.config.title.toLowerCase()}` : `New ${this.config.title.toLowerCase()}`;
         }
@@ -271,7 +307,8 @@ export default class SabSetupRecords extends LightningElement {
 
     get fields() {
         const editing = Boolean(this.form[this.config.idField]);
-        return this.config.fields.map((f) => {
+        const source = this.generating ? GENERATE_FIELDS : this.config.fields.filter((f) => !f.showWhen || f.showWhen(this.form));
+        return source.map((f) => {
             const value = this.form[f.name];
             const disabled = !this.canManage || (f.createOnly && editing) || (f.name === 'companyKey' && this.currentKind !== 'newCompany');
             return {
@@ -307,6 +344,24 @@ export default class SabSetupRecords extends LightningElement {
         return !this.config.single && this.view === 'list';
     }
 
+    get showGenerate() {
+        return Boolean(this.config.canGenerate) && this.view === 'list';
+    }
+
+    async handleGenerate() {
+        this.formError = undefined;
+        this.requestKey = newKey('generate');
+        this.generating = true;
+        this.form = { firstDay: '', periodPattern: 'Monthly' };
+        this.view = 'form';
+        try {
+            const o = await getSetupOptions({ companyId: this.companyId });
+            this.form = { firstDay: o.nextPeriodStart || '', periodPattern: 'Monthly' };
+        } catch (error) {
+            this.formError = reduceError(error);
+        }
+    }
+
     handleNew() {
         this.edit({ ...(this.config.defaults || {}) });
     }
@@ -317,6 +372,7 @@ export default class SabSetupRecords extends LightningElement {
     }
 
     handleBack() {
+        this.generating = false;
         this.view = 'list';
         this.formError = undefined;
     }
@@ -324,7 +380,11 @@ export default class SabSetupRecords extends LightningElement {
     handleInput(event) {
         const field = event.target.dataset.field;
         const value = event.target.type === 'checkbox' ? event.target.checked : event.target.value;
-        this.form = { ...this.form, [field]: value };
+        const form = { ...this.form, [field]: value };
+        if (this.currentKind === 'newCompany' && field === 'fiscalYearStartMonth' && !isCustom(form)) {
+            form.firstDay = fiscalYearStart(Number(value));
+        }
+        this.form = form;
     }
 
     buildRequest() {
@@ -335,7 +395,7 @@ export default class SabSetupRecords extends LightningElement {
         if (this.config.idField) {
             request[this.config.idField] = this.form[this.config.idField] || null;
         }
-        for (const f of this.config.fields) {
+        for (const f of this.config.fields.filter((x) => !x.extra)) {
             const v = this.form[f.name];
             if (f.type === 'checkbox') {
                 request[f.name] = v === true;
@@ -357,8 +417,15 @@ export default class SabSetupRecords extends LightningElement {
         }
         this.saving = true;
         this.formError = undefined;
+        if (this.generating) {
+            await this.saveGenerated();
+            return;
+        }
         try {
             const recordId = await this.config.save(this.buildRequest(), this.requestKey);
+            if (this.currentKind === 'newCompany' && this.form.createPeriods === true) {
+                await this.generateFirstYear(recordId);
+            }
             this.dispatchEvent(new CustomEvent('sabtoast', { detail: { message: this.config.saved }, bubbles: true, composed: true }));
             this.dispatchEvent(new CustomEvent('saved', { detail: { recordId, kind: this.currentKind } }));
             if (this.config.single) {
@@ -367,6 +434,34 @@ export default class SabSetupRecords extends LightningElement {
                 this.rows = (await getSetupRecords({ companyId: this.companyId, kind: this.currentKind })) || [];
                 this.view = 'list';
             }
+        } catch (error) {
+            this.formError = reduceError(error);
+        } finally {
+            this.saving = false;
+        }
+    }
+
+    async generateFirstYear(companyId) {
+        const custom = isCustom(this.form);
+        try {
+            const count = await generatePeriods({ request: { companyId, firstDay: custom ? this.form.firstDay || null : fiscalYearStart(Number(this.form.fiscalYearStartMonth || 1)),
+                pattern: custom ? this.form.periodPattern || 'Monthly' : 'Monthly', fiscalYear: null }, requestKey: `${this.requestKey}-P` });
+            this.dispatchEvent(new CustomEvent('sabtoast', { detail: { message: `${count} accounting periods created` }, bubbles: true, composed: true }));
+        } catch (error) {
+            this.dispatchEvent(new CustomEvent('sabtoast', { detail: { message: `Company created, but periods were not: ${reduceError(error)}`, tone: 'bad' },
+                bubbles: true, composed: true }));
+        }
+    }
+
+    async saveGenerated() {
+        try {
+            const count = await generatePeriods({ request: { companyId: this.companyId, firstDay: this.form.firstDay || null, pattern: this.form.periodPattern || 'Monthly',
+                fiscalYear: null }, requestKey: this.requestKey });
+            this.dispatchEvent(new CustomEvent('sabtoast', { detail: { message: `${count} accounting periods generated` }, bubbles: true, composed: true }));
+            this.dispatchEvent(new CustomEvent('saved', { detail: { kind: 'period' } }));
+            this.rows = (await getSetupRecords({ companyId: this.companyId, kind: 'period' })) || [];
+            this.generating = false;
+            this.view = 'list';
         } catch (error) {
             this.formError = reduceError(error);
         } finally {

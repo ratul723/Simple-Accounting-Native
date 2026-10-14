@@ -5,7 +5,8 @@
  * SABCloseTaskService.generateChecklist / assign / updateStatus, each status change with a request key.
  *
  * The inbox is SABApprovalService.getInbox (current steps waiting on the running user) narrowed to the selected
- * company. "Submitted by you" lists the user's Pending requests in the company with their next approver. The
+ * company. "Pending in this company" lists every Pending request with its requester and next approver (requests waiting on
+ * someone else, or with no approver left, are visible here); the user's own are also returned as myRequests. The
  * checklist is SABCloseTaskService.getChecklist with assignee names and the grant holders who can be assigned.
  */
 public with sharing class SABApprovalsCloseWorkspaceController {
@@ -19,6 +20,8 @@ public with sharing class SABApprovalsCloseWorkspaceController {
         @AuraEnabled public Id currentPeriodId { get; set; }
         @AuraEnabled public List<InboxRow> inbox { get; set; }
         @AuraEnabled public List<RequestRow> myRequests { get; set; }
+        /** Every Pending request in the company with its next approver, so a request waiting on someone else is visible too. */
+        @AuraEnabled public List<RequestRow> pendingRequests { get; set; }
         @AuraEnabled public List<PeriodRow> periods { get; set; }
     }
 
@@ -42,6 +45,10 @@ public with sharing class SABApprovalsCloseWorkspaceController {
         @AuraEnabled public Datetime requestedAt { get; set; }
         @AuraEnabled public String status { get; set; }
         @AuraEnabled public String nextApprover { get; set; }
+        @AuraEnabled public String requestedByName { get; set; }
+        @AuraEnabled public Boolean mine { get; set; }
+        @AuraEnabled public Boolean waitingOnMe { get; set; }
+        @AuraEnabled public Boolean unassigned { get; set; }
     }
 
     public class PeriodRow {
@@ -98,7 +105,13 @@ public with sharing class SABApprovalsCloseWorkspaceController {
             data.canRequest = SABPermissionService.hasPermission('SAB_Request_Approval');
             data.canManageClose = SABPermissionService.hasPermission('SAB_Manage_Close_Tasks');
             data.inbox = inbox(companyId);
-            data.myRequests = myRequests(companyId);
+            data.pendingRequests = pendingRequests(companyId);
+            data.myRequests = new List<RequestRow>();
+            for (RequestRow row : data.pendingRequests) {
+                if (row.mine) {
+                    data.myRequests.add(row);
+                }
+            }
             data.periods = periods(companyId);
             Date today = Date.today();
             for (PeriodRow period : data.periods) {
@@ -222,17 +235,17 @@ public with sharing class SABApprovalsCloseWorkspaceController {
         return rows;
     }
 
-    private static List<RequestRow> myRequests(Id companyId) {
+    private static List<RequestRow> pendingRequests(Id companyId) {
         List<RequestRow> rows = new List<RequestRow>();
         Id userId = UserInfo.getUserId();
         Map<Id, RequestRow> byId = new Map<Id, RequestRow>();
         for (Approval_Request__c request : [
-            SELECT Id, Name, Source_Type__c, Source_Business_Key__c, Requested_At__c, Status__c
+            SELECT Id, Name, Source_Type__c, Source_Business_Key__c, Requested_At__c, Status__c, Requested_By__c, Requested_By__r.Name
             FROM Approval_Request__c
-            WHERE Company__c = :companyId AND Requested_By__c = :userId AND Status__c = :STATUS_PENDING
+            WHERE Company__c = :companyId AND Status__c = :STATUS_PENDING
             WITH USER_MODE
             ORDER BY Requested_At__c DESC
-            LIMIT 50
+            LIMIT 100
         ]) {
             RequestRow row = new RequestRow();
             row.approvalRequestId = request.Id;
@@ -241,6 +254,10 @@ public with sharing class SABApprovalsCloseWorkspaceController {
             row.sourceBusinessKey = request.Source_Business_Key__c;
             row.requestedAt = request.Requested_At__c;
             row.status = request.Status__c;
+            row.requestedByName = request.Requested_By__r == null ? null : request.Requested_By__r.Name;
+            row.mine = request.Requested_By__c == userId;
+            row.waitingOnMe = false;
+            row.unassigned = true;
             byId.put(request.Id, row);
             rows.add(row);
         }
@@ -249,15 +266,17 @@ public with sharing class SABApprovalsCloseWorkspaceController {
         }
         Set<Id> requestIds = byId.keySet();
         for (Approval_Step__c step : [
-            SELECT Approval_Request__c, Assignee_User__r.Name
+            SELECT Approval_Request__c, Assignee_User__c, Assignee_User__r.Name
             FROM Approval_Step__c
             WHERE Approval_Request__c IN :requestIds AND Decision__c = :STATUS_PENDING
             WITH USER_MODE
             ORDER BY Sequence__c ASC
         ]) {
             RequestRow row = byId.get(step.Approval_Request__c);
-            if (row.nextApprover == null && step.Assignee_User__r != null) {
-                row.nextApprover = step.Assignee_User__r.Name;
+            if (row.unassigned && step.Assignee_User__c != null) {
+                row.unassigned = false;
+                row.nextApprover = step.Assignee_User__r == null ? null : step.Assignee_User__r.Name;
+                row.waitingOnMe = step.Assignee_User__c == userId;
             }
         }
         return rows;

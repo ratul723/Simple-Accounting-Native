@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>SABApprovalsCloseWorkspaceController</members>
+        <members>SABApprovalsCloseWorkspaceCtrlTest</members>
+        <members>SABDocumentEntryService</members>
+        <members>SABDocumentEntryServiceTest</members>
+        <members>SABEmployeeCompensationService</members>
+        <members>SABPeopleSetupController</members>
+        <members>SABPeopleSetupControllerTest</members>
+        <members>SABSetupActionService</members>
+        <members>SABSetupActionServiceTest</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>sabApprovalsWorkspace</members>
+        <members>sabDocumentEditor</members>
+        <members>sabEmployees</members>
+        <members>sabJournalsWorkspace</members>
+        <members>sabPeopleWorkspace</members>
+        <members>sabTaxWorkspace</members>
+        <name>LightningComponentBundle</name>
+    </types>
+    <types>
+        <members>SAB_App_User</members>
+        <name>PermissionSet</name>
+    </types>
+    <version>67.0</version>
+</Package>

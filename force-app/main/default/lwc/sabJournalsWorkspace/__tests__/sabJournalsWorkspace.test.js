@@ -283,4 +283,21 @@ describe('c-sab-journals-workspace', () => {
         await flush();
         expect(el2.shadowRoot.querySelector('.sab-journal-list')).not.toBeNull();
     });
+
+    it('tags journal lines with an optional project when projects exist and the feature is on', async () => {
+        getWorkspace.mockResolvedValue({ ...CTX, projects: [{ value: 'PR1', label: 'PRJ-1 Fit-out' }] });
+        const el = mount();
+        await flush();
+        const root = el.shadowRoot;
+        expect(root.querySelector('.egrid thead').textContent).toContain('Project');
+        const select = root.querySelector('[data-field="projectId"]');
+        select.value = 'PR1';
+        select.dispatchEvent(new CustomEvent('change'));
+        root.querySelector('.sab-save-draft').click();
+        await flush();
+        expect(saveDraft.mock.calls[0][0].request.lines[0].projectId).toBe('PR1');
+        const el2 = mount({ caps: { canCreateJournal: true, disabledFeatures: ['PROJECTS'] } });
+        await flush();
+        expect(el2.shadowRoot.querySelector('[data-field="projectId"]')).toBeNull();
+    });
 });

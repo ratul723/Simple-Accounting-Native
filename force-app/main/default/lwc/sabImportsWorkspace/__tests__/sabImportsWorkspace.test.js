@@ -16,7 +16,7 @@ const COMPANY = 'a01000000000001AAA';
 
 function workspace(overrides = {}) {
     return {
-        canManage: true, canCommit: true, canViewLog: true, importTypes: ['Chart of Accounts', 'Journal Entries', 'Opening Balances'],
+        canManage: true, canCommit: true, canViewLog: true, importTypes: ['Chart of Accounts', 'Journal Entries', 'Opening Balances', 'Customers', 'Suppliers', 'Budgets'],
         jobs: [
             { importJobId: 'J1', name: 'IMP-0002', importType: 'Opening Balances', status: 'Validated', rowCount: 14, validCount: 12, errorCount: 2,
                 requestedBy: 'Priya Nair', requestedAt: '2026-09-24T02:00:00.000Z' },
@@ -151,6 +151,16 @@ describe('c-sab-imports-workspace', () => {
         expect(root.querySelector('.drop .strong').textContent).toBe('coa.csv');
         expect(root.querySelector('.drop .small').textContent).toBe('2 data rows, 0 KB');
         expect(root.querySelector('.hint-line').textContent).toContain('account_code');
+        for (const [type, text] of [['Customers', 'credit_limit'], ['Suppliers', 'accounts payable'], ['Budgets', 'budget_name']]) {
+            select.value = type;
+            select.dispatchEvent(new CustomEvent('change'));
+            // eslint-disable-next-line no-await-in-loop
+            await flush();
+            expect(root.querySelector('.hint-line').textContent).toContain(text);
+        }
+        select.value = 'Chart of Accounts';
+        select.dispatchEvent(new CustomEvent('change'));
+        await flush();
         root.querySelector('.stage-import').click();
         await flush();
         expect(stageImport.mock.calls[0][0]).toMatchObject({ companyId: COMPANY, importType: 'Chart of Accounts' });

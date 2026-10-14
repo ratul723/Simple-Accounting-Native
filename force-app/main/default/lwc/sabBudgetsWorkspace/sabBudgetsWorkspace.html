@@ -29,11 +29,29 @@
                 <template for:each={versionButtons} for:item="v"><button key={v.id} class={v.className} type="button" aria-pressed={v.pressed} data-id={v.id} onclick={handleVersion}>{v.label}</button></template>
             </div>
             <template lwc:if={hasBudget}><span class={statusChip}><span class="dot"></span>{budget.status}</span></template>
-            <span class="spacer"></span>
-            <label class="row small muted dept">Department
-                <select class="select sab-department" onchange={handleDepartment}><option value="">All departments</option>
-                    <template for:each={departmentOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+            <template lwc:if={showApprovedButton}>
+                <button class="btn sm sab-approved-version" type="button" onclick={handleApprovedVersion}>Compare approved version</button></template>
         </div>
+        <div class="row picker review">
+            <label class="row small muted dept">From
+                <select class="select sab-from" data-field="fromPeriod" onchange={handleRange}><option value="">Year start</option>
+                    <template for:each={fromOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+            <label class="row small muted dept">To
+                <select class="select sab-to" data-field="toPeriod" onchange={handleRange}><option value="">Year end</option>
+                    <template for:each={toOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+            <span class="spacer"></span>
+            <div class="seg sab-group" role="group" aria-label="Compare by">
+                <template for:each={groupButtons} for:item="g"><button key={g.id} class={g.className} type="button" aria-pressed={g.pressed} data-id={g.id} onclick={handleGroup}>{g.label}</button></template>
+            </div>
+            <template lwc:if={showDimensionFilter}>
+                <label class="row small muted dept">{dimensionLabel}
+                    <select class="select sab-dimension" onchange={handleDimension}><option value="">All</option>
+                        <template for:each={dimensionOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+            </template>
+        </div>
+        <template lwc:if={hasBudget}>
+            <dl class="kv facts sab-version-facts"><template for:each={versionFacts} for:item="f"><div key={f.key} class="fact"><dt>{f.label}</dt><dd>{f.value}</dd></div></template></dl>
+        </template>
 
         <template lwc:if={hasBudget}>
             <template lwc:if={varianceError}>
@@ -88,6 +106,10 @@
             <div class="grid g2 form">
                 <label class="field"><span>Name</span><input class="input" data-field="name" value={form.name} placeholder="For example FY27 Original" oninput={handleField} /></label>
                 <label class="field"><span>Fiscal year</span><input class="input n" type="number" data-field="fiscalYear" value={form.fiscalYear} oninput={handleField} /></label>
+                <label class="field"><span>Currency</span><div class="ro">{currencyText}</div></label>
+                <label class="field"><span>Start from</span><select class="select" data-field="copyFrom" onchange={handleField}><option value="">A blank budget</option>
+                    <template for:each={copyOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>Copy {o.label}</option></template></select></label>
+                <label class="field"><span>Adjust copied amounts by %</span><input class="input n" type="number" step="0.1" data-field="adjustPercent" value={form.adjustPercent} oninput={handleField} /></label>
             </div>
         </template>
         <template lwc:if={isReasonModal}>
@@ -110,6 +132,17 @@
                 </tr></template></tbody>
                 <tfoot><tr><td>Total</td><td></td><td></td><td></td><td class="n num">{linesTotal}</td><td></td></tr></tfoot>
             </table></div>
+            <template lwc:if={spreadOpen}>
+                <div class="row spread">
+                    <select class="select" data-field="glAccountId" aria-label="Account to spread" onchange={handleSpreadField}><option value="">Account</option>
+                        <template for:each={spreadAccountOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select>
+                    <select class="select" data-field="departmentId" aria-label="Department" onchange={handleSpreadField}><option value="">No department</option>
+                        <template for:each={spreadDepartmentOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select>
+                    <input class="input n sab-spread-amount" type="number" step="0.01" data-field="annual" placeholder="Annual amount" aria-label="Annual amount" oninput={handleSpreadField} />
+                    <button class="btn sm primary sab-spread-apply" type="button" onclick={handleSpreadApply}>Spread across periods</button>
+                </div>
+            </template>
+            <button class="btn sm ghost sab-spread" type="button" onclick={handleSpreadToggle}>Spread an annual amount</button>
             <button class="btn sm ghost sab-add-line add-line" type="button" onclick={handleAddLine}><c-sab-icon name="plus" size="14"></c-sab-icon>Add line</button>
         </template>
         <button slot="footer" class="btn ghost sab-modal-close" type="button" onclick={handleCloseModal}>Close</button>

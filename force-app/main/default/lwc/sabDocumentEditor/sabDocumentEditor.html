@@ -5,8 +5,18 @@
         <template lwc:elseif={options}>
             <template lwc:if={isPayment}>
                 <div class="grid g2 form">
-                    <label class="field"><span>{partyLabel}</span><select class="select" data-field="partyProfileId" onchange={handleField}><option value="">Select</option>
-                        <template for:each={partyOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+                    <div class="field party">
+                        <label class="field"><span>{partyLabel}</span><select class="select" data-field="partyProfileId" onchange={handleField}><option value="">Select</option>
+                            <template for:each={partyOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+                        <button class="linkish sab-new-party" type="button" onclick={handleTogglePartyForm}>{newPartyLabel}</button>
+                        <template lwc:if={partyFormOpen}>
+                            <div class="party-form">
+                                <input class="input sab-party-name" value={newPartyName} placeholder="Name" aria-label="Name" oninput={handlePartyName} />
+                                <button class="btn sm primary sab-party-save" type="button" disabled={partySaving} onclick={handleSaveParty}>Add</button>
+                            </div>
+                            <template lwc:if={partyError}><div class="small down party-error">{partyError}</div></template>
+                        </template>
+                    </div>
                     <label class="field"><span>Bank account</span><select class="select" data-field="bankAccountId" onchange={handleField}><option value="">Select</option>
                         <template for:each={bankOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
                     <label class="field"><span>Amount</span><input class="input n" type="number" step="0.01" data-field="amount" value={form.amount} oninput={handleField} /></label>
@@ -22,13 +32,27 @@
             <template lwc:else>
                 <div class="grid g2 form">
                     <template lwc:if={isClaim}>
-                        <label class="field"><span>Claimant</span><select class="select" data-field="employmentId" onchange={handleField}><option value="">Select</option>
-                            <template for:each={employmentOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+                        <div class="field party">
+                            <label class="field"><span>Claimant</span><select class="select" data-field="employmentId" onchange={handleField}><option value="">Select</option>
+                                <template for:each={employmentOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+                            <template lwc:if={noEmployees}><div class="small down">No employees in this company yet.
+                                <button class="linkish sab-open-people" type="button" onclick={handleOpenPeople}>Add employees in People &amp; payroll</button></div></template>
+                        </div>
                         <label class="field"><span>Claim date</span><input class="input" type="date" data-field="documentDate" value={form.documentDate} oninput={handleField} /></label>
                     </template>
                     <template lwc:else>
-                        <label class="field"><span>{partyLabel}</span><select class="select" data-field="partyProfileId" onchange={handleField}><option value="">Select</option>
-                            <template for:each={partyOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+                        <div class="field party">
+                            <label class="field"><span>{partyLabel}</span><select class="select" data-field="partyProfileId" onchange={handleField}><option value="">Select</option>
+                                <template for:each={partyOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+                            <button class="linkish sab-new-party" type="button" onclick={handleTogglePartyForm}>{newPartyLabel}</button>
+                            <template lwc:if={partyFormOpen}>
+                                <div class="party-form">
+                                    <input class="input sab-party-name" value={newPartyName} placeholder="Name" aria-label="Name" oninput={handlePartyName} />
+                                    <button class="btn sm primary sab-party-save" type="button" disabled={partySaving} onclick={handleSaveParty}>Add</button>
+                                </div>
+                                <template lwc:if={partyError}><div class="small down party-error">{partyError}</div></template>
+                            </template>
+                        </div>
                         <template lwc:if={isCredit}>
                             <label class="field"><span>Reduces invoice</span><select class="select" data-field="originalInvoiceId" onchange={handleField}><option value="">Select</option>
                                 <template for:each={creditOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
@@ -49,7 +73,7 @@
                         <th>Description</th><th>{accountLabel}</th><th>Tax</th>
                         <template lwc:if={isDocument}><th class="n">Qty</th><th class="n">Unit price</th><template lwc:if={showDiscount}><th class="n">Discount</th></template></template>
                         <template lwc:if={isClaim}><th class="n">Amount</th></template>
-                        <th>Department</th><th class="n">Net</th><th><span class="sr">Remove</span></th></tr></thead>
+                        <th>Department</th><template lwc:if={showCostCenter}><th>Cost center</th></template><template lwc:if={showProjects}><th>Project</th></template><th class="n">Net</th><th><span class="sr">Remove</span></th></tr></thead>
                     <tbody><template for:each={lineRows} for:item="l"><tr key={l.key}>
                         <template lwc:if={isClaim}>
                             <td class="date"><input class="input" type="date" data-index={l.index} data-field="expenseDate" value={l.expenseDate} aria-label="Expense date" oninput={handleLine} /></td>
@@ -71,6 +95,10 @@
                         </template>
                         <td><select class="select" data-index={l.index} data-field="departmentId" aria-label="Department" onchange={handleLine}><option value="">&#8212;</option>
                             <template for:each={l.departmentOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></td>
+                        <template lwc:if={showCostCenter}><td><select class="select" data-index={l.index} data-field="costCenterId" aria-label="Cost center" onchange={handleLine}><option value="">&#8212;</option>
+                            <template for:each={l.costCenterOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></td></template>
+                        <template lwc:if={showProjects}><td><select class="select" data-index={l.index} data-field="projectId" aria-label="Project" onchange={handleLine}><option value="">&#8212;</option>
+                            <template for:each={l.projectOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></td></template>
                         <td class="n num">{l.netText}</td>
                         <td><button class="btn ghost sm sab-remove-line" type="button" data-index={l.index} onclick={handleRemoveLine}>Remove</button></td>
                     </tr></template></tbody>

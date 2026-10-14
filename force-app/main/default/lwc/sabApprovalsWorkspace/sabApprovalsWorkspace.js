@@ -209,10 +209,15 @@ export default class SabApprovalsWorkspace extends LightningElement {
 
     get requestRows() {
         const reason = this.data && this.data.canRequest ? undefined : 'Your role cannot cancel approval requests';
-        return ((this.data && this.data.myRequests) || []).map((r) => ({
+        const rows = (this.data && (this.data.pendingRequests || this.data.myRequests)) || [];
+        return rows.map((r) => ({
             ...r,
             requestedText: formatDateTime(r.requestedAt),
             chip: chipClass(r.status),
+            approverText: r.unassigned ? 'No approver assigned' : r.waitingOnMe ? 'You' : r.nextApprover,
+            approverClass: r.unassigned ? 'down' : r.waitingOnMe ? 'strong' : '',
+            requester: r.mine ? 'You' : r.requestedByName,
+            canCancel: r.mine !== false,
             disabled: Boolean(reason),
             title: reason
         }));

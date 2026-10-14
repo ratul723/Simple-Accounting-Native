@@ -138,4 +138,55 @@ private class SABImportServiceTest {
         System.assertEquals(null, SABImportService.parseDate('15/01/2026'), 'Other formats are refused.');
         System.assertEquals(null, SABImportService.parseAmount('ten'), 'Non-numeric amounts are refused.');
     }
+
+    @IsTest
+    static void customersAndSuppliersImportAsAccountingProfiles() {
+        String customers = 'name,tax_number,credit_limit\nGreenfield Produce,53 004,20000\nGreenfield Produce,,\nCoastal Foods,,-5\nPacific Grocers,,1000\n';
+        String suppliers = 'name\nFuel Co\n';
+        SABImportService.ActionResult committed;
+        SABImportService.ActionResult supplierCheck;
+        System.runAs(SABImportTestFixture.user(SABImportTestFixture.IMPORTER)) {
+            SABTestGovernor.startTest();
+            SABImportService.ActionResult staged = SABImportService.stage(SABImportTestFixture.companyId(), 'Customers', customers);
+            SABImportService.validate(staged.importJobId);
+            committed = SABImportService.commitImport(staged.importJobId, 'I20-CUST-COMMIT');
+            SABImportService.ActionResult sup = SABImportService.stage(SABImportTestFixture.companyId(), 'Suppliers', suppliers);
+            supplierCheck = SABImportService.validate(sup.importJobId);
+            SABTestGovernor.stopTest();
+        }
+        System.assertEquals('Part Failed', committed.status, 'Duplicates and bad limits are rejected.');
+        System.assertEquals(1, committed.committedCount, 'One customer committed.');
+        Map<Decimal, Import_Row__c> byRow = rows(committed.importJobId);
+        System.assertEquals('Error', byRow.get(1).Validation_Status__c, 'A name twice in the file is rejected.');
+        System.assert(byRow.get(3).Validation_Message__c.contains('credit_limit'), byRow.get(3).Validation_Message__c);
+        Party_Accounting_Profile__c profile = [SELECT Is_Customer__c, Credit_Limit__c, AR_Control_Account__r.Account_Code__c, Account__r.Name
+            FROM Party_Accounting_Profile__c WHERE Id = :byRow.get(4).Committed_Record_Id__c WITH SYSTEM_MODE];
+        System.assert(profile.Is_Customer__c, 'Customer profile.');
+        System.assertEquals(1000, profile.Credit_Limit__c, 'Credit limit.');
+        System.assertEquals('1200', profile.AR_Control_Account__r.Account_Code__c, 'AR control account.');
+        System.assertEquals('Pacific Grocers', profile.Account__r.Name, 'Account name.');
+        System.assertEquals(0, supplierCheck.validCount, 'No AP control account, so suppliers cannot be imported.');
+    }
+
+    @IsTest
+    static void budgetLinesValidateAgainstPeriodsAndAccounts() {
+        String csv = 'budget_name,fiscal_year,period_key,account_code,amount,department_code\n'
+            + 'FY26 Plan,2026,I20-2026-01,4000,1500,\n'
+            + 'FY26 Plan,2026,I20-2099-01,4000,10,\n'
+            + 'FY26 Plan,26,I20-2026-01,9999,abc,NOPE\n';
+        SABImportService.ActionResult validated;
+        System.runAs(SABImportTestFixture.user(SABImportTestFixture.IMPORTER)) {
+            SABTestGovernor.startTest();
+            SABImportService.ActionResult staged = SABImportService.stage(SABImportTestFixture.companyId(), 'Budgets', csv);
+            validated = SABImportService.validate(staged.importJobId);
+            SABTestGovernor.stopTest();
+        }
+        System.assertEquals(1, validated.validCount, 'One valid budget line.');
+        Map<Decimal, Import_Row__c> byRow = rows(validated.importJobId);
+        System.assert(byRow.get(2).Validation_Message__c.contains('period_key'), byRow.get(2).Validation_Message__c);
+        String third = byRow.get(3).Validation_Message__c;
+        System.assert(third.contains('fiscal_year') && third.contains('account_code') && third.contains('amount') && third.contains('department_code'), third);
+        System.assertEquals(2026, SABImportService.parseYear('2026'), 'Year parsing.');
+        System.assertEquals(null, SABImportService.parseYear('26'), 'Two digits rejected.');
+    }
 }

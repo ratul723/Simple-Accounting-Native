@@ -98,7 +98,7 @@
 
                         <div class="tbl-wrap">
                             <table class="tbl egrid">
-                                <thead><tr><th class="c">#</th><th>GL account</th><th>Description</th><th>Department</th><th>Cost center</th>
+                                <thead><tr><th class="c">#</th><th>GL account</th><th>Description</th><th>Department</th><th>Cost center</th><template lwc:if={showProjects}><th>Project</th></template>
                                     <th class="n">Debit</th><th class="n">Credit</th><th><span class="sr">Remove</span></th></tr></thead>
                                 <tbody>
                                     <template for:each={lineRows} for:item="l">
@@ -119,6 +119,10 @@
                                                     <option value="">&#8212;</option>
                                                     <template for:each={l.costCenterOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template>
                                                 </select></td>
+                                                <template lwc:if={showProjects}><td><select class="select" data-index={l.index} data-field="projectId" aria-label={l.projLabel} onchange={handleLine}>
+                                                    <option value="">&#8212;</option>
+                                                    <template for:each={l.projectOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template>
+                                                </select></td></template>
                                                 <td class={l.debitClass}><input class="input n" inputmode="decimal" data-index={l.index} data-field="debit" value={l.debit} aria-label={l.debitLabel} oninput={handleLine} /></td>
                                                 <td class="amt"><input class="input n" inputmode="decimal" data-index={l.index} data-field="credit" value={l.credit} aria-label={l.creditLabel} oninput={handleLine} /></td>
                                                 <td><button class="icon-btn sab-remove-line" type="button" data-index={l.index} aria-label={l.removeLabel} onclick={handleRemoveLine}>
@@ -129,6 +133,7 @@
                                                 <td>{l.explanation}</td>
                                                 <td>{l.departmentName}</td>
                                                 <td>{l.costCenterName}</td>
+                                                <template lwc:if={showProjects}><td>{l.projectName}</td></template>
                                                 <td class="n num">{l.debitText}</td>
                                                 <td class="n num">{l.creditText}</td>
                                                 <td></td>

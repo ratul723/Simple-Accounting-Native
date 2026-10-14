@@ -40,6 +40,10 @@ public with sharing class SABBudgetWorkspaceController {
         @AuraEnabled public String status;
         @AuraEnabled public String currencyCode;
         @AuraEnabled public Integer lineCount;
+        @AuraEnabled public String submittedByName;
+        @AuraEnabled public Datetime submittedAt;
+        @AuraEnabled public String approvedByName;
+        @AuraEnabled public Datetime approvedAt;
     }
 
     public class WorkspaceDTO {
@@ -97,7 +101,8 @@ public with sharing class SABBudgetWorkspaceController {
             counts.put(s, 0);
         }
         result.budgets = new List<BudgetDTO>();
-        for (Budget__c b : [SELECT Id, Name, Fiscal_Year__c, Version__c, Status__c, Currency__c, (SELECT Id FROM Budget_Line_Budget__r)
+        for (Budget__c b : [SELECT Id, Name, Fiscal_Year__c, Version__c, Status__c, Currency__c, Submitted_By__r.Name, Submitted_At__c, Approved_By__r.Name, Approved_At__c,
+                (SELECT Id FROM Budget_Line_Budget__r)
                 FROM Budget__c WHERE Company__c = :companyId WITH USER_MODE ORDER BY Fiscal_Year__c DESC, Version__c DESC LIMIT :ROW_LIMIT]) {
             result.budgets.add(toBudget(b));
             if (counts.containsKey(b.Status__c)) {
@@ -150,8 +155,8 @@ public with sharing class SABBudgetWorkspaceController {
             throw new BudgetWorkspaceException('Select a budget first.');
         }
         authorize();
-        List<Budget__c> rows = [SELECT Id, Name, Company__c, Fiscal_Year__c, Version__c, Status__c, Currency__c,
-            (SELECT Id FROM Budget_Line_Budget__r) FROM Budget__c WHERE Id = :budgetId WITH USER_MODE];
+        List<Budget__c> rows = [SELECT Id, Name, Company__c, Fiscal_Year__c, Version__c, Status__c, Currency__c, Submitted_By__r.Name, Submitted_At__c,
+            Approved_By__r.Name, Approved_At__c, (SELECT Id FROM Budget_Line_Budget__r) FROM Budget__c WHERE Id = :budgetId WITH USER_MODE];
         if (rows.isEmpty()) {
             throw new BudgetWorkspaceException('Budget not found or not accessible.');
         }
@@ -204,6 +209,10 @@ public with sharing class SABBudgetWorkspaceController {
         dto.fiscalYear = b.Fiscal_Year__c == null ? null : b.Fiscal_Year__c.intValue();
         dto.version = b.Version__c;
         dto.status = b.Status__c;
+        dto.submittedByName = b.Submitted_By__r == null ? null : b.Submitted_By__r.Name;
+        dto.submittedAt = b.Submitted_At__c;
+        dto.approvedByName = b.Approved_By__r == null ? null : b.Approved_By__r.Name;
+        dto.approvedAt = b.Approved_At__c;
         dto.currencyCode = b.Currency__c;
         dto.lineCount = b.Budget_Line_Budget__r == null ? 0 : b.Budget_Line_Budget__r.size();
         return dto;

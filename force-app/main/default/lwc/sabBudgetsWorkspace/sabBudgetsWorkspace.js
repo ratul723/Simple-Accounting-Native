@@ -7,7 +7,7 @@ import submitBudget from '@salesforce/apex/SABBudgetService.submit';
 import approveBudget from '@salesforce/apex/SABBudgetService.approve';
 import returnBudget from '@salesforce/apex/SABBudgetService.returnToDraft';
 import reviseBudget from '@salesforce/apex/SABBudgetService.revise';
-import { formatNumber, chipClass } from 'c/sabFormat';
+import { formatNumber, formatDate, chipClass } from 'c/sabFormat';
 import { reduceError, newKey, toast } from 'c/sabMoneyShared';
 
 const INCOME = ['Revenue', 'Income'];
@@ -37,6 +37,11 @@ export default class SabBudgetsWorkspace extends LightningElement {
     fiscalYear;
     budgetId;
     departmentId = '';
+    groupBy = 'ACCOUNT';
+    spread;
+    dimensionId = '';
+    fromPeriod = '';
+    toPeriod = '';
     busy = false;
     modal;
     form = {};
@@ -76,7 +81,10 @@ export default class SabBudgetsWorkspace extends LightningElement {
             this.data = data;
             const budgets = data.budgets || [];
             if (!budgets.some((b) => b.budgetId === this.budgetId)) {
-                const latest = [...budgets].sort((a, b) => b.fiscalYear - a.fiscalYear || b.version - a.version)[0];
+                const sorted = [...budgets].sort((a, b) => b.fiscalYear - a.fiscalYear || b.version - a.version);
+                const approved = sorted.find((b) => b.status === 'Approved');
+                // Directors review performance against the approved version; preparers start on the latest version.
+                const latest = this.isDirector && approved ? approved : sorted[0];
                 this.budgetId = latest ? latest.budgetId : undefined;
             }
             const selected = budgets.find((b) => b.budgetId === this.budgetId);
@@ -104,8 +112,8 @@ export default class SabBudgetsWorkspace extends LightningElement {
         }
         try {
             const [variance, detail] = await Promise.all([
-                getBudgetVsActual({ companyId: this.currentCompanyId, fiscalYear: this.fiscalYear, budgetId: this.budgetId, periodIds: null,
-                    groupBy: this.departmentId ? 'ACCOUNT_DEPARTMENT' : 'ACCOUNT' }),
+                getBudgetVsActual({ companyId: this.currentCompanyId, fiscalYear: this.fiscalYear, budgetId: this.budgetId,
+                    periodIds: this.rangePeriodIds, groupBy: this.groupBy }),
                 getBudgetDetail({ budgetId: this.budgetId })
             ]);
             if (sequence !== this.varianceSequence) {
@@ -170,6 +178,8 @@ export default class SabBudgetsWorkspace extends LightningElement {
 
     async handleYear(event) {
         this.fiscalYear = Number(event.target.value);
+        this.fromPeriod = '';
+        this.toPeriod = '';
         const first = ((this.data && this.data.budgets) || []).filter((b) => b.fiscalYear === this.fiscalYear).sort((a, b) => b.version - a.version)[0];
         this.budgetId = first ? first.budgetId : undefined;
         await this.loadBudget();
@@ -191,14 +201,95 @@ export default class SabBudgetsWorkspace extends LightningElement {
         return chipClass(this.budget.status, this.budget.status === 'Draft' ? 'neutral' : undefined);
     }
 
-    get departmentOptions() {
-        return ((this.data && this.data.departments) || []).map((d) => ({ ...d, selected: d.value === this.departmentId }));
+    get isDirector() {
+        return Boolean(this.persona && this.persona.key === 'DIRECTOR');
     }
 
-    async handleDepartment(event) {
-        this.departmentId = event.target.value;
+    // ---------- review filters: period range and dimension ----------
+
+    get fyPeriods() {
+        return ((this.data && this.data.periods) || []).filter((p) => p.fiscalYear === this.fiscalYear);
+    }
+
+    /** Selected periods between From and To, or null for the whole year. */
+    get rangePeriodIds() {
+        const list = this.fyPeriods;
+        if (!this.fromPeriod && !this.toPeriod) {
+            return null;
+        }
+        const start = this.fromPeriod ? list.findIndex((p) => p.value === this.fromPeriod) : 0;
+        const end = this.toPeriod ? list.findIndex((p) => p.value === this.toPeriod) : list.length - 1;
+        return list.slice(Math.max(0, start), end < 0 ? list.length : end + 1).map((p) => p.value);
+    }
+
+    get fromOptions() {
+        return this.fyPeriods.map((p) => ({ ...p, selected: p.value === this.fromPeriod }));
+    }
+
+    get toOptions() {
+        return this.fyPeriods.map((p) => ({ ...p, selected: p.value === this.toPeriod }));
+    }
+
+    get groupButtons() {
+        return [['ACCOUNT', 'Account'], ['ACCOUNT_DEPARTMENT', 'Department'], ['ACCOUNT_COST_CENTER', 'Cost center']].map(([id, label]) => ({
+            id, label, className: id === this.groupBy ? 'on' : '', pressed: id === this.groupBy ? 'true' : 'false' }));
+    }
+
+    get showDimensionFilter() {
+        return this.groupBy !== 'ACCOUNT';
+    }
+
+    get dimensionLabel() {
+        return this.groupBy === 'ACCOUNT_COST_CENTER' ? 'Cost center' : 'Department';
+    }
+
+    get dimensionOptions() {
+        const list = this.groupBy === 'ACCOUNT_COST_CENTER' ? this.data.costCenters : this.data.departments;
+        return (list || []).map((d) => ({ ...d, selected: d.value === this.dimensionId }));
+    }
+
+    async handleGroup(event) {
+        this.groupBy = event.currentTarget.dataset.id;
+        this.dimensionId = '';
         await this.loadBudget();
     }
+
+    handleDimension(event) {
+        this.dimensionId = event.target.value;
+    }
+
+    async handleRange(event) {
+        this[event.target.dataset.field] = event.target.value;
+        await this.loadBudget();
+    }
+
+    handleApprovedVersion() {
+        const approved = ((this.data && this.data.budgets) || []).find((b) => b.fiscalYear === this.fiscalYear && b.status === 'Approved');
+        if (approved) {
+            this.budgetId = approved.budgetId;
+            this.loadBudget();
+        }
+    }
+
+    get hasApprovedVersion() {
+        return ((this.data && this.data.budgets) || []).some((b) => b.fiscalYear === this.fiscalYear && b.status === 'Approved');
+    }
+
+    get showApprovedButton() {
+        return this.hasApprovedVersion && !(this.budget && this.budget.status === 'Approved');
+    }
+
+    get versionFacts() {
+        const b = this.budget;
+        if (!b) {
+            return [];
+        }
+        return [['Version', `v${b.version}`], ['Currency', b.currencyCode || '\u2014'], ['Lines', String(b.lineCount || 0)],
+            ['Submitted', b.submittedAt ? `${b.submittedByName || ''}, ${formatDate(String(b.submittedAt).slice(0, 10))}` : '\u2014'],
+            ['Approved', b.approvedAt ? `${b.approvedByName || ''}, ${formatDate(String(b.approvedAt).slice(0, 10))}` : '\u2014']]
+            .map(([label, value]) => ({ key: label, label, value }));
+    }
+
 
     get actions() {
         const b = this.budget || {};
@@ -220,7 +311,7 @@ export default class SabBudgetsWorkspace extends LightningElement {
     // ---------- variance ----------
 
     get rows() {
-        const rows = ((this.variance && this.variance.rows) || []).filter((r) => !this.departmentId || r.dimensionId === this.departmentId);
+        const rows = ((this.variance && this.variance.rows) || []).filter((r) => !this.dimensionId || r.dimensionId === this.dimensionId);
         return rows.map((r) => {
             const used = r.budget ? (r.actual / r.budget) * 100 : 0;
             const positive = r.favourable !== false;
@@ -347,10 +438,82 @@ export default class SabBudgetsWorkspace extends LightningElement {
     }
 
     handleNew() {
-        this.openModal('new', { name: '', fiscalYear: String(this.fiscalYear || new Date().getFullYear()) });
+        this.openModal('new', { name: '', fiscalYear: String(this.fiscalYear || new Date().getFullYear()), copyFrom: '', adjustPercent: '0' });
+    }
+
+    get copyOptions() {
+        return ((this.data && this.data.budgets) || []).map((b) => ({ value: b.budgetId, label: `FY ${b.fiscalYear} ${b.name} v${b.version} (${b.status})`,
+            selected: b.budgetId === this.form.copyFrom }));
+    }
+
+    get currencyText() {
+        return (this.data && this.data.functionalCurrency) || '';
+    }
+
+    /** Lines of another version moved to the new year by period position and adjusted by a percentage. */
+    async copiedLines(sourceId, fiscalYear, percent) {
+        const source = (this.data.budgets || []).find((b) => b.budgetId === sourceId);
+        const detail = await getBudgetDetail({ budgetId: sourceId });
+        const periods = this.data.periods || [];
+        const from = periods.filter((p) => p.fiscalYear === source.fiscalYear).map((p) => p.value);
+        const to = periods.filter((p) => p.fiscalYear === fiscalYear).map((p) => p.value);
+        const factor = 1 + (Number(percent) || 0) / 100;
+        const lines = [];
+        for (const l of detail.lines || []) {
+            const index = from.indexOf(l.accountingPeriodId);
+            if (index < 0 || index >= to.length) {
+                continue;
+            }
+            lines.push({ accountingPeriodId: to[index], glAccountId: l.glAccountId, departmentId: l.departmentId || null, costCenterId: l.costCenterId || null,
+                amount: Math.round((Number(l.amount) || 0) * factor * 100) / 100 });
+        }
+        if (!to.length) {
+            throw new Error(`FY ${fiscalYear} has no accounting periods yet. Generate them in Company setup first.`);
+        }
+        return lines;
+    }
+
+    // ---------- spread an annual amount ----------
+
+    get spreadOpen() {
+        return Boolean(this.spread);
+    }
+
+    handleSpreadToggle() {
+        this.spread = this.spread ? undefined : { glAccountId: '', departmentId: '', costCenterId: '', annual: '' };
+    }
+
+    get spreadAccountOptions() {
+        return ((this.data && this.data.accounts) || []).map((o) => ({ ...o, selected: this.spread && o.value === this.spread.glAccountId }));
+    }
+
+    get spreadDepartmentOptions() {
+        return ((this.data && this.data.departments) || []).map((o) => ({ ...o, selected: this.spread && o.value === this.spread.departmentId }));
+    }
+
+    handleSpreadField(event) {
+        this.spread = { ...this.spread, [event.target.dataset.field]: event.target.value };
+    }
+
+    handleSpreadApply() {
+        const periods = this.fyPeriods;
+        const annual = Number(this.spread.annual) || 0;
+        if (!this.spread.glAccountId || !annual || !periods.length) {
+            this.formError = 'Choose an account and an annual amount to spread across the periods.';
+            return;
+        }
+        const each = Math.floor((annual / periods.length) * 100) / 100;
+        const last = Math.round((annual - each * (periods.length - 1)) * 100) / 100;
+        const added = periods.map((p, i) => ({ key: `s${Date.now()}${i}`, accountingPeriodId: p.value, glAccountId: this.spread.glAccountId,
+            departmentId: this.spread.departmentId || '', costCenterId: '', amount: String(i === periods.length - 1 ? last : each) }));
+        const kept = this.lines.filter((l) => l.glAccountId || l.amount);
+        this.lines = [...kept, ...added];
+        this.spread = undefined;
+        this.formError = undefined;
     }
 
     handleEdit() {
+        this.spread = undefined;
         this.lines = ((this.detail && this.detail.lines) || []).map((l, i) => ({ key: `l${i}`, accountingPeriodId: l.accountingPeriodId, glAccountId: l.glAccountId,
             departmentId: l.departmentId || '', costCenterId: l.costCenterId || '', amount: l.amount === null || l.amount === undefined ? '' : String(l.amount) }));
         if (!this.lines.length) {
@@ -451,9 +614,11 @@ export default class SabBudgetsWorkspace extends LightningElement {
         if (this.modal === 'new') {
             this.busy = true;
             try {
-                this.budgetId = await saveDraft({ request: { budgetId: null, companyId: this.currentCompanyId, fiscalYear: Number(f.fiscalYear), name: f.name, lines: [] } });
+                const year = Number(f.fiscalYear);
+                const lines = f.copyFrom ? await this.copiedLines(f.copyFrom, year, f.adjustPercent) : [];
+                this.budgetId = await saveDraft({ request: { budgetId: null, companyId: this.currentCompanyId, fiscalYear: year, name: f.name, lines } });
                 this.fiscalYear = Number(f.fiscalYear);
-                toast(this, 'Draft budget created');
+                toast(this, f.copyFrom ? 'Draft budget created from the copied version' : 'Draft budget created');
                 ok = true;
             } catch (error) {
                 this.formError = reduceError(error);

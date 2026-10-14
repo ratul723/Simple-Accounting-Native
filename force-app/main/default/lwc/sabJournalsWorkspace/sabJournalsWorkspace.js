@@ -13,7 +13,7 @@ const REVERSIBLE = ['Manual', 'Opening', 'Allocation'];
 
 let lineSequence = 0;
 const nextKey = () => `line-${++lineSequence}`;
-const blankLine = () => ({ key: nextKey(), glAccountId: '', explanation: '', departmentId: '', costCenterId: '', debit: '', credit: '' });
+const blankLine = () => ({ key: nextKey(), glAccountId: '', explanation: '', departmentId: '', costCenterId: '', projectId: '', debit: '', credit: '' });
 
 function todayIso() {
     const d = new Date();
@@ -149,9 +149,15 @@ export default class SabJournalsWorkspace extends LightningElement {
         return Object.fromEntries(((this.browse && this.browse.accounts) || []).map((a) => [a.accountId, a]));
     }
 
+    /** Projects are an optional dimension: shown when the company has projects and the Projects feature is on. */
+    get showProjects() {
+        const off = ((this.caps && this.caps.disabledFeatures) || []).includes('PROJECTS');
+        return !off && Boolean(this.ctx && (this.ctx.projects || []).length);
+    }
+
     get optionName() {
         const map = {};
-        for (const list of [this.ctx && this.ctx.departments, this.ctx && this.ctx.costCenters]) {
+        for (const list of [this.ctx && this.ctx.departments, this.ctx && this.ctx.costCenters, this.ctx && this.ctx.projects]) {
             (list || []).forEach((o) => {
                 map[o.value] = o.label;
             });
@@ -307,6 +313,9 @@ export default class SabJournalsWorkspace extends LightningElement {
                 accountOptions: this.accountOptions.map((o) => ({ ...o, selected: o.value === l.glAccountId })),
                 departmentOptions: opts(this.ctx && this.ctx.departments, l.departmentId),
                 costCenterOptions: opts(this.ctx && this.ctx.costCenters, l.costCenterId),
+                projectOptions: opts(this.ctx && this.ctx.projects, l.projectId),
+                projectName: l.projectId ? names[l.projectId] : '',
+                projLabel: `Project line ${i + 1}`,
                 accountCode: account ? account.code : '',
                 accountName: account ? account.name : 'No account yet',
                 departmentName: l.departmentId ? names[l.departmentId] : '',

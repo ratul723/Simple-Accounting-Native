@@ -1,0 +1,84 @@
+<template>
+    <template lwc:if={errorMessage}>
+        <section class="panel"><div class="panel-b"><div class="banner t-bad" role="alert"><c-sab-icon name="alert"></c-sab-icon>
+            <div><b>Employees could not be loaded</b><div class="small">{errorMessage}</div></div>
+            <span class="spacer"></span><button class="btn sm" type="button" onclick={handleRetry}>Try again</button></div></div></section>
+    </template>
+    <template lwc:elseif={loaded}>
+        <section class="panel sab-employees">
+            <div class="panel-h"><div><h2>Employees and pay</h2><div class="sub">{summary}</div></div><span class="spacer"></span>
+                <button class="btn sm sab-new-component" type="button" disabled={manageDisabled} title={manageTitle} onclick={handleNewComponent}>New pay component</button>
+                <button class="btn sm primary sab-new-employee" type="button" disabled={manageDisabled} title={manageTitle} onclick={handleNewEmployee}>
+                    <c-sab-icon name="plus" size="14"></c-sab-icon>New employee</button></div>
+            <div class="panel-b flush">
+                <template lwc:if={hasEmployees}>
+                    <div class="list">
+                        <template for:each={rows} for:item="e">
+                            <div key={e.employmentId} class="emp">
+                                <div class="row"><span class="strong">{e.employeeReference}</span><span class="small muted">{e.departmentText}, from {e.startText}</span>
+                                    <span class="spacer"></span><span class={e.chip}><span class="dot"></span>{e.employmentStatus}</span>
+                                    <button class="btn sm ghost sab-add-pay" type="button" data-id={e.employmentId} disabled={manageDisabled} title={manageTitle} onclick={handleAddPay}>Add pay</button></div>
+                                <template lwc:if={e.warning}><div class="small down warn">{e.warning}</div></template>
+                                <template lwc:if={e.hasLines}>
+                                    <table class="tbl pay">
+                                        <tbody><template for:each={e.lines} for:item="l"><tr key={l.assignmentId}><td>{l.payComponentName}<div class="small muted">{l.category}</div></td>
+                                            <td class="n num">{l.amountText}</td><td>from {l.fromText}</td><td><span class={l.chip}><span class="dot"></span>{l.status}</span></td>
+                                            <td class="act"><template lwc:if={l.canApprove}><button class="btn sm primary sab-approve-pay" type="button" data-id={l.assignmentId}
+                                                disabled={l.approveDisabled} title={l.approveTitle} onclick={handleApprove}>Approve</button></template></td></tr></template></tbody>
+                                    </table>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+                <template lwc:else>
+                    <div class="empty"><div class="ill"><c-sab-icon name="people" size="30"></c-sab-icon></div><h3>No employees yet</h3>
+                        <p>Add employees here. They can then claim expenses, and payroll runs calculate their approved pay.</p></div>
+                </template>
+            </div>
+        </section>
+    </template>
+    <template lwc:else><section class="panel"><div class="panel-b muted" role="status">Loading employees</div></section></template>
+
+    <c-sab-modal open={modalOpen} heading={modalHeading} subheading={modalSub} onclose={handleClose}>
+        <template lwc:if={formError}><div class="banner t-bad form-error" role="alert"><c-sab-icon name="alert"></c-sab-icon><div>{formError}</div></div></template>
+        <template lwc:if={isEmployeeModal}>
+            <div class="grid g2 form">
+                <label class="field"><span>Employee reference</span><input class="input" data-field="employeeReference" value={form.employeeReference} placeholder="For example EMP-001" oninput={handleField} /></label>
+                <label class="field"><span>Start date</span><input class="input" type="date" data-field="startDate" value={form.startDate} oninput={handleField} /></label>
+                <label class="field"><span>Find Salesforce user (optional)</span><input class="input sab-user-search" value={form.search} placeholder="Links the employee to a login" oninput={handleUserSearch} /></label>
+                <label class="field"><span>User</span><select class="select" data-field="userId" onchange={handleField}><option value="">None</option>
+                    <template for:each={userOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+                <label class="field"><span>Department</span><select class="select" data-field="departmentId" onchange={handleField}><option value="">None</option>
+                    <template for:each={departmentOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+                <label class="field"><span>Cost center</span><select class="select" data-field="costCenterId" onchange={handleField}><option value="">None</option>
+                    <template for:each={costCenterOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+            </div>
+        </template>
+        <template lwc:if={isComponentModal}>
+            <div class="grid g2 form">
+                <label class="field"><span>Name</span><input class="input" data-field="name" value={form.name} oninput={handleField} /></label>
+                <label class="field"><span>Key</span><input class="input" data-field="componentKey" value={form.componentKey} placeholder="For example BASIC" oninput={handleField} /></label>
+                <label class="field"><span>Category</span><select class="select" data-field="category" onchange={handleField}>
+                    <template for:each={categoryOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+                <label class="field"><span>Expense account</span><select class="select" data-field="expenseAccountId" onchange={handleField}><option value="">Select</option>
+                    <template for:each={expenseOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+                <label class="field"><span>Liability account (deductions and contributions)</span><select class="select" data-field="liabilityAccountId" onchange={handleField}><option value="">None</option>
+                    <template for:each={liabilityOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+            </div>
+        </template>
+        <template lwc:if={isPayModal}>
+            <template lwc:if={noComponents}><p class="muted">Add a pay component first, such as basic salary.</p></template>
+            <template lwc:else>
+                <div class="grid g2 form">
+                    <label class="field"><span>Pay component</span><select class="select" data-field="payComponentId" onchange={handleField}>
+                        <template for:each={componentOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+                    <label class="field"><span>Amount per period</span><input class="input n" type="number" step="0.01" data-field="amount" value={form.amount} oninput={handleField} /></label>
+                    <label class="field"><span>Effective from</span><input class="input" type="date" data-field="effectiveFrom" value={form.effectiveFrom} oninput={handleField} /></label>
+                </div>
+            </template>
+        </template>
+        <button slot="footer" class="btn ghost sab-modal-close" type="button" onclick={handleClose}>Cancel</button>
+        <button slot="footer" class="btn primary sab-modal-save" type="button" disabled={saving} onclick={handleSave}>Save</button>
+    </c-sab-modal>
+</template>

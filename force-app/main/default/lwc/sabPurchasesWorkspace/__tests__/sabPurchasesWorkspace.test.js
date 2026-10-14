@@ -240,4 +240,11 @@ describe('c-sab-purchases-workspace', () => {
         await flush();
         expect(getWorkspace).toHaveBeenCalledTimes(2);
     });
+
+    it('hides purchase orders when purchasing is switched off', async () => {
+        const el = mount({ caps: { disabledFeatures: ['PURCHASING'] } });
+        await flush();
+        const tabs = Array.from(el.shadowRoot.querySelectorAll('.tab')).map((t) => t.textContent);
+        expect(tabs.some((t) => t.includes('Purchase orders'))).toBe(false);
+    });
 });

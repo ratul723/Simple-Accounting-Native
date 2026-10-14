@@ -41,3 +41,29 @@ td.amt {
 .row.center {
     justify-content: center;
 }
+
+.review {
+    margin-top: -6px;
+}
+
+.sab-version-facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 22px;
+    margin: 0 0 16px;
+}
+
+.sab-version-facts .fact {
+    display: flex;
+    gap: 6px;
+}
+
+.spread {
+    margin-top: 12px;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.spread .select {
+    width: auto;
+}

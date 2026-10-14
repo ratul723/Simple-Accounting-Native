@@ -155,14 +155,6 @@ export default class SabSetupWorkspace extends LightningElement {
         this.openEditor(this.nextStep.key);
     }
 
-    async handleValidate() {
-        await this.load();
-        if (this.state) {
-            this.toast(this.state.readyForCoreAccounting ? 'Core setup checks passed' : 'Core setup still has items to finish',
-                this.state.readyForCoreAccounting ? 'good' : 'bad');
-        }
-    }
-
     // ---------- company tab ----------
 
     get readiness() {
@@ -319,6 +311,7 @@ export default class SabSetupWorkspace extends LightningElement {
 
     async handleEditorSaved() {
         this.records = {};
+        this.dispatchEvent(new CustomEvent('sabrefreshshell', { bubbles: true, composed: true }));
         await this.load();
     }
 

@@ -140,7 +140,7 @@ public with sharing class SABJournalWorkspaceController {
         @AuraEnabled public List<DraftLineInput> lines { get; set; }
     }
 
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled
     public static WorkspaceDTO getWorkspace(Id companyId) {
         assertCompanyId(companyId);
         SABCompanyAccessService.assertCompanyAccess(companyId);
@@ -320,7 +320,7 @@ public with sharing class SABJournalWorkspaceController {
         return dto;
     }
 
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled
     public static JournalDTO getJournal(Id journalId) {
         if (journalId == null) {
             throw new AuraHandledException('Journal Entry is required.');
