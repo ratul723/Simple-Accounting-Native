@@ -1,0 +1,107 @@
+<template>
+    <c-sab-workspace-header company-name={companyName} group="Planning" heading="Projects"
+        description="Track costs and revenue by project using the project dimension on journal, invoice and bill lines.">
+        <button slot="actions" class="btn primary sab-new-project" type="button" disabled={manageDisabled} title={manageTitle} onclick={handleNew}>
+            <c-sab-icon name="plus" size="16"></c-sab-icon>New project</button>
+    </c-sab-workspace-header>
+
+    <template lwc:if={errorMessage}>
+        <section class="panel"><div class="empty"><div class="ill"><c-sab-icon name="alert" size="30"></c-sab-icon></div>
+            <h3>Projects could not be loaded</h3><p>{errorMessage}</p>
+            <div class="row center"><button class="btn primary" type="button" onclick={handleRetry}>Try again</button></div></div></section>
+    </template>
+    <template lwc:elseif={showLoading}>
+        <section class="panel"><div class="panel-b muted" role="status">Loading projects</div></section>
+    </template>
+    <template lwc:elseif={data}>
+        <template lwc:if={disabledBanner}>
+            <div class="banner t-warn gap"><c-sab-icon name="alert"></c-sab-icon><div><b>The project dimension is turned off</b>
+                <div class="small">Turn on Projects in Configuration so lines can be tagged with a project.</div></div>
+                <template lwc:if={canOpenConfig}><span class="spacer"></span><button class="btn sm sab-open-config" type="button" onclick={handleOpenConfig}>Open configuration</button></template></div>
+        </template>
+        <template lwc:if={noFinancials}>
+            <div class="banner t-info gap"><c-sab-icon name="lock"></c-sab-icon><div><b>Project financials are restricted</b>
+                <div class="small">{personaLabel} users can see projects but not their figures.</div></div></div>
+        </template>
+        <template lwc:if={hasProjects}>
+            <div class="grid g3 cards">
+                <template for:each={cards} for:item="p">
+                    <div key={p.projectId} class={p.className} role="button" tabindex="0" aria-pressed={p.pressed} data-id={p.projectId} onclick={handlePick} onkeydown={handlePick}>
+                        <div class="row"><span class="small muted">{p.code}</span><span class="spacer"></span><span class={p.chip}><span class="dot"></span>{p.status}</span></div>
+                        <h4 class="card-title">{p.name}</h4>
+                        <template lwc:if={p.showMoney}>
+                            <div class="row card-meta"><span class="small muted">{p.moneyText}</span><span class="spacer"></span><span class="small strong">{p.marginText}</span></div>
+                            <div class={p.meterClass}><i style={p.meterStyle}></i></div>
+                        </template>
+                    </div>
+                </template>
+            </div>
+            <template lwc:if={project}>
+                <div class="split">
+                    <section class="panel sab-project">
+                        <div class="panel-h"><div><h2>{panelTitle}</h2><div class="sub">{panelSub}</div></div><span class="spacer"></span>
+                            <button class="btn sm sab-edit-project" type="button" disabled={manageDisabled} title={manageTitle} onclick={handleEdit}>Edit</button></div>
+                        <div class="panel-b">
+                            <template lwc:if={reportError}><div class="banner t-bad" role="alert"><c-sab-icon name="alert"></c-sab-icon><div>{reportError}</div></div></template>
+                            <template lwc:elseif={report}>
+                                <div class="grid g4 totals">
+                                    <div><div class="small muted">Revenue</div><div class="big">{view.revenueText}</div></div>
+                                    <div><div class="small muted">Cost to date</div><div class="big">{view.costText}</div></div>
+                                    <div><div class="small muted">Margin</div><div class={view.profitClass}>{view.profitText}</div></div>
+                                    <div><div class="small muted">Margin %</div><div class="big">{view.marginText}</div></div>
+                                </div>
+                                <template lwc:if={view.hasCosts}>
+                                    <div class="small muted label">Cost by account</div>
+                                    <div class="stackbar"><template for:each={view.segments} for:item="s"><i key={s.key} style={s.style} title={s.title}></i></template></div>
+                                    <div class="legend"><template for:each={view.legend} for:item="l"><span key={l.key}><i class="sw" style={l.swatch}></i>{l.text}</span></template></div>
+                                </template>
+                                <template lwc:else><p class="muted">No costs recorded yet. Tag journal, invoice and bill lines with this project to start tracking.</p></template>
+                                <hr class="sep" />
+                                <dl class="kv"><template for:each={view.facts} for:item="f"><dt key={f.key}>{f.label}</dt><dd key={f.valueKey}>{f.value}</dd></template></dl>
+                            </template>
+                            <template lwc:elseif={noFinancials}><p class="muted">Figures need the View Project Financials permission.</p></template>
+                            <template lwc:else><p class="muted">Loading figures</p></template>
+                        </div>
+                    </section>
+                    <section class="panel sab-tagged">
+                        <div class="panel-h"><div><h2>Tagged lines</h2></div></div>
+                        <div class="panel-b flush">
+                            <template lwc:if={hasLedger}>
+                                <div class="tbl-wrap"><table class="tbl">
+                                    <thead><tr><th>Date</th><th>Source</th><th class="n">Amount</th></tr></thead>
+                                    <tbody><template for:each={ledgerRows} for:item="l"><tr key={l.lineId}><td>{l.dateText}</td>
+                                        <td><template lwc:if={canOpenJournal}><button class="linkish sab-open-journal" type="button" data-id={l.journalId} onclick={handleOpenJournal}>{l.journalName}</button></template>
+                                            <template lwc:else><span class="id">{l.journalName}</span></template>
+                                            <div class="small muted">{l.detail}</div></td>
+                                        <td class="n num">{l.amountText}</td></tr></template></tbody>
+                                </table></div>
+                                <template lwc:if={hasMore}><div class="more"><button class="btn sm ghost sab-more" type="button" onclick={handleMore}>Show more</button></div></template>
+                            </template>
+                            <template lwc:else><div class="panel-b muted">No tagged lines yet.</div></template>
+                        </div>
+                    </section>
+                </div>
+            </template>
+        </template>
+        <template lwc:else>
+            <section class="panel"><div class="empty"><div class="ill"><c-sab-icon name="proj" size="30"></c-sab-icon></div><h3>No projects yet</h3>
+                <p>Create a project, then tag journal, invoice and bill lines with it to track cost and margin.</p></div></section>
+        </template>
+    </template>
+
+    <c-sab-modal open={modalOpen} heading={modalHeading} subheading="The project code is fixed once saved." onclose={handleClose}>
+        <template lwc:if={formError}><div class="banner t-bad form-error" role="alert"><c-sab-icon name="alert"></c-sab-icon><div>{formError}</div></div></template>
+        <div class="grid g2 form">
+            <label class="field"><span>Project code</span><input class="input" data-field="code" value={form.code} disabled={isEditing} oninput={handleField} /></label>
+            <label class="field"><span>Name</span><input class="input" data-field="name" value={form.name} oninput={handleField} /></label>
+            <label class="field"><span>Status</span><select class="select" data-field="status" onchange={handleField}>
+                <template for:each={statusOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+            <label class="field"><span>Customer</span><select class="select" data-field="customerAccountId" onchange={handleField}><option value="">None</option>
+                <template for:each={customerOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+            <label class="field"><span>Start</span><input class="input" type="date" data-field="startDate" value={form.startDate} oninput={handleField} /></label>
+            <label class="field"><span>Target end</span><input class="input" type="date" data-field="endDate" value={form.endDate} oninput={handleField} /></label>
+        </div>
+        <button slot="footer" class="btn ghost sab-modal-close" type="button" onclick={handleClose}>Cancel</button>
+        <button slot="footer" class="btn primary sab-modal-save" type="button" disabled={saving} onclick={handleSave}>Save</button>
+    </c-sab-modal>
+</template>

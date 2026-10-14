@@ -84,6 +84,7 @@ export default class SabAppShell extends NavigationMixin(LightningElement) {
     searchTimer;
     fontsLoaded = false;
     newCompanyOpen = false;
+    sampleOpen = false;
 
     @wire(CurrentPageReference)
     handlePageReference(pageRef) {
@@ -519,12 +520,29 @@ export default class SabAppShell extends NavigationMixin(LightningElement) {
     }
 
     async handleNewCompanySaved(event) {
-        const companyId = event.detail && event.detail.recordId;
         this.newCompanyOpen = false;
+        await this.openNewCompany(event.detail && event.detail.recordId, 'Accounting company created. Finish its setup next.', 'setup');
+    }
+
+    handleLoadSample() {
+        this.closePopovers();
+        this.sampleOpen = true;
+    }
+
+    handleSampleClose() {
+        this.sampleOpen = false;
+    }
+
+    async handleSampleLoaded(event) {
+        this.sampleOpen = false;
+        await this.openNewCompany(event.detail && event.detail.recordId, 'Sample company loaded. Explore it from Finance home.', 'home');
+    }
+
+    async openNewCompany(companyId, message, workspace) {
         if (!companyId) {
             return;
         }
-        this.toast('Accounting company created. Finish its setup next.');
+        this.toast(message);
         try {
             const context = await getCompanyContext({ companyId });
             if (context && !this.companies.some((c) => c.companyId === context.companyId)) {
@@ -533,7 +551,7 @@ export default class SabAppShell extends NavigationMixin(LightningElement) {
             this.isLoading = true;
             this.loadedWorkspaceId = undefined;
             await this.selectCompany(companyId, true);
-            this.navigateTo('setup');
+            this.navigateTo(workspace);
         } catch (error) {
             this.errorMessage = reduceError(error);
         } finally {

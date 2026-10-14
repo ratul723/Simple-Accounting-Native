@@ -1,0 +1,109 @@
+<template>
+    <c-sab-workspace-header company-name={companyName} group="Administration" heading="Configuration &amp; diagnostics"
+        description="Company features, access grants, approval activity, configuration checks and processing health."></c-sab-workspace-header>
+
+    <template lwc:if={errorMessage}>
+        <section class="panel"><div class="empty"><div class="ill"><c-sab-icon name="alert" size="30"></c-sab-icon></div>
+            <h3>Configuration could not be loaded</h3><p>{errorMessage}</p>
+            <div class="row center"><button class="btn primary" type="button" onclick={handleRetry}>Try again</button></div></div></section>
+    </template>
+    <template lwc:elseif={showLoading}>
+        <section class="panel"><div class="panel-b muted" role="status">Loading configuration</div></section>
+    </template>
+    <template lwc:elseif={data}>
+        <div class="tabs" role="tablist">
+            <template for:each={tabs} for:item="t">
+                <button key={t.id} class={t.className} type="button" role="tab" aria-selected={t.selected} data-tab={t.id} onclick={handleTab}>{t.label}
+                    <template lwc:if={t.hasCount}><span class="count">{t.count}</span></template></button>
+            </template>
+        </div>
+
+        <template lwc:if={isFeat}>
+            <div class="grid g2">
+                <template for:each={featureCards} for:item="f">
+                    <div key={f.featureKey} class="cardlet sab-feature">
+                        <div class="row nowrap"><div class="grow"><h4>{f.title}</h4><div class="small muted note">{f.note}</div></div>
+                            <button class={f.switchClass} type="button" role="switch" aria-checked={f.checked} aria-label={f.title} data-key={f.featureKey}
+                                disabled={f.disabled} title={f.title2} onclick={handleFeature}></button></div>
+                        <div class="status"><span class={f.chip}><span class="dot"></span>{f.statusText}</span></div>
+                    </div>
+                </template>
+            </div>
+        </template>
+
+        <template lwc:elseif={isAccess}>
+            <section class="panel">
+                <div class="panel-h"><div><div class="sub">Company access grants drive record sharing. Every service also checks access on the server.</div></div><span class="spacer"></span>
+                    <button class="btn sm primary sab-new-grant" type="button" disabled={accessDisabled} title={accessTitle} onclick={handleNewGrant}><c-sab-icon name="plus" size="14"></c-sab-icon>Grant access</button></div>
+                <div class="panel-b flush"><div class="tbl-wrap"><table class="tbl sab-grants">
+                    <thead><tr><th>User</th><th>Role</th><th>Effective</th><th class="n">Approval limit</th><th>Status</th></tr></thead>
+                    <tbody><template for:each={grantRows} for:item="g"><tr key={g.grantId} class="click" tabindex="0" data-id={g.grantId} onclick={handleGrant} onkeydown={handleGrant}>
+                        <td><span class="strong">{g.userName}</span></td><td>{g.role}</td><td>{g.effectiveText}</td><td class="n num">{g.limitText}</td>
+                        <td><span class={g.chip}><span class="dot"></span>{g.statusText}</span></td></tr></template></tbody>
+                </table></div></div>
+            </section>
+        </template>
+
+        <template lwc:elseif={isAppr}>
+            <section class="panel">
+                <div class="panel-h"><div><div class="sub">Approval requests by document type. Approvals bind to the source version, so material edits invalidate an approval.</div></div></div>
+                <div class="panel-b flush">
+                    <template lwc:if={hasApprovals}>
+                        <div class="tbl-wrap"><table class="tbl sab-approvals">
+                            <thead><tr><th>Applies to</th><th class="n">Pending</th><th class="n">Approved</th><th class="n">Rejected</th><th class="n">Other</th></tr></thead>
+                            <tbody><template for:each={approvalRows} for:item="a"><tr key={a.sourceType}><td>{a.label}</td><td class="n num">{a.pending}</td>
+                                <td class="n num">{a.approved}</td><td class="n num">{a.rejected}</td><td class="n num">{a.other}</td></tr></template></tbody>
+                        </table></div>
+                    </template>
+                    <template lwc:else><div class="panel-b muted">No approval requests yet.</div></template>
+                </div>
+            </section>
+        </template>
+
+        <template lwc:elseif={isChecks}>
+            <section class="panel">
+                <div class="panel-h"><div><div class="sub">{checkSummary}</div></div><span class="spacer"></span>
+                    <button class="btn sm sab-run-checks" type="button" onclick={handleRunChecks}><c-sab-icon name="refresh" size="14"></c-sab-icon>Run checks</button></div>
+                <div class="panel-b flush"><div class="list sab-checks">
+                    <template for:each={checkRows} for:item="c"><div key={c.key} class="li"><span class={c.iconClass}><c-sab-icon name={c.icon}></c-sab-icon></span>
+                        <div class="body"><div class="t">{c.title}</div><div class="d">{c.detail}</div></div><span class={c.chip}><span class="dot"></span>{c.status}</span></div></template>
+                </div></div>
+            </section>
+        </template>
+
+        <template lwc:else>
+            <div class="banner t-info gap"><c-sab-icon name="info"></c-sab-icon><div><b>Sanitised diagnostics</b>
+                <div class="small">Technical admins see processing health here without access to financial detail or secrets.</div></div></div>
+            <section class="panel"><div class="panel-b flush">
+                <template lwc:if={hasRuns}>
+                    <div class="tbl-wrap"><table class="tbl sab-runs">
+                        <thead><tr><th>Run</th><th>Job</th><th>Started</th><th class="n">Duration</th><th class="n">Rows</th><th>Status</th></tr></thead>
+                        <tbody><template for:each={runRows} for:item="r"><tr key={r.runId}><td><span class="id">{r.name}</span></td><td>{r.runType}</td><td>{r.startedText}</td>
+                            <td class="n num">{r.durationText}</td><td class="n num">{r.processedText}</td>
+                            <td><span class={r.chip}><span class="dot"></span>{r.status}</span><template lwc:if={r.failureText}><div class="small down">{r.failureText}</div></template></td></tr></template></tbody>
+                    </table></div>
+                </template>
+                <template lwc:else><div class="panel-b muted">No processing runs yet.</div></template>
+            </div></section>
+        </template>
+    </template>
+
+    <c-sab-modal open={modalOpen} heading={modalHeading} subheading="Access takes effect immediately. You cannot change your own access." onclose={handleClose}>
+        <template lwc:if={formError}><div class="banner t-bad form-error" role="alert"><c-sab-icon name="alert"></c-sab-icon><div>{formError}</div></div></template>
+        <div class="grid g2 form">
+            <template lwc:if={isNewGrant}>
+                <label class="field"><span>Find user</span><input class="input sab-user-search" value={form.search} placeholder="Type a name or username" oninput={handleSearch} /></label>
+                <label class="field"><span>User</span><select class="select sab-user" data-field="userId" onchange={handleField}><option value="">Select</option>
+                    <template for:each={userOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+            </template>
+            <label class="field"><span>Role</span><select class="select" data-field="role" onchange={handleField}>
+                <template for:each={roleOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+            <label class="field"><span>Approval limit</span><input class="input n" type="number" step="1" data-field="approvalLimit" value={form.approvalLimit} placeholder="No limit" oninput={handleField} /></label>
+            <label class="field"><span>Effective from</span><input class="input" type="date" data-field="effectiveFrom" value={form.effectiveFrom} oninput={handleField} /></label>
+            <label class="field"><span>Effective to</span><input class="input" type="date" data-field="effectiveTo" value={form.effectiveTo} oninput={handleField} /></label>
+            <label class="check"><input type="checkbox" data-field="active" checked={form.active} onchange={handleField} />Active</label>
+        </div>
+        <button slot="footer" class="btn ghost sab-modal-close" type="button" onclick={handleClose}>Cancel</button>
+        <button slot="footer" class="btn primary sab-modal-save" type="button" disabled={saving} onclick={handleSave}>Save</button>
+    </c-sab-modal>
+</template>

@@ -184,4 +184,27 @@ describe('c-sab-finance-home', () => {
         expect(el.shadowRoot.querySelector('.empty h3').textContent).toBe('No accounting company yet');
         expect(getHome).not.toHaveBeenCalled();
     });
+
+    it('gives treasury, HR, director and auditor personas their own shortcuts', async () => {
+        getHome.mockResolvedValue(ACTIVE);
+        const cases = [['TREASURY', 'Treasury', ['Banking', 'Open payments'], 'payments'], ['HR', 'HR', ['Expense claims', 'Open payroll'], 'payroll'],
+            ['DIRECTOR', 'Director', ['Report center', 'Open approvals'], 'approvals'], ['AUDITOR', 'Auditor', ['Report center', 'Open audit history'], 'audit']];
+        for (const [key, label, labels, target] of cases) {
+            const el = mount({ companyId: 'a01000000000001AAA', persona: { key, label }, visibleWorkspaces: ['home', 'bank', 'payments', 'payroll', 'reports', 'approvals', 'audit'] });
+            // eslint-disable-next-line no-await-in-loop
+            await flush();
+            const root = el.shadowRoot;
+            expect(root.querySelector('.new-journal')).toBeNull();
+            expect([root.querySelector('.persona-secondary').textContent, root.querySelector('.persona-primary').textContent]).toEqual(labels);
+            const nav = jest.fn();
+            el.addEventListener('sabnavigate', nav);
+            root.querySelector('.persona-primary').click();
+            expect(nav.mock.calls[0][0].detail.workspace).toBe(target);
+        }
+        const hr = mount({ companyId: 'a01000000000001AAA', persona: { key: 'HR', label: 'HR' }, visibleWorkspaces: ['home', 'payroll'] });
+        await flush();
+        const secondary = hr.shadowRoot.querySelector('.persona-secondary');
+        expect(secondary.disabled).toBe(true);
+        expect(secondary.title).toBe('Expense claims is not available to the HR role');
+    });
 });

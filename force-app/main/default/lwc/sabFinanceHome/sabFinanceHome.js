@@ -169,6 +169,32 @@ export default class SabFinanceHome extends LightningElement {
         return guardTitle(this.invoiceAllowed, this.personaLabel, 'create invoices');
     }
 
+    /** Header shortcuts for personas whose day starts somewhere other than journals and invoices (G22H). */
+    get personaActions() {
+        const key = this.persona && this.persona.key;
+        const sets = {
+            TREASURY: [['bank', 'Banking'], ['payments', 'Open payments']],
+            HR: [['expenses', 'Expense claims'], ['payroll', 'Open payroll']],
+            DIRECTOR: [['reports', 'Report center'], ['approvals', 'Open approvals']],
+            AUDITOR: [['reports', 'Report center'], ['audit', 'Open audit history']]
+        };
+        const set = sets[key];
+        if (!set) {
+            return undefined;
+        }
+        const action = ([workspace, label]) => ({ workspace, label, disabled: !this.canGo(workspace),
+            title: this.canGo(workspace) ? undefined : `${label} is not available to the ${this.personaLabel} role` });
+        return { secondary: action(set[0]), primary: action(set[1]) };
+    }
+
+    get hasPersonaActions() {
+        return Boolean(this.personaActions);
+    }
+
+    handlePersonaAction(event) {
+        this.navigate(event.currentTarget.dataset.workspace);
+    }
+
     get canContinueSetup() {
         return this.canGo('setup');
     }

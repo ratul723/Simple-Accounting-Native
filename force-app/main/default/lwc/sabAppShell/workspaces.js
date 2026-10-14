@@ -66,8 +66,9 @@ export const WORKSPACES = [
     { id: 'budgets', group: 'Planning', label: 'Budgets', icon: 'budget', shellAware: true, title: 'Budgets',
         description: 'Budget versions, budget lines by account and department, and actual against budget on the same basis.',
         loader: () => import('c/sabBudgetsWorkspace') },
-    { id: 'projects', group: 'Planning', label: 'Projects', icon: 'proj', optional: true, title: 'Projects',
-        description: 'Track costs and revenue by project using the project dimension on journal, invoice and bill lines.' },
+    { id: 'projects', group: 'Planning', label: 'Projects', icon: 'proj', optional: true, shellAware: true, title: 'Projects',
+        description: 'Track costs and revenue by project using the project dimension on journal, invoice and bill lines.',
+        loader: () => import('c/sabProjectsWorkspace') },
     { id: 'tax', group: 'Compliance & reporting', label: 'Tax', icon: 'tax', shellAware: true, title: 'Tax',
         description: 'Tax codes and rates, calculated source tax lines, and return preparation.',
         loader: () => import('c/sabTaxWorkspace') },
@@ -86,13 +87,15 @@ export const WORKSPACES = [
     { id: 'setup', group: 'Administration', label: 'Company setup', icon: 'setup', shellAware: true, title: 'Company setup',
         description: 'Company profile, functional currency, fiscal calendar, periods, defaults and document numbering.',
         loader: () => import('c/sabSetupWorkspace') },
-    { id: 'coa', group: 'Administration', label: 'Chart of accounts', icon: 'coa', title: 'Chart of accounts & dimensions',
-        description: 'GL accounts, departments, cost centers, projects and report mappings for this company.' },
+    { id: 'coa', group: 'Administration', label: 'Chart of accounts', icon: 'coa', shellAware: true, title: 'Chart of accounts & dimensions',
+        description: 'GL accounts, departments, cost centers, projects and report mappings for this company.',
+        loader: () => import('c/sabChartWorkspace') },
     { id: 'import', group: 'Administration', label: 'Import & integration', icon: 'import', shellAware: true, title: 'Import & integration center',
         description: 'Stage files, validate, preview, commit and retry, and follow every outbound integration request.',
         loader: () => import('c/sabImportsWorkspace') },
-    { id: 'config', group: 'Administration', label: 'Configuration & diagnostics', icon: 'config', title: 'Configuration & diagnostics',
-        description: 'Company features, access grants, approval rules, configuration checks and processing health.' }
+    { id: 'config', group: 'Administration', label: 'Configuration & diagnostics', icon: 'config', shellAware: true, title: 'Configuration & diagnostics',
+        description: 'Company features, access grants, approval activity, configuration checks and processing health.',
+        loader: () => import('c/sabConfigWorkspace') }
 ];
 
 export const WORKSPACE_BY_ID = Object.fromEntries(WORKSPACES.map((w) => [w.id, w]));

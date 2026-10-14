@@ -31,10 +31,18 @@
     </template>
     <template lwc:elseif={isActive}>
         <c-sab-workspace-header company-name={displayCompany} group="Overview" heading={heading} description={description}>
-            <button slot="actions" class="btn new-journal" type="button" disabled={journalDisabled} title={journalTitle}
-                onclick={handleNewJournal}><c-sab-icon name="plus" size="16"></c-sab-icon>New journal</button>
-            <button slot="actions" class="btn primary new-invoice" type="button" disabled={invoiceDisabled} title={invoiceTitle}
-                onclick={handleNewInvoice}><c-sab-icon name="plus" size="16"></c-sab-icon>New invoice</button>
+            <template lwc:if={hasPersonaActions}>
+                <button slot="actions" class="btn persona-secondary" type="button" data-workspace={personaActions.secondary.workspace} disabled={personaActions.secondary.disabled}
+                    title={personaActions.secondary.title} onclick={handlePersonaAction}>{personaActions.secondary.label}</button>
+                <button slot="actions" class="btn primary persona-primary" type="button" data-workspace={personaActions.primary.workspace} disabled={personaActions.primary.disabled}
+                    title={personaActions.primary.title} onclick={handlePersonaAction}>{personaActions.primary.label}</button>
+            </template>
+            <template lwc:else>
+                <button slot="actions" class="btn new-journal" type="button" disabled={journalDisabled} title={journalTitle}
+                    onclick={handleNewJournal}><c-sab-icon name="plus" size="16"></c-sab-icon>New journal</button>
+                <button slot="actions" class="btn primary new-invoice" type="button" disabled={invoiceDisabled} title={invoiceTitle}
+                    onclick={handleNewInvoice}><c-sab-icon name="plus" size="16"></c-sab-icon>New invoice</button>
+            </template>
         </c-sab-workspace-header>
 
         <div class="figs">

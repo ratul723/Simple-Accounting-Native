@@ -152,7 +152,14 @@ public with sharing class SABExpenseClaimLifecycleService {
                         APPROVAL_PENDING
                 );
 
-            insert approvalRequest;
+            // G19 guards Approval_Request__c against direct writes; this lifecycle owns its claim approval rows,
+            // so it opens the approval write scope around its own inserts and updates.
+            SABApprovalCloseGuard.beginWrite();
+            try {
+                insert approvalRequest;
+            } finally {
+                SABApprovalCloseGuard.endWrite();
+            }
 
             lifecycleMutationInProgress =
                 true;
@@ -293,7 +300,12 @@ public with sharing class SABExpenseClaimLifecycleService {
                     APPROVAL_APPROVED;
                 approvalRequest.Completed_At__c =
                     System.now();
-                update approvalRequest;
+                SABApprovalCloseGuard.beginWrite();
+                try {
+                    update approvalRequest;
+                } finally {
+                    SABApprovalCloseGuard.endWrite();
+                }
 
                 claim.Status__c =
                     STATUS_APPROVED;
@@ -399,7 +411,12 @@ public with sharing class SABExpenseClaimLifecycleService {
                     APPROVAL_REJECTED;
                 approvalRequest.Completed_At__c =
                     System.now();
-                update approvalRequest;
+                SABApprovalCloseGuard.beginWrite();
+                try {
+                    update approvalRequest;
+                } finally {
+                    SABApprovalCloseGuard.endWrite();
+                }
 
                 claim.Status__c =
                     STATUS_REJECTED;

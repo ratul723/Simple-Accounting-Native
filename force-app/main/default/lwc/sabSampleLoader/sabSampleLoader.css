@@ -1,0 +1,19 @@
+@import 'c/sabStyles';
+
+.intro {
+    margin: 0 0 8px;
+}
+
+.what {
+    margin: 0 0 12px 18px;
+    padding: 0;
+    line-height: 1.6;
+}
+
+.summary {
+    margin-top: 12px;
+}
+
+.form-error {
+    margin-bottom: 14px;
+}

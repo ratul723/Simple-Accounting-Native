@@ -1,0 +1,36 @@
+<template>
+    <c-sab-modal open={open} heading={heading} subheading={subheading} onclose={handleClose}>
+        <template lwc:if={errorMessage}><div class="banner t-bad form-error" role="alert"><c-sab-icon name="alert"></c-sab-icon><div>{errorMessage}</div></div></template>
+        <template lwc:if={notStarted}>
+            <p class="intro">The sample company is yours alone and separate from your real books. It includes:</p>
+            <ul class="what">
+                <li>Two years of monthly periods, a chart of accounts, departments and cost centers</li>
+                <li>Three customers, three suppliers and an operating bank account</li>
+                <li>Opening balances and three months of trading, posted to the ledger</li>
+                <li>An overdue invoice, a current invoice, a bill waiting for approval and a draft receipt</li>
+            </ul>
+            <p class="small muted">Postings run as you, so steps your role cannot perform are skipped and listed.</p>
+        </template>
+        <template lwc:else>
+            <div class="steps sab-sample-steps" aria-live="polite">
+                <template for:each={steps} for:item="s">
+                    <div key={s.key} class={s.className}>
+                        <span class="n"><template lwc:if={s.done}><c-sab-icon name="check" size="13"></c-sab-icon></template><template lwc:else>{s.number}</template></span>
+                        <div><div class="t">{s.label}</div><div class="small muted">{s.hint}</div></div>
+                    </div>
+                </template>
+            </div>
+            <p class="small muted summary">{summary}</p>
+            <template lwc:if={showFailureNote}>
+                <div class="banner t-warn"><c-sab-icon name="alert"></c-sab-icon><div><b>Some steps were skipped</b><div class="small">{lastMessage}</div></div></div>
+            </template>
+        </template>
+        <button slot="footer" class="btn ghost sab-sample-close" type="button" onclick={handleClose}>Close</button>
+        <template lwc:if={notStarted}>
+            <button slot="footer" class="btn primary sab-sample-start" type="button" onclick={handleStart}>Load sample company</button>
+        </template>
+        <template lwc:else>
+            <button slot="footer" class="btn primary sab-sample-open" type="button" disabled={openDisabled} onclick={handleOpenCompany}>{openLabel}</button>
+        </template>
+    </c-sab-modal>
+</template>

@@ -1,0 +1,61 @@
+@import 'c/sabStyles';
+
+.gap {
+    margin-bottom: 16px;
+    align-items: center;
+}
+
+.cards {
+    margin-bottom: 16px;
+}
+
+.cardlet[role="button"]:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+}
+
+.card-title {
+    margin-top: 6px;
+}
+
+.card-meta {
+    margin: 10px 0 6px;
+}
+
+.totals {
+    margin-bottom: 16px;
+}
+
+.label {
+    margin-bottom: 8px;
+}
+
+.legend {
+    margin-top: 8px;
+}
+
+.linkish {
+    background: none;
+    border: 0;
+    padding: 0;
+    font: inherit;
+    font-weight: 600;
+    color: var(--accent);
+    cursor: pointer;
+}
+
+.more {
+    padding: 10px 14px;
+}
+
+.form {
+    gap: 12px 14px;
+}
+
+.form-error {
+    margin-bottom: 14px;
+}
+
+.row.center {
+    justify-content: center;
+}

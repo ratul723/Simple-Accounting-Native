@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>SABAdminWorkspaceController</members>
+        <members>SABAdminWorkspaceControllerTest</members>
+        <members>SABAdminWorkspaceService</members>
+        <members>SABAppShellController</members>
+        <members>SABAppShellControllerTest</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>sabAppShell</members>
+        <members>sabChartWorkspace</members>
+        <members>sabConfigWorkspace</members>
+        <members>sabProjectsWorkspace</members>
+        <name>LightningComponentBundle</name>
+    </types>
+    <types>
+        <members>SAB_App_User</members>
+        <name>PermissionSet</name>
+    </types>
+    <version>67.0</version>
+</Package>

@@ -34,7 +34,7 @@ const COMPANIES = [
 const SHELL = {
     userId: '005000000000001AAA',
     persona: { key: 'FINANCE_MANAGER', label: 'Finance Manager', userName: 'Alex Morgan', firstName: 'Alex', initials: 'AM' },
-    visibleWorkspaces: ['home', 'journal', 'close', 'setup', 'coa'],
+    visibleWorkspaces: ['home', 'journal', 'close', 'setup', 'retired'],
     hasPeriod: true,
     periodKey: 'FY27-P03',
     periodStart: '2026-09-01',
@@ -129,7 +129,7 @@ describe('c-sab-app-shell', () => {
         await settle();
         expect(root.querySelector('.nav-item[data-id="journal"]').getAttribute('aria-current')).toBe('page');
 
-        CurrentPageReference.emit({ type: 'standard__navItemPage', attributes: { apiName: 'SAB_Home' }, state: { c__ws: 'coa' } });
+        CurrentPageReference.emit({ type: 'standard__navItemPage', attributes: { apiName: 'SAB_Home' }, state: { c__ws: 'retired' } });
         await settle();
         expect(root.querySelector('.workspace.aware')).not.toBeNull();
     });
@@ -335,6 +335,41 @@ describe('c-sab-app-shell', () => {
         editor.dispatchEvent(new CustomEvent('close'));
         await flush();
         expect(editor.open).toBe(false);
+    });
+
+    it('loads a sample company from the switcher and the welcome screen', async () => {
+        getShellContext.mockResolvedValue({ ...SHELL, canCreateCompany: true });
+        const SAMPLE = { companyId: 'a01000000000008AAA', companyName: 'Harbourline Trading (sample 123456)', companyKey: 'SAMPLE-123456', functionalCurrency: 'AUD', setupStatus: 'Active' };
+        getCompanyContext.mockImplementation(({ companyId }) => Promise.resolve(companyId === SAMPLE.companyId ? SAMPLE : COMPANIES.find((c) => c.companyId === companyId)));
+        const el = mount();
+        await settle();
+        const root = el.shadowRoot;
+        root.querySelector('.company-btn').click();
+        await flush();
+        root.querySelector('.load-sample').click();
+        await flush();
+        const loader = root.querySelector('c-sab-sample-loader');
+        expect(loader.open).toBe(true);
+        loader.dispatchEvent(new CustomEvent('close'));
+        await flush();
+        expect(loader.open).toBe(false);
+        root.querySelector('.company-btn').click();
+        await flush();
+        root.querySelector('.load-sample').click();
+        await flush();
+        loader.dispatchEvent(new CustomEvent('loaded', { detail: { recordId: SAMPLE.companyId } }));
+        await settle();
+        expect(root.querySelector('.company-name').textContent).toBe('Harbourline Trading (sample 123456)');
+        expect(root.querySelector('c-sab-toast').shadowRoot.querySelector('.toast').textContent).toBe('Sample company loaded. Explore it from Finance home.');
+        expect(loader.open).toBe(false);
+
+        getAccessibleCompanies.mockResolvedValue([]);
+        getShellContext.mockResolvedValue({ ...SHELL, visibleWorkspaces: ['home', 'setup'], hasPeriod: false, canCreateCompany: true });
+        const el2 = mount();
+        await settle();
+        el2.shadowRoot.querySelector('.sample-first').click();
+        await flush();
+        expect(el2.shadowRoot.querySelector('c-sab-sample-loader').open).toBe(true);
     });
 
     it('welcomes a user without companies who may create one', async () => {

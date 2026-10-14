@@ -1,0 +1,46 @@
+@import 'c/sabStyles';
+
+.nowrap {
+    flex-wrap: nowrap;
+    align-items: flex-start;
+}
+
+.grow {
+    flex: 1;
+    min-width: 0;
+}
+
+.note {
+    margin-top: 3px;
+}
+
+.status {
+    margin-top: 10px;
+}
+
+.gap {
+    margin-bottom: 16px;
+}
+
+.check {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.form {
+    gap: 12px 14px;
+}
+
+.form-error {
+    margin-bottom: 14px;
+}
+
+tr.click:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: -2px;
+}
+
+.row.center {
+    justify-content: center;
+}

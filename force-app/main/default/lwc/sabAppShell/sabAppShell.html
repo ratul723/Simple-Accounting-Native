@@ -50,6 +50,10 @@
                         <span class="avatar co add"><c-sab-icon name="plus" size="14" stroke-width="2"></c-sab-icon></span>
                         <span><span class="t">New accounting company</span><span class="d">Create it, then set up its foundation</span></span>
                     </button>
+                    <button class="pop-item load-sample" type="button" onclick={handleLoadSample}>
+                        <span class="avatar co add"><c-sab-icon name="spark" size="14" stroke-width="2"></c-sab-icon></span>
+                        <span><span class="t">Load sample company</span><span class="d">Harbourline Trading with three months of activity</span></span>
+                    </button>
                 </template>
             </div>
             <div class={userPopClass} onclick={stopClick}>
@@ -109,8 +113,10 @@
                     <div class="empty">
                         <div class="ill"><c-sab-icon name="setup" size="30"></c-sab-icon></div>
                         <h3>No accounting company yet</h3>
-                        <p>You become the finance manager of the company you create.</p>
-                        <div class="row center"><button class="btn primary create-first" type="button" onclick={handleNewCompany}>
+                        <p>You become the finance manager of the company you create. To look around first, load the Harbourline Trading sample.</p>
+                        <div class="row center"><button class="btn sample-first" type="button" onclick={handleLoadSample}>
+                            <c-sab-icon name="spark" size="16"></c-sab-icon>Load sample company</button>
+                            <button class="btn primary create-first" type="button" onclick={handleNewCompany}>
                             <c-sab-icon name="plus" size="16"></c-sab-icon>New accounting company</button></div>
                     </div>
                 </section>
@@ -164,5 +170,6 @@
     </div>
     <div class={scrimClass} onclick={handleScrimClick}></div>
     <c-sab-setup-records kind="newCompany" open={newCompanyOpen} onclose={handleNewCompanyClose} onsaved={handleNewCompanySaved}></c-sab-setup-records>
+    <c-sab-sample-loader open={sampleOpen} onclose={handleSampleClose} onloaded={handleSampleLoaded}></c-sab-sample-loader>
     <c-sab-toast></c-sab-toast>
 </template>

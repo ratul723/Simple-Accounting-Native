@@ -1,0 +1,58 @@
+@import 'c/sabStyles';
+
+.filters {
+    margin-bottom: 12px;
+}
+
+.gap {
+    margin-bottom: 16px;
+    align-items: center;
+}
+
+.gap-label {
+    gap: 6px;
+}
+
+.gap-label .select {
+    width: auto;
+}
+
+.tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+tr.inactive td {
+    color: var(--muted);
+}
+
+.checks {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 6px;
+}
+
+.check {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.form {
+    gap: 12px 14px;
+}
+
+.form-error {
+    margin-bottom: 14px;
+}
+
+tr.click:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: -2px;
+}
+
+.row.center {
+    justify-content: center;
+}

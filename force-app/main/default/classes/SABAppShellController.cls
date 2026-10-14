@@ -37,7 +37,7 @@ public with sharing class SABAppShellController {
         new WorkspaceRule('payroll', null, Payroll_Run__c.SObjectType, ACCESS_READ, 'PAYROLL'),
         new WorkspaceRule('assets', 'SAB_View_Fixed_Asset_Workspace', null, null, 'FIXED_ASSETS'),
         new WorkspaceRule('budgets', 'SAB_View_Budgets', null, null, 'BUDGETS'),
-        new WorkspaceRule('projects', 'SAB_View_Project_Financials', null, null, 'PROJECTS'),
+        new WorkspaceRule('projects', 'SAB_View_Project_Financials', null, null, null),
         new WorkspaceRule('tax', 'SAB_View_Tax_Returns', null, null, null),
         new WorkspaceRule('reports', 'SAB_View_Management_Reports', null, null, null),
         new WorkspaceRule('equity', 'SAB_View_Equity', null, null, 'EQUITY'),
