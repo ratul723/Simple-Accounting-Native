@@ -5,6 +5,10 @@
         <visible>true</visible>
     </applicationVisibilities>
     <classAccesses>
+        <apexClass>SABPaymentActionService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>SABPeopleSetupController</apexClass>
         <enabled>true</enabled>
     </classAccesses>

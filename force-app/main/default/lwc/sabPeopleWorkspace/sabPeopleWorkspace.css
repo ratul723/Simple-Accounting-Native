@@ -66,3 +66,6 @@
 .row.center {
     justify-content: center;
 }
+.action-hint {
+    margin: 0 16px 12px;
+}

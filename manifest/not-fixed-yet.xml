@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>SABAppShellController</members>
+        <members>SABAppShellControllerTest</members>
+        <members>SABBudgetWorkspaceController</members>
+        <members>SABCompanyAccessService</members>
+        <members>SABCompanyContextController</members>
+        <members>SABDocumentEntryService</members>
+        <members>SABImportServiceTest</members>
+        <members>SABImportsWorkspaceControllerTest</members>
+        <members>SABMoneyWorkspaceController</members>
+        <members>SABMoneyWorkspaceControllerTest</members>
+        <members>SABPaymentActionService</members>
+        <members>SABPaymentActionServiceTest</members>
+        <members>SABPostingService</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>sabAppShell</members>
+        <members>sabDocumentEditor</members>
+        <members>sabEmployees</members>
+        <members>sabFxWorkspace</members>
+        <members>sabPaymentsWorkspace</members>
+        <members>sabPeopleWorkspace</members>
+        <members>sabReportsWorkspace</members>
+        <name>LightningComponentBundle</name>
+    </types>
+    <types>
+        <members>SAB_App_User</members>
+        <name>PermissionSet</name>
+    </types>
+    <version>67.0</version>
+</Package>

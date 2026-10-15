@@ -62,6 +62,17 @@ public without sharing class SABCompanyAccessService {
         return accessibleCompanyIds.contains(companyId);
     }
 
+    /**
+     * An inactive company is locked: nothing may be posted or entered for it until it is reactivated in Company setup.
+     * Setup, configuration and the company switcher stay available so it can be reactivated.
+     */
+    public static void assertCompanyActive(Id companyId) {
+        List<Accounting_Company__c> rows = [SELECT Is_Active__c FROM Accounting_Company__c WHERE Id = :companyId WITH SYSTEM_MODE LIMIT 1];
+        if (rows.isEmpty() || rows[0].Is_Active__c != true) {
+            throw new CompanyAccessDeniedException('This company is inactive. Reactivate it in Company setup to continue.');
+        }
+    }
+
     public static void assertCompanyAccess(Id companyId) {
         if (!hasCompanyAccess(companyId)) {
             throw new CompanyAccessDeniedException(

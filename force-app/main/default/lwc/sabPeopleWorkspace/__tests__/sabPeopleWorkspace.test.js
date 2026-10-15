@@ -318,4 +318,32 @@ describe('c-sab-people-workspace', () => {
         await flush();
         expect(getWorkspace.mock.calls.length).toBeGreaterThan(calls);
     });
+
+    it('shows net pay as not posted and keeps Release net pay visible until the run is posted', async () => {
+        getSummary.mockResolvedValue(summary('Approved'));
+        getRunDetail.mockResolvedValue(detail(undefined, { settledAmount: 0, outstandingAmount: 0, effectiveSettlementId: null }));
+        const el = mount({ key: 'TREASURY', label: 'Treasury' });
+        await flush();
+        const root = el.shadowRoot;
+        const rows = root.querySelectorAll('.sab-settlement tbody tr');
+        expect(rows[0].textContent).toContain('Not posted');
+        expect(rows[0].textContent).toContain('4,800.00');
+        expect(root.querySelector('.sab-release-disabled').disabled).toBe(true);
+        expect(root.querySelector('.sab-release-disabled').title).toContain('once the run is posted');
+        expect(root.querySelector('.sab-prepare').disabled).toBe(true);
+        expect(root.querySelector('.sab-pay-waiting').textContent).toContain('The run is Approved');
+    });
+
+    it('explains in the panel why the next payroll step is unavailable', async () => {
+        getSummary.mockResolvedValue(summary('Submitted'));
+        getWorkspace.mockResolvedValue(workspace({ ...CAPS, approve: false }));
+        const el = mount({ key: 'HR', label: 'HR' });
+        await flush();
+        expect(el.shadowRoot.querySelector('.sab-prep-hint').textContent).toContain('HR role cannot approve payroll');
+        getSummary.mockResolvedValue(summary('Draft'));
+        getWorkspace.mockResolvedValue({ ...workspace(), employments: [] });
+        const el2 = mount({ key: 'HR', label: 'HR' });
+        await flush();
+        expect(el2.shadowRoot.querySelector('.sab-prep-hint').textContent).toContain('No active employees yet');
+    });
 });

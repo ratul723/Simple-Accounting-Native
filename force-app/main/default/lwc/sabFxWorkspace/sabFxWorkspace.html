@@ -44,7 +44,13 @@
             </div></section>
         </template>
         <template lwc:elseif={isPayments}>
-            <section class="panel"><div class="panel-b flush">
+            <section class="panel">
+                <div class="panel-h"><div><div class="sub">Payments and receipts in a currency other than {cur}. Authorising takes the approved Spot rate for the value date.</div></div>
+                    <span class="spacer"></span>
+                    <button class="btn sm sab-record-foreign-receipt" type="button" data-kind="receipt" onclick={handleRecordForeign}>Record foreign receipt</button>
+                    <button class="btn sm primary sab-record-foreign-payment" type="button" data-kind="payment" onclick={handleRecordForeign}>
+                        <c-sab-icon name="plus" size="14"></c-sab-icon>Record foreign payment</button></div>
+                <div class="panel-b flush">
                 <template lwc:if={hasPayments}>
                     <div class="tbl-wrap"><table class="tbl sab-fx-payments">
                         <thead><tr><th>Payment</th><th>Party</th><th class="n">Amount</th><th class="n">Rate</th><th class="n">Unallocated</th><th>State</th></tr></thead>
@@ -53,8 +59,27 @@
                             <td class="n num">{p.rateText}</td><td class="n num">{p.unallocatedText}</td><td><span class={p.chip}><span class="dot"></span>{p.processingState}</span></td></tr></template></tbody>
                     </table></div>
                 </template>
-                <template lwc:else><div class="panel-b muted">No foreign-currency payments.</div></template>
+                <template lwc:else><div class="panel-b muted">No foreign-currency payments. Record one above.</div></template>
             </div></section>
+        </template>
+        <template lwc:elseif={isRates}>
+            <section class="panel">
+                <div class="panel-h"><div><div class="sub">Approved rates into {cur}. Foreign payments need a Spot rate on or before their value date; revaluation uses Closing rates.</div></div>
+                    <span class="spacer"></span>
+                    <button class="btn sm primary sab-add-rate" type="button" disabled={rateDisabled} title={rateTitle} onclick={handleAddRate}>
+                        <c-sab-icon name="plus" size="14"></c-sab-icon>Add rate</button></div>
+                <div class="panel-b flush">
+                    <template lwc:if={ratesError}><div class="panel-b"><div class="banner t-bad">{ratesError}</div></div></template>
+                    <template lwc:elseif={hasRates}>
+                        <div class="tbl-wrap"><table class="tbl sab-rates">
+                            <thead><tr><th>Currencies</th><th>Type</th><th>Effective from</th><th class="n">Rate</th><th>Source</th><th>Status</th></tr></thead>
+                            <tbody><template for:each={rateRows} for:item="r"><tr key={r.rateId}><td>{r.pair}</td><td>{r.rateType}</td><td>{r.dateText}</td>
+                                <td class="n num">{r.rateText}</td><td class="small">{r.source}</td><td><span class={r.chip}><span class="dot"></span>{r.statusText}</span></td></tr></template></tbody>
+                        </table></div>
+                    </template>
+                    <template lwc:else><div class="panel-b muted">No exchange rates yet. Add a Spot rate before authorising a foreign payment.</div></template>
+                </div>
+            </section>
         </template>
         <template lwc:else>
             <section class="panel"><div class="panel-b flush">
@@ -114,6 +139,17 @@
 
     <c-sab-modal open={modalOpen} heading={modalHeading} subheading={modalSub} onclose={handleCloseModal}>
         <template lwc:if={formError}><div class="banner t-bad form-error" role="alert"><c-sab-icon name="alert"></c-sab-icon><div>{formError}</div></div></template>
+        <template lwc:if={isRateModal}>
+            <div class="grid g2 form">
+                <label class="field"><span>From currency</span><input class="input sab-rate-from" data-field="fromCurrency" value={form.fromCurrency} maxlength="3" oninput={handleField} /></label>
+                <label class="field"><span>To currency</span><input class="input" value={cur} disabled /></label>
+                <label class="field"><span>Rate type</span><select class="select" data-field="rateType" onchange={handleField}>
+                    <template for:each={rateTypeOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+                <label class="field"><span>Effective from</span><input class="input" type="date" data-field="effectiveDate" value={form.effectiveDate} oninput={handleField} /></label>
+                <label class="field wide"><span>Rate</span><input class="input n" type="number" step="0.000001" data-field="rate" value={form.rate} oninput={handleField} /></label>
+            </div>
+            <p class="small muted">{rateHint}</p>
+        </template>
         <template lwc:if={isFxSetupModal}>
             <div class="grid g2 form">
                 <template for:each={fxSlots} for:item="slot">
@@ -163,4 +199,6 @@
         <button slot="footer" class="btn ghost sab-modal-close" type="button" onclick={handleCloseModal}>Close</button>
         <button slot="footer" class={saveClass} type="button" disabled={busy} onclick={handleSave}>{saveLabel}</button>
     </c-sab-modal>
+    <c-sab-document-editor company-id={companyId} kind={editorKind} default-currency={foreignCurrency} open={editorOpen}
+        onclose={handleEditorClose} onsaved={handleEditorSaved}></c-sab-document-editor>
 </template>

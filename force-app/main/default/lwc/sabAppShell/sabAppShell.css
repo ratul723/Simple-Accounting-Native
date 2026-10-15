@@ -220,3 +220,7 @@
 }
 .avatar.co.add{background:var(--accent-soft);color:var(--accent)}
 .pop-item.new-company{border-top:1px solid var(--line);margin-top:4px;padding-top:10px}
+
+.inactive-banner {
+    margin-bottom: 16px;
+}

@@ -123,6 +123,9 @@ public without sharing class SABPostingService {
         SABCompanyAccessService.assertCompanyAccess(
             initialJournal.Company__c
         );
+        SABCompanyAccessService.assertCompanyActive(
+            initialJournal.Company__c
+        );
 
         validatePostingKeyLength(request.postingKey);
 

@@ -140,6 +140,18 @@
                     </template>
                 </template>
 
+                <template lwc:elseif={isTable}>
+                    <p class="small muted table-note">{tableReport.note}</p>
+                    <template lwc:if={tableReport.hasRows}>
+                        <div class="tbl-wrap"><table class="tbl sab-table-report">
+                            <thead><tr><template for:each={tableReport.columns} for:item="c"><th key={c.label} class={c.className}>{c.label}</th></template></tr></thead>
+                            <tbody><template for:each={tableReport.rows} for:item="r"><tr key={r.key}>
+                                <template for:each={r.cells} for:item="c"><td key={c.key} class={c.className}>{c.value}</td></template></tr></template></tbody>
+                            <template lwc:if={tableReport.hasTotal}><tfoot><tr><td colspan={tableReport.totalSpan}>Total</td><td class="n num">{tableReport.total}</td></tr></tfoot></template>
+                        </table></div>
+                    </template>
+                    <template lwc:else><div class="muted">Nothing to report for this selection.</div></template>
+                </template>
                 <template lwc:elseif={isCf}>
                     <div class={cf.bannerClass}><c-sab-icon name="info"></c-sab-icon><div><b>{cf.bannerTitle}</b><div class="small">{cf.bannerText}</div></div></div>
                     <div class="tbl-wrap"><table class="tbl sab-cf">

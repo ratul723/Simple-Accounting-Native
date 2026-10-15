@@ -37,6 +37,8 @@ export default class SabDocumentEditor extends LightningElement {
     @api companyId;
     @api kind = 'invoice';
     @api recordId;
+    /** Optional currency for a new payment or receipt, such as a foreign currency from Foreign exchange. */
+    @api defaultCurrency;
 
     options;
     form = {};
@@ -92,7 +94,7 @@ export default class SabDocumentEditor extends LightningElement {
     blank() {
         const today = todayIso();
         const party = ((this.options[this.config.partyList] || [])[0] || {}).value || '';
-        this.form = { partyProfileId: party, documentDate: today, dueDate: addDays(today, 30), reference: '', originalInvoiceId: '', currencyCode: this.options.currencyCode,
+        this.form = { partyProfileId: party, documentDate: today, dueDate: addDays(today, 30), reference: '', originalInvoiceId: '', currencyCode: this.defaultCurrency || this.options.currencyCode,
             exchangeRate: '', bankAccountId: ((this.options.bankAccounts || [])[0] || {}).value || '', amount: '', effectiveDate: today,
             method: ((this.options.methods || [])[0] || {}).value || '', employmentId: this.options.myEmploymentId || ((this.options.employments || [])[0] || {}).value || '' };
         this.lines = [blankLine()];

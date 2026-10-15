@@ -27,6 +27,10 @@ jest.mock('@salesforce/apex/SABSetupActionService.getOptions', () => ({ default:
 jest.mock('@salesforce/apex/SABSetupActionService.saveFxAccounts', () => ({ default: jest.fn() }), { virtual: true });
 import getSetupOptions from '@salesforce/apex/SABSetupActionService.getOptions';
 import saveFxAccounts from '@salesforce/apex/SABSetupActionService.saveFxAccounts';
+jest.mock('@salesforce/apex/SABPaymentActionService.getRates', () => ({ default: jest.fn() }), { virtual: true });
+jest.mock('@salesforce/apex/SABPaymentActionService.saveRate', () => ({ default: jest.fn() }), { virtual: true });
+import getRates from '@salesforce/apex/SABPaymentActionService.getRates';
+import saveRate from '@salesforce/apex/SABPaymentActionService.saveRate';
 
 const run = (id, status, extra = {}) => ({ runId: id, name: `FXR-${id}`, runKey: `KEY-${id}`, accountingPeriodName: '2026-09', rateSetKey: 'RBA', reversalPolicy: 'First Day of Next Period',
     status, lineCount: 2, arLineCount: 1, apLineCount: 1, signedAdjustmentTotal: -120, approvedByName: 'Daniel', postedAt: '2026-09-30T02:00:00.000Z',
@@ -234,7 +238,7 @@ describe('c-sab-fx-workspace', () => {
         expect(el2.shadowRoot.querySelector('.banner.t-warn')).toBeNull();
         el2.shadowRoot.querySelectorAll('.tab')[1].click();
         await flush();
-        expect(el2.shadowRoot.querySelector('.panel-b.muted').textContent).toBe('No foreign-currency payments.');
+        expect(el2.shadowRoot.querySelector('.panel-b.muted').textContent).toBe('No foreign-currency payments. Record one above.');
         el2.shadowRoot.querySelectorAll('.tab')[2].click();
         await flush();
         expect(el2.shadowRoot.querySelector('.panel-b.muted').textContent).toBe('No foreign-currency settlements yet.');
@@ -278,5 +282,54 @@ describe('c-sab-fx-workspace', () => {
         root.querySelector('.sab-fx-setup').click();
         await flush();
         expect(root.querySelector('.form-error').textContent).toBe('No access.');
+    });
+
+    it('lists and adds exchange rates and records foreign payments', async () => {
+        getRates.mockResolvedValue({ canManage: true, functionalCurrency: 'AUD', rates: [{ rateId: 'X1', fromCurrency: 'EUR', toCurrency: 'AUD', rateType: 'Spot', rate: 1.65,
+            effectiveAt: '2026-10-01T00:00:00.000Z', approved: true, source: 'Manual entry' }] });
+        saveRate.mockRejectedValueOnce({ body: { message: 'The rate must be greater than zero.' } }).mockResolvedValue('X2');
+        const el = mount();
+        await flush();
+        const root = el.shadowRoot;
+        root.querySelectorAll('.tab')[3].click();
+        await flush();
+        expect(root.querySelector('.sab-rates tbody tr').textContent).toContain('EUR to AUD');
+        root.querySelector('.sab-add-rate').click();
+        await flush();
+        expect(root.querySelector('.sab-rate-from').value).toBe('EUR');
+        root.querySelector('.sab-modal-save').click();
+        await flush();
+        setModal(root, 'rate', '1.66');
+        root.querySelector('.sab-modal-save').click();
+        await flush();
+        expect(saveRate.mock.calls[1][0]).toMatchObject({ companyId: 'a01000000000001AAA', request: { fromCurrency: 'EUR', rateType: 'Spot', rate: 1.66 } });
+        root.querySelectorAll('.tab')[1].click();
+        await flush();
+        root.querySelector('.sab-record-foreign-payment').click();
+        await flush();
+        const editor = root.querySelector('c-sab-document-editor');
+        expect(editor.open).toBe(true);
+        expect(editor.kind).toBe('payment');
+        expect(editor.defaultCurrency).toBe('EUR');
+        editor.dispatchEvent(new CustomEvent('saved', { detail: { recordId: 'P9' } }));
+        editor.dispatchEvent(new CustomEvent('close'));
+        await flush();
+        root.querySelector('.sab-record-foreign-receipt').click();
+        await flush();
+        expect(editor.kind).toBe('receipt');
+
+        getRates.mockResolvedValueOnce({ canManage: false, functionalCurrency: 'AUD', rates: [] });
+        const el2 = mount();
+        await flush();
+        el2.shadowRoot.querySelectorAll('.tab')[3].click();
+        await flush();
+        expect(el2.shadowRoot.querySelector('.sab-add-rate').disabled).toBe(true);
+        expect(el2.shadowRoot.querySelector('.panel-b.muted').textContent).toContain('No exchange rates yet');
+        getRates.mockRejectedValueOnce({ body: { message: 'No access.' } });
+        const el3 = mount();
+        await flush();
+        el3.shadowRoot.querySelectorAll('.tab')[3].click();
+        await flush();
+        expect(el3.shadowRoot.querySelector('.banner.t-bad').textContent).toBe('No access.');
     });
 });

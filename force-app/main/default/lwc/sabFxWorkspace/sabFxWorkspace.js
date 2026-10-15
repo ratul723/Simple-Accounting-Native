@@ -12,6 +12,8 @@ import allocateForeignPayment from '@salesforce/apex/SABForeignCurrencySettlemen
 import reverseForeignAllocation from '@salesforce/apex/SABForeignCurrencySettlementService.reverseForeignAllocation';
 import getSetupOptions from '@salesforce/apex/SABSetupActionService.getOptions';
 import saveFxAccounts from '@salesforce/apex/SABSetupActionService.saveFxAccounts';
+import getRates from '@salesforce/apex/SABPaymentActionService.getRates';
+import saveRate from '@salesforce/apex/SABPaymentActionService.saveRate';
 import { formatNumber, formatDate, chipClass } from 'c/sabFormat';
 import { reduceError, newKey, todayIso, hsteps, toast } from 'c/sabMoneyShared';
 
@@ -44,6 +46,10 @@ export default class SabFxWorkspace extends LightningElement {
     form = {};
     targets = [];
     fxOptions;
+    ratesView;
+    ratesError;
+    editorOpen = false;
+    editorKind = 'payment';
     formError;
     requestKeys = {};
     loadSequence = 0;
@@ -73,6 +79,7 @@ export default class SabFxWorkspace extends LightningElement {
             const data = await getDashboard({ companyId });
             if (sequence === this.loadSequence) {
                 this.data = data;
+                this.loadRates();
             }
         } catch (error) {
             if (sequence === this.loadSequence) {
@@ -141,7 +148,8 @@ export default class SabFxWorkspace extends LightningElement {
         return [
             { id: 'runs', label: 'Revaluation', count: this.runs.length },
             { id: 'pay', label: 'Foreign payments', count: this.payments.length },
-            { id: 'alloc', label: 'Settlements', count: this.allocations.length }
+            { id: 'alloc', label: 'Settlements', count: this.allocations.length },
+            { id: 'rates', label: 'Exchange rates', count: this.rateRows.length }
         ].map((t) => ({ ...t, className: t.id === this.activeTab ? 'tab active' : 'tab', selected: t.id === this.activeTab ? 'true' : 'false' }));
     }
 
@@ -151,6 +159,83 @@ export default class SabFxWorkspace extends LightningElement {
 
     get isRuns() {
         return this.activeTab === 'runs';
+    }
+
+    get isRates() {
+        return this.activeTab === 'rates';
+    }
+
+    // ---------- exchange rates ----------
+
+    async loadRates() {
+        try {
+            this.ratesView = await getRates({ companyId: this.currentCompanyId });
+            this.ratesError = undefined;
+        } catch (error) {
+            this.ratesError = reduceError(error);
+        }
+    }
+
+    get rateRows() {
+        return ((this.ratesView && this.ratesView.rates) || []).map((r) => ({
+            ...r,
+            pair: `${r.fromCurrency} to ${r.toCurrency}`,
+            rateText: String(r.rate),
+            dateText: r.effectiveAt ? formatDate(String(r.effectiveAt).slice(0, 10)) : '\u2014',
+            chip: chipClass(r.approved ? 'Approved' : 'Not approved', r.approved ? 'good' : 'neutral'),
+            statusText: r.approved ? 'Approved' : 'Not approved'
+        }));
+    }
+
+    get hasRates() {
+        return this.rateRows.length > 0;
+    }
+
+    get rateDisabled() {
+        return !(this.ratesView && this.ratesView.canManage);
+    }
+
+    get rateTitle() {
+        return this.rateDisabled ? `${this.personaLabel} role cannot maintain exchange rates` : undefined;
+    }
+
+    handleAddRate() {
+        this.openModal('rate', { fromCurrency: this.foreignCurrency, rateType: 'Spot', rate: '', effectiveDate: todayIso() });
+    }
+
+    get isRateModal() {
+        return this.modal === 'rate';
+    }
+
+    get rateTypeOptions() {
+        return ['Spot', 'Closing', 'Average'].map((v) => ({ value: v, label: v, selected: v === this.form.rateType }));
+    }
+
+    get rateHint() {
+        const cur = this.cur;
+        return `How many ${cur} one unit of ${this.form.fromCurrency || 'the other currency'} buys. Payments use Spot rates; revaluation uses Closing rates.`;
+    }
+
+    // ---------- record a foreign payment ----------
+
+    /** The most recent non-functional currency with a rate, used as the default for new foreign payments. */
+    get foreignCurrency() {
+        const rate = ((this.ratesView && this.ratesView.rates) || []).find((r) => r.fromCurrency !== this.cur);
+        return rate ? rate.fromCurrency : 'USD';
+    }
+
+    handleRecordForeign(event) {
+        this.editorKind = event.currentTarget.dataset.kind;
+        this.editorOpen = true;
+    }
+
+    handleEditorClose() {
+        this.editorOpen = false;
+    }
+
+    async handleEditorSaved() {
+        this.activeTab = 'pay';
+        await this.load();
     }
 
     get isPayments() {
@@ -441,12 +526,13 @@ export default class SabFxWorkspace extends LightningElement {
     }
 
     get modalHeading() {
-        return { fxSetup: 'FX gain and loss accounts', preview: 'New revaluation', approve: 'Approve revaluation', post: 'Post revaluation', reverse: 'Reverse revaluation',
+        return { rate: 'Add exchange rate', fxSetup: 'FX gain and loss accounts', preview: 'New revaluation', approve: 'Approve revaluation', post: 'Post revaluation', reverse: 'Reverse revaluation',
             allocate: 'Allocate foreign payment', reverseAlloc: 'Reverse settlement' }[this.modal];
     }
 
     get modalSub() {
         return {
+            rate: 'Rates are shared by every company. Each rate is approved when saved.',
             fxSetup: 'Choose the accounts revaluations and settlements post to. Leave a slot on "Create" to add a standard account for it.',
             preview: 'Revalues open foreign-currency receivables and payables at the period-end rate. Nothing posts until approved and posted.',
             approve: 'Approves the previewed adjustments for posting.',
@@ -458,7 +544,7 @@ export default class SabFxWorkspace extends LightningElement {
     }
 
     get saveLabel() {
-        return { fxSetup: 'Save accounts', preview: 'Preview run', approve: 'Approve', post: 'Post revaluation', reverse: 'Reverse', allocate: 'Allocate', reverseAlloc: 'Reverse settlement' }[this.modal];
+        return { rate: 'Save rate', fxSetup: 'Save accounts', preview: 'Preview run', approve: 'Approve', post: 'Post revaluation', reverse: 'Reverse', allocate: 'Allocate', reverseAlloc: 'Reverse settlement' }[this.modal];
     }
 
     get saveClass() {
@@ -482,7 +568,7 @@ export default class SabFxWorkspace extends LightningElement {
     }
 
     get showReason() {
-        return this.modal !== 'preview' && this.modal !== 'fxSetup';
+        return this.modal !== 'preview' && this.modal !== 'fxSetup' && this.modal !== 'rate';
     }
 
     get reasonLabel() {
@@ -526,7 +612,14 @@ export default class SabFxWorkspace extends LightningElement {
             return;
         }
         let ok;
-        if (this.modal === 'fxSetup') {
+        if (this.modal === 'rate') {
+            ok = await this.execute('RATE', `${f.fromCurrency}|${f.rateType}|${f.effectiveDate}`, (requestKey) => saveRate({ companyId: this.currentCompanyId,
+                request: { fromCurrency: f.fromCurrency, toCurrency: null, rateType: f.rateType, rate: f.rate === '' ? null : Number(f.rate),
+                    effectiveDate: f.effectiveDate || null }, requestKey }), 'Exchange rate saved');
+            if (ok) {
+                this.activeTab = 'rates';
+            }
+        } else if (this.modal === 'fxSetup') {
             ok = await this.execute('FXSETUP', this.currentCompanyId, (requestKey) => saveFxAccounts({ request: { companyId: this.currentCompanyId,
                 unrealizedGainAccountId: f.unrealizedGainAccountId || null, unrealizedLossAccountId: f.unrealizedLossAccountId || null,
                 realizedGainAccountId: f.realizedGainAccountId || null, realizedLossAccountId: f.realizedLossAccountId || null, createMissing: true }, requestKey }),

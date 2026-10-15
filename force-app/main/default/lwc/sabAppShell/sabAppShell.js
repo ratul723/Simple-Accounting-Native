@@ -312,9 +312,23 @@ export default class SabAppShell extends NavigationMixin(LightningElement) {
             ...c,
             className: c.companyId === selected ? 'pop-item sel' : 'pop-item',
             badge: (c.companyKey || c.companyName || '').slice(0, 2).toUpperCase(),
-            sub: `${c.companyKey}, ${c.functionalCurrency}, ${isReady(c.setupStatus) ? c.setupStatus.toLowerCase() : 'setup in progress'}`,
+            sub: c.isActive === false ? `${c.companyKey}, ${c.functionalCurrency}, inactive`
+                : `${c.companyKey}, ${c.functionalCurrency}, ${isReady(c.setupStatus) ? c.setupStatus.toLowerCase() : 'setup in progress'}`,
             selected: c.companyId === selected ? 'true' : 'false'
         }));
+    }
+
+    /** Shown above every workspace of an inactive company: only home, setup and configuration stay open. */
+    get companyInactive() {
+        return Boolean(this.shell && this.shell.companyInactive);
+    }
+
+    get canOpenSetup() {
+        return this.isVisible('setup');
+    }
+
+    handleOpenSetup() {
+        this.navigateTo('setup');
     }
 
     get navGroups() {

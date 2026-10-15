@@ -354,6 +354,21 @@ describe('c-sab-app-shell', () => {
         expect(root.querySelector('c-sab-toast').shadowRoot.querySelector('.toast').textContent).toBe('Context failed.');
     });
 
+    it('locks an inactive company to home, setup and configuration with a banner', async () => {
+        getAccessibleCompanies.mockResolvedValue(COMPANIES.map((c, i) => (i === 0 ? { ...c, isActive: false } : c)));
+        getShellContext.mockResolvedValue({ ...SHELL, companyInactive: true, visibleWorkspaces: ['home', 'setup'] });
+        const el = mount();
+        await settle();
+        const root = el.shadowRoot;
+        expect(root.querySelector('.inactive-banner').textContent).toContain('This company is inactive');
+        root.querySelector('.company-btn').click();
+        await flush();
+        expect(root.querySelector('[role="listbox"] .pop-item .d').textContent).toContain('inactive');
+        root.querySelector('.sab-open-setup').click();
+        await settle();
+        expect(root.querySelector('.nav-item[data-id="setup"]').getAttribute('aria-current')).toBe('page');
+    });
+
     it('loads a sample company from the switcher and the welcome screen', async () => {
         getShellContext.mockResolvedValue({ ...SHELL, canCreateCompany: true });
         const SAMPLE = { companyId: 'a01000000000008AAA', companyName: 'Harbourline Trading (sample 123456)', companyKey: 'SAMPLE-123456', functionalCurrency: 'AUD', setupStatus: 'Active' };

@@ -12,11 +12,18 @@ import failPayment from '@salesforce/apex/SABSupplierPaymentService.markFailed';
 import retryPayment from '@salesforce/apex/SABSupplierPaymentService.retryFailed';
 import postPayment from '@salesforce/apex/SABSupplierPaymentPostingService.recordSucceededAndPost';
 import allocateReceipt from '@salesforce/apex/SABCustomerReceiptAllocationService.allocateToInvoices';
+import allocateDisbursement from '@salesforce/apex/SABPaymentActionService.allocateDisbursement';
+import authorizeForeign from '@salesforce/apex/SABForeignCurrencySettlementService.authorizeForeignPayment';
+import submitForeign from '@salesforce/apex/SABForeignCurrencySettlementService.submitForeignPayment';
+import postForeign from '@salesforce/apex/SABForeignCurrencySettlementService.postForeignPayment';
+import { friendly } from 'c/sabPaymentsWorkspace';
 
 const MOCKS = ['SABMoneyWorkspaceController.getPayments', 'SABCustomerReceiptService.authorize', 'SABCustomerReceiptService.submitForProcessing',
     'SABCustomerReceiptService.markFailed', 'SABCustomerReceiptService.retryFailed', 'SABCustomerReceiptPostingService.recordSucceededAndPost',
     'SABSupplierPaymentService.authorize', 'SABSupplierPaymentService.submitForExecution', 'SABSupplierPaymentService.markFailed',
-    'SABSupplierPaymentService.retryFailed', 'SABSupplierPaymentPostingService.recordSucceededAndPost', 'SABCustomerReceiptAllocationService.allocateToInvoices'];
+    'SABSupplierPaymentService.retryFailed', 'SABSupplierPaymentPostingService.recordSucceededAndPost', 'SABCustomerReceiptAllocationService.allocateToInvoices',
+    'SABPaymentActionService.allocateDisbursement', 'SABForeignCurrencySettlementService.authorizeForeignPayment',
+    'SABForeignCurrencySettlementService.submitForeignPayment', 'SABForeignCurrencySettlementService.postForeignPayment'];
 jest.mock('@salesforce/apex/SABMoneyWorkspaceController.getPayments', () => ({ default: jest.fn() }), { virtual: true });
 jest.mock('@salesforce/apex/SABCustomerReceiptService.authorize', () => ({ default: jest.fn() }), { virtual: true });
 jest.mock('@salesforce/apex/SABCustomerReceiptService.submitForProcessing', () => ({ default: jest.fn() }), { virtual: true });
@@ -29,6 +36,10 @@ jest.mock('@salesforce/apex/SABSupplierPaymentService.markFailed', () => ({ defa
 jest.mock('@salesforce/apex/SABSupplierPaymentService.retryFailed', () => ({ default: jest.fn() }), { virtual: true });
 jest.mock('@salesforce/apex/SABSupplierPaymentPostingService.recordSucceededAndPost', () => ({ default: jest.fn() }), { virtual: true });
 jest.mock('@salesforce/apex/SABCustomerReceiptAllocationService.allocateToInvoices', () => ({ default: jest.fn() }), { virtual: true });
+jest.mock('@salesforce/apex/SABPaymentActionService.allocateDisbursement', () => ({ default: jest.fn() }), { virtual: true });
+jest.mock('@salesforce/apex/SABForeignCurrencySettlementService.authorizeForeignPayment', () => ({ default: jest.fn() }), { virtual: true });
+jest.mock('@salesforce/apex/SABForeignCurrencySettlementService.submitForeignPayment', () => ({ default: jest.fn() }), { virtual: true });
+jest.mock('@salesforce/apex/SABForeignCurrencySettlementService.postForeignPayment', () => ({ default: jest.fn() }), { virtual: true });
 
 const pay = (id, direction, state, extra = {}) => ({ paymentId: id, paymentNumber: `PAY-${id}`, direction, partyProfileId: 'C1', partyName: 'Greenfield',
     effectiveDate: '2026-10-10', bankName: 'Operating', method: 'EFT', amount: 1000, currencyCode: 'AUD', state, allocated: 0, allocations: [], ...extra });
@@ -82,7 +93,7 @@ describe('c-sab-payments-workspace', () => {
     });
 
     it('renders figures, the failed banner and filtered tabs', async () => {
-        expect(MOCKS.length).toBe(12);
+        expect(MOCKS.length).toBe(16);
         const el = mount();
         await flush();
         const root = el.shadowRoot;
@@ -251,5 +262,82 @@ describe('c-sab-payments-workspace', () => {
         editor.dispatchEvent(new CustomEvent('saved', { detail: { recordId: 'D4' } }));
         await flush();
         expect(root.querySelector('c-sab-drawer').heading).toBe('PAY-D4');
+    });
+
+    it('allocates a cleared supplier payment to open bills', async () => {
+        getPayments.mockResolvedValue(data({ canAllocate: true, payments: [pay('D9', 'Disbursement', 'Succeeded', { partyProfileId: 'S1', partyName: 'Fuel Co' })],
+            openBills: [{ documentId: 'B1', documentNumber: 'BILL-1 (F-9)', partyProfileId: 'S1', dueDate: '2026-10-31', outstanding: 600 },
+                { documentId: 'B2', documentNumber: 'BILL-2', partyProfileId: 'OTHER', outstanding: 50 }] }));
+        allocateDisbursement.mockResolvedValue(1);
+        const el = mount();
+        await flush();
+        const root = el.shadowRoot;
+        expect(root.querySelectorAll('.tab')[3].textContent).toContain('1');
+        open(root, 'D9');
+        await flush();
+        expect(root.querySelector('.allocate-title').textContent).toBe('Allocate 1,000.00 to open bills');
+        const rows = root.querySelectorAll('.sab-open-invoices tbody tr');
+        expect(rows.length).toBe(1);
+        expect(root.querySelector('.sab-open-invoices thead').textContent).toContain('Bill');
+        const input = rows[0].querySelector('input');
+        input.value = '600';
+        input.dispatchEvent(new CustomEvent('input'));
+        root.querySelector('.sab-allocate').click();
+        await flush();
+        expect(allocateDisbursement.mock.calls[0][0]).toMatchObject({ paymentId: 'D9', lines: [{ supplierBillId: 'B1', amount: 600 }] });
+
+        getPayments.mockResolvedValue(data({ canAllocate: false, payments: [pay('D8', 'Disbursement', 'Succeeded', { partyProfileId: 'S2' })], openBills: [] }));
+        const el2 = mount();
+        await flush();
+        open(el2.shadowRoot, 'D8');
+        await flush();
+        expect(Array.from(el2.shadowRoot.querySelectorAll('c-sab-drawer p.muted.small')).map((x) => x.textContent)).toContain('This supplier has no open posted bills to allocate to.');
+    });
+
+    it('sends foreign-currency payments through the foreign-currency service', async () => {
+        getPayments.mockResolvedValue(data({ payments: [pay('F1', 'Disbursement', 'Draft', { currencyCode: 'USD' }), pay('F2', 'Disbursement', 'Authorized', { currencyCode: 'USD' }),
+            pay('F3', 'Disbursement', 'Submitted', { currencyCode: 'USD' }), pay('F4', 'Disbursement', 'Succeeded', { currencyCode: 'USD' })] }));
+        authorizeForeign.mockRejectedValueOnce({ body: { message: 'No approved Spot exchange rate exists for USD to AUD at or before 2026-10-14 23:59:59.' } })
+            .mockResolvedValue({});
+        [submitForeign, postForeign].forEach((m) => m.mockResolvedValue({}));
+        const el = mount();
+        const toast = jest.fn();
+        el.addEventListener('sabtoast', toast);
+        const nav = jest.fn();
+        el.addEventListener('sabnavigate', nav);
+        await flush();
+        const root = el.shadowRoot;
+        open(root, 'F1');
+        await flush();
+        expect(root.querySelector('.sab-foreign-note').textContent).toContain('USD');
+        root.querySelector('.sab-authorize').click();
+        await flush();
+        expect(toast.mock.calls[0][0].detail.message).toBe('No approved Spot rate from USD to AUD for this date. Add one in Foreign exchange > Exchange rates.');
+        root.querySelector('.sab-authorize').click();
+        await flush();
+        expect(authorizePayment).not.toHaveBeenCalled();
+        expect(authorizeForeign).toHaveBeenCalledTimes(2);
+        open(root, 'F2');
+        await flush();
+        root.querySelector('.sab-release').click();
+        await flush();
+        expect(submitForeign.mock.calls[0][0]).toMatchObject({ paymentId: 'F2' });
+        open(root, 'F3');
+        await flush();
+        root.querySelector('.sab-clear').click();
+        await flush();
+        expect(postForeign.mock.calls[0][0]).toMatchObject({ paymentId: 'F3' });
+        open(root, 'F4');
+        await flush();
+        expect(root.querySelector('.sab-open-invoices')).toBeNull();
+        root.querySelector('.sab-open-fx').click();
+        expect(nav.mock.calls[0][0].detail.workspace).toBe('fx');
+    });
+
+    it('shortens long settlement messages', () => {
+        expect(friendly('Payment currency must match the bank account currency; same-currency supplier disbursements only are supported.'))
+            .toContain('approved exchange rate');
+        expect(friendly('No approved rate anywhere.')).toBe('No approved exchange rate for this date. Add one in Foreign exchange > Exchange rates.');
+        expect(friendly('Other message.')).toBe('Other message.');
     });
 });

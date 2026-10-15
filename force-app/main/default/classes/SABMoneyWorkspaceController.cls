@@ -71,6 +71,9 @@ public with sharing class SABMoneyWorkspaceController {
         @AuraEnabled public Integer awaitingReleaseCount { get; set; }
         @AuraEnabled public List<PaymentRow> payments { get; set; }
         @AuraEnabled public List<DocumentRow> openInvoices { get; set; }
+        /** Posted supplier bills with an amount still to pay, for allocating cleared supplier payments. */
+        @AuraEnabled public List<DocumentRow> openBills { get; set; }
+        @AuraEnabled public Boolean canAllocate { get; set; }
     }
 
     public class PaymentRow {
@@ -311,6 +314,8 @@ public with sharing class SABMoneyWorkspaceController {
                 }
             }
             data.openInvoices = openInvoices(companyId);
+            data.openBills = openBills(companyId);
+            data.canAllocate = Schema.SObjectType.Payment_Allocation__c.isCreateable();
             return data;
         } catch (QueryException ex) {
             throw auraError('Payments could not be loaded: ' + ex.getMessage());
@@ -381,6 +386,32 @@ public with sharing class SABMoneyWorkspaceController {
             item.documentNumber = allocation.Supplier_Bill__r.Name;
         }
         return item;
+    }
+
+    private static List<DocumentRow> openBills(Id companyId) {
+        List<DocumentRow> rows = new List<DocumentRow>();
+        try {
+            SABAccountsPayableWorkspaceController.WorkspaceDTO ap = SABAccountsPayableWorkspaceController.getWorkspace(companyId, Date.today(), null, null, false);
+            for (SABAccountsPayableWorkspaceController.BillRowDTO bill : ap.bills) {
+                if (bill.status != 'Posted' || bill.documentType == 'Supplier Credit' || zero(bill.outstandingAmount) <= 0) {
+                    continue;
+                }
+                DocumentRow row = new DocumentRow();
+                row.documentId = bill.billId;
+                row.documentNumber = String.isBlank(bill.vendorReference) ? bill.billNumber : bill.billNumber + ' (' + bill.vendorReference + ')';
+                row.partyProfileId = bill.supplierProfileId;
+                row.partyName = bill.supplierName;
+                row.dueDate = bill.dueDate;
+                row.outstanding = bill.outstandingAmount;
+                row.currencyCode = bill.transactionCurrency;
+                row.status = bill.status;
+                rows.add(row);
+            }
+        } catch (Exception ex) {
+            // Users without payables access still see payments; they just cannot pick bills.
+            return rows;
+        }
+        return rows;
     }
 
     private static List<DocumentRow> openInvoices(Id companyId) {

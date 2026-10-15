@@ -13,16 +13,32 @@ import getGlFilters from '@salesforce/apex/SABGeneralLedgerController.getFilters
 import runGeneralLedger from '@salesforce/apex/SABGeneralLedgerController.runGeneralLedger';
 import { formatNumber, formatDate, formatDateTime } from 'c/sabFormat';
 import { reduceError, todayIso, toast } from 'c/sabMoneyShared';
+import runArAging from '@salesforce/apex/SABARAgingController.runAging';
+import getPayables from '@salesforce/apex/SABAccountsPayableWorkspaceController.getWorkspace';
+import getBankDashboard from '@salesforce/apex/SABBankReconciliationWorkspaceController.getDashboard';
+import getPayrollSummary from '@salesforce/apex/SABPayrollSummaryController.getSummary';
+import getAssetDashboard from '@salesforce/apex/SABFixedAssetWorkspaceController.getDashboard';
+import getBudgetVsActual from '@salesforce/apex/SABBudgetVarianceService.getBudgetVsActual';
+import getTaxWorkspace from '@salesforce/apex/SABTaxReturnWorkspaceController.getWorkspace';
 
 const REPORTS = [
     { id: 'overview', label: 'Management overview', tag: 'Available' },
-    { id: 'pnl', label: 'Profit and loss', tag: 'Available' },
-    { id: 'bs', label: 'Balance sheet', tag: 'Available' },
     { id: 'tb', label: 'Trial balance', tag: 'Available' },
     { id: 'gl', label: 'General ledger', tag: 'Available' },
-    { id: 'cf', label: 'Cash flow', tag: 'Available' },
-    { id: 'aging', label: 'Receivables aging', tag: 'In Sales' }
+    { id: 'pnl', label: 'Profit & loss', tag: 'Available' },
+    { id: 'bs', label: 'Balance sheet', tag: 'Available' },
+    { id: 'ar', label: 'AR aging', tag: 'Available' },
+    { id: 'ap', label: 'AP aging', tag: 'Available' },
+    { id: 'cash', label: 'Cash & bank', tag: 'Available' },
+    { id: 'payroll', label: 'Payroll cost', tag: 'Available' },
+    { id: 'assets', label: 'Asset register', tag: 'Available' },
+    { id: 'bva', label: 'Budget vs actual', tag: 'Available' },
+    { id: 'tax', label: 'Tax summary', tag: 'Available' },
+    { id: 'cf', label: 'Cash flow statement', tag: 'Available' }
 ];
+
+/** Reports drawn as one table from another workspace's service. */
+const TABLE_REPORTS = ['ar', 'ap', 'cash', 'payroll', 'assets', 'bva', 'tax'];
 
 /** Readable label for a mapping key such as OPERATING_EXPENSES or Revenue.Sales. */
 export function labelOf(key) {
@@ -131,6 +147,9 @@ export default class SabReportsWorkspace extends LightningElement {
         const to = this.periodById(this.toPeriod);
         const fromDate = from ? from.startDate : null;
         const toDate = to ? to.endDate : todayIso();
+        if (TABLE_REPORTS.includes(this.report)) {
+            return this.fetchTable(companyId, toDate, to);
+        }
         if (this.report === 'overview') {
             return getDashboard({ companyId, asOfDate: toDate });
         }
@@ -209,10 +228,6 @@ export default class SabReportsWorkspace extends LightningElement {
 
     handleReport(event) {
         const id = event.currentTarget.dataset.id;
-        if (id === 'aging') {
-            this.dispatchEvent(new CustomEvent('sabnavigate', { detail: { workspace: 'sales' }, bubbles: true, composed: true }));
-            return;
-        }
         this.report = id;
         this.result = undefined;
         this.run();
@@ -304,6 +319,80 @@ export default class SabReportsWorkspace extends LightningElement {
 
     get isGl() {
         return this.report === 'gl' && Boolean(this.result);
+    }
+
+    // ---------- table reports from other workspaces ----------
+
+    async fetchTable(companyId, asOfDate, toPeriod) {
+        const amount = (v) => formatNumber(Number(v) || 0);
+        const date = (v) => (v ? formatDate(v) : '\u2014');
+        const table = (columns, rows, total, note) => ({ kind: 'table', columns: columns.map((c) => ({ ...c, className: c.n ? 'n' : '' })), rows: rows.map((cells, i) => ({ key: `r${i}`,
+            cells: cells.map((c, j) => ({ key: `c${i}-${j}`, value: c, className: columns[j].n ? 'n num' : '' })) })), total, note });
+        if (this.report === 'ar') {
+            const r = await runArAging({ companyId, asOfDate, partyProfileId: null, includeSettled: false });
+            const rows = (r.rows || []).filter((x) => Number(x.outstandingDocumentAmount) > 0);
+            return table([{ label: 'Customer' }, { label: 'Invoice' }, { label: 'Due' }, { label: 'Days past due', n: true }, { label: 'Bucket' }, { label: 'Outstanding', n: true }],
+                rows.map((x) => [x.customerName, x.legalNumber, date(x.dueDate), String(x.daysPastDue || 0), x.agingBucket, amount(x.outstandingDocumentAmount)]),
+                amount(r.totalOutstanding), 'Posted invoices and credit notes still open at the end of the period.');
+        }
+        if (this.report === 'ap') {
+            const r = await getPayables({ companyId, asOfDate, statusFilter: null, supplierProfileId: null, includeSettled: false });
+            const rows = (r.bills || []).filter((b) => b.status === 'Posted' && Number(b.outstandingAmount) > 0);
+            return table([{ label: 'Supplier' }, { label: 'Bill' }, { label: 'Due' }, { label: 'Days past due', n: true }, { label: 'Bucket' }, { label: 'Outstanding', n: true }],
+                rows.map((b) => [b.supplierName, b.vendorReference ? `${b.billNumber} (${b.vendorReference})` : b.billNumber, date(b.dueDate), String(b.daysPastDue || 0),
+                    b.agingBucket, amount(b.outstandingAmount)]), amount(r.totalOutstanding), 'Posted bills still to pay at the end of the period.');
+        }
+        if (this.report === 'cash') {
+            const r = await getBankDashboard({ companyId });
+            const banks = r.bankAccounts || [];
+            return table([{ label: 'Account' }, { label: 'Bank' }, { label: 'Currency' }, { label: 'Ledger account' }, { label: 'Latest statement' },
+                { label: 'Statement closing', n: true }, { label: 'Book balance', n: true }],
+            banks.map((b) => [b.name, b.bankName || '\u2014', b.currencyCode, [b.glAccountCode, b.glAccountName].filter(Boolean).join(' '),
+                b.latestStatementName ? `${b.latestStatementName}, ${date(b.latestStatementEndDate)}` : '\u2014',
+                b.latestStatementName ? amount(b.latestStatementClosingAmount) : '\u2014', amount(b.currentBookBalance)]),
+            amount(banks.reduce((sum, b) => sum + (Number(b.currentBookBalance) || 0), 0)), 'Book balances from the posted ledger with the latest bank statement for each account.');
+        }
+        if (this.report === 'payroll') {
+            const r = await getPayrollSummary({ companyId, runId: null });
+            const runs = r.runs || [];
+            return table([{ label: 'Run' }, { label: 'Period' }, { label: 'State' }, { label: 'Employees', n: true }, { label: 'Gross', n: true }, { label: 'Deductions', n: true },
+                { label: 'Employer', n: true }, { label: 'Net', n: true }],
+            runs.map((x) => [x.name, `${date(x.periodStart)} to ${date(x.periodEnd)}`, x.state, String(x.employeeCount || 0), amount(x.grossTotal), amount(x.deductionTotal),
+                amount(x.employerTotal), amount(x.netTotal)]),
+            amount(runs.reduce((sum, x) => sum + (Number(x.netTotal) || 0), 0)),
+            'Total employment cost is gross pay plus employer contributions. Employee-level pay stays in People & payroll.');
+        }
+        if (this.report === 'assets') {
+            const r = await getAssetDashboard({ companyId });
+            const assets = r.assets || [];
+            return table([{ label: 'Asset' }, { label: 'Category' }, { label: 'Status' }, { label: 'In service' }, { label: 'Cost', n: true }, { label: 'Depreciation', n: true },
+                { label: 'Book value', n: true }],
+            assets.map((a) => [`${a.assetTag || a.companyAssetKey || ''} ${a.name}`.trim(), a.categoryName, a.status, date(a.inServiceDate), amount(a.cost),
+                amount(a.postedDepreciation), amount(a.netBookValue)]), amount(r.netBookValue), 'Net book value after posted depreciation, impairment and disposals.');
+        }
+        if (this.report === 'bva') {
+            const year = toPeriod ? Number(String(toPeriod.endDate).slice(0, 4)) : new Date().getFullYear();
+            const r = await getBudgetVsActual({ companyId, fiscalYear: year, budgetId: null, periodIds: null, groupBy: 'ACCOUNT' });
+            const rows = r.rows || [];
+            return table([{ label: 'Account' }, { label: 'Budget', n: true }, { label: 'Actual', n: true }, { label: 'Variance', n: true }, { label: 'Variance %', n: true }],
+                rows.map((x) => [`${x.accountCode} ${x.accountName}`, amount(x.budget), amount(x.actual), amount(x.variance),
+                    x.budget ? `${Number(x.variancePercent || 0).toFixed(1)}%` : '\u2014']),
+                undefined, `Approved budget for ${year} against posted actuals. Open Budgets to compare by period or department.`);
+        }
+        const r = await getTaxWorkspace({ companyId });
+        const returns = r.returns || [];
+        return table([{ label: 'Return' }, { label: 'Registration' }, { label: 'Period' }, { label: 'Status' }, { label: 'Net due', n: true }],
+            returns.map((x) => [`${x.name}${x.returnVersion > 1 ? ` v${x.returnVersion}` : ''}`, x.registrationName, `${date(x.periodStart)} to ${date(x.periodEnd)}`,
+                x.status, amount(x.netTaxDue)]), undefined, 'Tax returns prepared from posted tax lines. Prepare and lodge them in Tax.');
+    }
+
+    get isTable() {
+        return TABLE_REPORTS.includes(this.report) && Boolean(this.result) && this.result.kind === 'table';
+    }
+
+    get tableReport() {
+        const t = this.result;
+        return { ...t, hasRows: (t.rows || []).length > 0, hasTotal: t.total !== undefined, totalSpan: Math.max(1, (t.columns || []).length - 1) };
     }
 
     get isCf() {
@@ -509,6 +598,9 @@ export default class SabReportsWorkspace extends LightningElement {
     // ---------- export ----------
 
     get exportRows() {
+        if (this.isTable) {
+            return [this.result.columns.map((c) => c.label), ...this.result.rows.map((r) => r.cells.map((c) => c.value))];
+        }
         if (this.isPnl || this.isBs) {
             const rows = [['Line', 'Current', 'Comparison', 'Variance']];
             this.statementGroups(this.report).forEach((g) => {

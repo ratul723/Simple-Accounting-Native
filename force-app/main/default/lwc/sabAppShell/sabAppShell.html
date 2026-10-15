@@ -141,6 +141,11 @@
                 </section>
             </template>
             <template lwc:elseif={showShellAware}>
+                <template lwc:if={companyInactive}>
+                    <div class="banner t-warn inactive-banner" role="status"><c-sab-icon name="lock"></c-sab-icon><div><b>This company is inactive</b>
+                        <div class="small">Transactions, reports and posting are locked. Only Finance home, Company setup and Configuration are open. Reactivate it in Company setup.</div></div>
+                        <template lwc:if={canOpenSetup}><span class="spacer"></span><button class="btn sm sab-open-setup" type="button" onclick={handleOpenSetup}>Open company setup</button></template></div>
+                </template>
                 <lwc:component class="workspace aware" lwc:is={workspaceCtor} company-id={awareCompanyId} company-name={awareCompanyName}
                     currency-code={awareCurrency} setup-status={awareSetupStatus} persona={persona}
                     caps={workspaceCaps} visible-workspaces={visibleList} record-id={recordId}

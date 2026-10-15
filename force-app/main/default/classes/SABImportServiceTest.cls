@@ -94,7 +94,7 @@ private class SABImportServiceTest {
         SABTestGovernor.startTest();
         System.runAs(SABImportTestFixture.user(SABImportTestFixture.IMPORTER)) {
             Id companyId = SABImportTestFixture.companyId();
-            List<List<String>> bad = new List<List<String>>{new List<String>{'Customers', 'name\nAcme\n'},
+            List<List<String>> bad = new List<List<String>>{new List<String>{'Employees', 'name\nAcme\n'},
                 new List<String>{'Chart of Accounts', 'account_code,name\n9000,Missing type\n'}, new List<String>{'Chart of Accounts', 'account_code,name,account_type\n'}};
             for (List<String> b : bad) {
                 try {
@@ -123,7 +123,7 @@ private class SABImportServiceTest {
             }
         }
         SABTestGovernor.stopTest();
-        List<String> fragments = new List<String>{'G20 imports Chart of Accounts', 'Missing required column: account_type', 'at least one data row',
+        List<String> fragments = new List<String>{'Supported import types', 'Missing required column: account_type', 'at least one data row',
             'Validate the import before committing'};
         System.assertEquals(fragments.size(), messages.size(), 'Every invalid request was refused: ' + messages);
         for (Integer i = 0; i < fragments.size(); i++) {

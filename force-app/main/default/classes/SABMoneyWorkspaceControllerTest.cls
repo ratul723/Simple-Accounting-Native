@@ -111,6 +111,7 @@ private class SABMoneyWorkspaceControllerTest {
             extras = SABMoneyWorkspaceController.getPurchaseExtras(companyId);
             Test.stopTest();
             System.assertEquals(1, data.payments.size(), 'One payment.');
+        System.assertNotEquals(null, data.openBills, 'Open bills are listed for supplier allocations.');
             System.assertEquals('Draft', data.payments[0].state, 'Draft payment.');
             System.assertEquals('Receipt', data.payments[0].direction, 'Receipt.');
             System.assertEquals('G22M Customer', data.payments[0].partyName, 'Party name.');

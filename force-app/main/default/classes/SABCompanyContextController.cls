@@ -19,6 +19,8 @@ public with sharing class SABCompanyContextController {
         @AuraEnabled public String companyKey { get; set; }
         @AuraEnabled public String functionalCurrency { get; set; }
         @AuraEnabled public String setupStatus { get; set; }
+        /** Inactive companies stay listed so they can be reactivated; the shell locks their workspaces. */
+        @AuraEnabled public Boolean isActive { get; set; }
     }
 
     @AuraEnabled
@@ -41,7 +43,6 @@ public with sharing class SABCompanyContextController {
                    Is_Active__c
             FROM Accounting_Company__c
             WHERE Id IN :authorizedCompanyIds
-              AND Is_Active__c = true
             ORDER BY Name__c ASC, Company_Key__c ASC
         ];
 
@@ -90,7 +91,6 @@ public with sharing class SABCompanyContextController {
                    Is_Active__c
             FROM Accounting_Company__c
             WHERE Id = :companyId
-              AND Is_Active__c = true
             LIMIT 1
         ];
 
@@ -136,6 +136,7 @@ public with sharing class SABCompanyContextController {
         context.functionalCurrency =
             company.Functional_Currency__c;
         context.setupStatus = company.Setup_Status__c;
+        context.isActive = company.Is_Active__c == true;
 
         return context;
     }

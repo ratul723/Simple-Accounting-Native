@@ -11,10 +11,30 @@ import failPayment from '@salesforce/apex/SABSupplierPaymentService.markFailed';
 import retryPayment from '@salesforce/apex/SABSupplierPaymentService.retryFailed';
 import postPayment from '@salesforce/apex/SABSupplierPaymentPostingService.recordSucceededAndPost';
 import allocateReceipt from '@salesforce/apex/SABCustomerReceiptAllocationService.allocateToInvoices';
+import allocateDisbursement from '@salesforce/apex/SABPaymentActionService.allocateDisbursement';
+import authorizeForeign from '@salesforce/apex/SABForeignCurrencySettlementService.authorizeForeignPayment';
+import submitForeign from '@salesforce/apex/SABForeignCurrencySettlementService.submitForeignPayment';
+import postForeign from '@salesforce/apex/SABForeignCurrencySettlementService.postForeignPayment';
 import { formatNumber, formatDate, chipClass, plural } from 'c/sabFormat';
 import { reduceError, newKey, todayIso, hsteps, toast } from 'c/sabMoneyShared';
 
 const STATES = ['Draft', 'Authorized', 'Submitted', 'Succeeded'];
+
+/** Shorter wording for the long settlement-service messages users hit most often. */
+export function friendly(message) {
+    const text = String(message || '');
+    if (/must match the bank account currency/i.test(text)) {
+        return 'This payment is in a foreign currency, so it uses an approved exchange rate rather than the bank currency. Add a rate in Foreign exchange > Exchange rates if none exists.';
+    }
+    const rate = text.match(/No approved (\w+) exchange rate exists for ([A-Z]{3}) to ([A-Z]{3})/);
+    if (rate) {
+        return `No approved ${rate[1]} rate from ${rate[2]} to ${rate[3]} for this date. Add one in Foreign exchange > Exchange rates.`;
+    }
+    if (/^No approved/i.test(text)) {
+        return 'No approved exchange rate for this date. Add one in Foreign exchange > Exchange rates.';
+    }
+    return text;
+}
 
 /**
  * Payments in the Harbourline demo layout (G22G-3): receipts and disbursements with their processing lifecycle
@@ -108,7 +128,12 @@ export default class SabPaymentsWorkspace extends LightningElement {
     }
 
     needsAllocation(p) {
-        return p.direction === 'Receipt' && p.state === 'Succeeded' && !p.managedBy && p.amount - p.allocated > 0;
+        return p.state === 'Succeeded' && !p.managedBy && p.amount - p.allocated > 0;
+    }
+
+    /** Payments in another currency are processed by the foreign-currency settlement service with an approved rate. */
+    isForeign(p) {
+        return Boolean(p && p.currencyCode && this.data && this.data.currencyCode && p.currencyCode !== this.data.currencyCode);
     }
 
     // ---------- figures, banner, tabs ----------
@@ -227,8 +252,12 @@ export default class SabPaymentsWorkspace extends LightningElement {
         const approveReason = !d.canApprove ? `${this.personaLabel} role cannot authorise payments` : undefined;
         const postReason = !d.canPost ? `${this.personaLabel} role cannot post payments` : undefined;
         const editReason = !d.canEdit ? `${this.personaLabel} role cannot change payments` : undefined;
-        const openInvoices = p.direction === 'Receipt' && p.state === 'Succeeded' && !managed
-            ? (d.openInvoices || []).filter((i) => i.partyProfileId === p.partyProfileId).map((i) => ({
+        const foreign = this.isForeign(p);
+        const receipt = p.direction === 'Receipt';
+        const documents = receipt ? d.openInvoices : d.openBills;
+        const noun = receipt ? 'invoice' : 'bill';
+        const openInvoices = p.state === 'Succeeded' && !managed && !foreign
+            ? (documents || []).filter((i) => i.partyProfileId === p.partyProfileId).map((i) => ({
                 ...i,
                 dueText: formatDate(i.dueDate),
                 outstandingText: formatNumber(i.outstanding),
@@ -236,6 +265,7 @@ export default class SabPaymentsWorkspace extends LightningElement {
                 label: `Allocate to ${i.documentNumber}`
             }))
             : [];
+        const allocateReason = !receipt && d.canAllocate === false ? `${this.personaLabel} role cannot allocate payments` : undefined;
         return {
             steps: hsteps(STATES, index === 3 ? 4 : Math.max(0, index)),
             failed: p.state === 'Failed',
@@ -249,12 +279,20 @@ export default class SabPaymentsWorkspace extends LightningElement {
             hasAllocations: (p.allocations || []).length > 0,
             openInvoices,
             showAllocate: openInvoices.length > 0 && remaining > 0,
-            noOpenInvoices: p.direction === 'Receipt' && p.state === 'Succeeded' && !managed && remaining > 0 && openInvoices.length === 0,
+            noOpenInvoices: p.state === 'Succeeded' && !managed && !foreign && remaining > 0 && openInvoices.length === 0,
+            noOpenText: receipt ? 'This customer has no open posted invoices to allocate to.' : 'This supplier has no open posted bills to allocate to.',
+            allocateTitleText: `Allocate ${formatNumber(remaining)} to open ${noun}s`,
+            documentLabel: receipt ? 'Invoice' : 'Bill',
+            allocateDisabled: this.busy || Boolean(allocateReason),
+            allocateTitle: allocateReason,
+            foreign,
+            foreignText: `This payment is in ${p.currencyCode}. Authorising it takes the approved Spot rate to ${d.currencyCode} for the value date, and it is allocated in Foreign exchange, which also posts the realized gain or loss.`,
+            showForeignAllocate: foreign && p.state === 'Succeeded' && remaining > 0,
             remainingText: formatNumber(remaining),
             canAuthorize: !managed && p.state === 'Draft',
             canRelease: !managed && p.state === 'Authorized',
             canClear: !managed && p.state === 'Submitted',
-            canRetry: !managed && p.state === 'Failed',
+            canRetry: !managed && !foreign && p.state === 'Failed',
             approveDisabled: this.busy || Boolean(approveReason),
             approveTitle: approveReason,
             editDisabled: this.busy || Boolean(editReason),
@@ -272,20 +310,32 @@ export default class SabPaymentsWorkspace extends LightningElement {
             await this.load();
             return true;
         } catch (error) {
-            toast(this, reduceError(error), 'bad');
+            toast(this, friendly(reduceError(error)), 'bad');
             return false;
         } finally {
             this.busy = false;
         }
     }
 
+    handleOpenFx() {
+        this.dispatchEvent(new CustomEvent('sabnavigate', { detail: { workspace: 'fx' }, bubbles: true, composed: true }));
+    }
+
     get isReceipt() {
         return this.selected && this.selected.direction === 'Receipt';
+    }
+
+    get isForeignSelected() {
+        return this.isForeign(this.selected);
     }
 
     handleAuthorize() {
         const paymentId = this.selectedId;
         const requestKey = newKey('PAY-AUTH', paymentId);
+        if (this.isForeignSelected) {
+            this.run(() => authorizeForeign({ paymentId, requestKey }), 'Foreign-currency payment authorised at the approved rate');
+            return;
+        }
         this.run(() => (this.isReceipt ? authorizeReceipt({ paymentId, requestKey }) : authorizePayment({ paymentId, requestKey })), 'Payment authorised');
     }
 
@@ -293,6 +343,10 @@ export default class SabPaymentsWorkspace extends LightningElement {
         const paymentId = this.selectedId;
         const requestKey = newKey('PAY-SUBMIT', paymentId);
         const providerRequestKey = newKey('PROVIDER', paymentId);
+        if (this.isForeignSelected) {
+            this.run(() => submitForeign({ paymentId, providerRequestKey, requestKey }), 'Released to the bank');
+            return;
+        }
         this.run(() => (this.isReceipt ? submitReceipt({ paymentId, providerRequestKey, requestKey }) : submitPayment({ paymentId, providerRequestKey, requestKey })),
             'Released to the bank');
     }
@@ -300,6 +354,10 @@ export default class SabPaymentsWorkspace extends LightningElement {
     handleClear() {
         const paymentId = this.selectedId;
         const request = { paymentId, requestKey: newKey('PAY-POST', paymentId) };
+        if (this.isForeignSelected) {
+            this.run(() => postForeign({ paymentId, requestKey: request.requestKey }), 'Marked as cleared and posted');
+            return;
+        }
         this.run(() => (this.isReceipt ? postReceipt({ request }) : postPayment({ request })), 'Marked as cleared and posted');
     }
 
@@ -314,14 +372,19 @@ export default class SabPaymentsWorkspace extends LightningElement {
     }
 
     async handleAllocate() {
-        const requests = Object.entries(this.allocations)
-            .filter(([, v]) => Number(v) > 0)
-            .map(([invoiceId, v]) => ({ invoiceId, allocatedAmount: Number(v), allocationDate: todayIso(), effectiveDate: todayIso(), notes: null }));
-        if (!requests.length) {
-            toast(this, 'Enter an amount for at least one invoice.', 'bad');
+        const entries = Object.entries(this.allocations).filter(([, v]) => Number(v) > 0);
+        const noun = this.isReceipt ? 'invoice' : 'bill';
+        if (!entries.length) {
+            toast(this, `Enter an amount for at least one ${noun}.`, 'bad');
             return;
         }
-        const ok = await this.run(() => allocateReceipt({ receiptId: this.selectedId, requests }), `Allocated to ${plural(requests.length, 'invoice')}`);
+        const paymentId = this.selectedId;
+        const call = this.isReceipt
+            ? () => allocateReceipt({ receiptId: paymentId, requests: entries.map(([invoiceId, v]) => ({ invoiceId, allocatedAmount: Number(v), allocationDate: todayIso(),
+                effectiveDate: todayIso(), notes: null })) })
+            : () => allocateDisbursement({ paymentId, lines: entries.map(([supplierBillId, v]) => ({ supplierBillId, amount: Number(v) })),
+                requestKey: newKey('PAY-ALLOC', paymentId) });
+        const ok = await this.run(call, `Allocated to ${plural(entries.length, noun)}`);
         if (ok) {
             this.allocations = {};
         }

@@ -101,9 +101,10 @@ public with sharing class SABBudgetWorkspaceController {
             counts.put(s, 0);
         }
         result.budgets = new List<BudgetDTO>();
-        for (Budget__c b : [SELECT Id, Name, Fiscal_Year__c, Version__c, Status__c, Currency__c, Submitted_By__r.Name, Submitted_At__c, Approved_By__r.Name, Approved_At__c,
-                (SELECT Id FROM Budget_Line_Budget__r)
-                FROM Budget__c WHERE Company__c = :companyId WITH USER_MODE ORDER BY Fiscal_Year__c DESC, Version__c DESC LIMIT :ROW_LIMIT]) {
+        List<Budget__c> budgetRows = [SELECT Id, Name, Fiscal_Year__c, Version__c, Status__c, Currency__c, (SELECT Id FROM Budget_Line_Budget__r)
+                FROM Budget__c WHERE Company__c = :companyId WITH USER_MODE ORDER BY Fiscal_Year__c DESC, Version__c DESC LIMIT :ROW_LIMIT];
+        loadAudit(new Map<Id, Budget__c>(budgetRows).keySet());
+        for (Budget__c b : budgetRows) {
             result.budgets.add(toBudget(b));
             if (counts.containsKey(b.Status__c)) {
                 counts.put(b.Status__c, counts.get(b.Status__c) + 1);
@@ -155,13 +156,14 @@ public with sharing class SABBudgetWorkspaceController {
             throw new BudgetWorkspaceException('Select a budget first.');
         }
         authorize();
-        List<Budget__c> rows = [SELECT Id, Name, Company__c, Fiscal_Year__c, Version__c, Status__c, Currency__c, Submitted_By__r.Name, Submitted_At__c,
-            Approved_By__r.Name, Approved_At__c, (SELECT Id FROM Budget_Line_Budget__r) FROM Budget__c WHERE Id = :budgetId WITH USER_MODE];
+        List<Budget__c> rows = [SELECT Id, Name, Company__c, Fiscal_Year__c, Version__c, Status__c, Currency__c,
+            (SELECT Id FROM Budget_Line_Budget__r) FROM Budget__c WHERE Id = :budgetId WITH USER_MODE];
         if (rows.isEmpty()) {
             throw new BudgetWorkspaceException('Budget not found or not accessible.');
         }
         SABCompanyAccessService.assertCompanyAccess(rows[0].Company__c);
         BudgetDetailDTO detail = new BudgetDetailDTO();
+        loadAudit(new Set<Id>{ rows[0].Id });
         detail.budget = toBudget(rows[0]);
         detail.lines = new List<LineDTO>();
         detail.total = 0;
@@ -202,6 +204,20 @@ public with sharing class SABBudgetWorkspaceController {
         return c;
     }
 
+    // Who submitted and approved a version is shown to everyone who can open the budget, even without field access to
+    // the audit lookups, so it is read in system mode for budgets the caller has already read in user mode.
+    private static final Map<Id, Budget__c> AUDIT_CACHE = new Map<Id, Budget__c>();
+
+    private static void loadAudit(Set<Id> budgetIds) {
+        if (budgetIds.isEmpty()) {
+            return;
+        }
+        for (Budget__c b : [SELECT Id, Submitted_By__r.Name, Submitted_At__c, Approved_By__r.Name, Approved_At__c FROM Budget__c
+                WHERE Id IN :budgetIds WITH SYSTEM_MODE]) {
+            AUDIT_CACHE.put(b.Id, b);
+        }
+    }
+
     private static BudgetDTO toBudget(Budget__c b) {
         BudgetDTO dto = new BudgetDTO();
         dto.budgetId = b.Id;
@@ -209,10 +225,13 @@ public with sharing class SABBudgetWorkspaceController {
         dto.fiscalYear = b.Fiscal_Year__c == null ? null : b.Fiscal_Year__c.intValue();
         dto.version = b.Version__c;
         dto.status = b.Status__c;
-        dto.submittedByName = b.Submitted_By__r == null ? null : b.Submitted_By__r.Name;
-        dto.submittedAt = b.Submitted_At__c;
-        dto.approvedByName = b.Approved_By__r == null ? null : b.Approved_By__r.Name;
-        dto.approvedAt = b.Approved_At__c;
+        Budget__c audit = AUDIT_CACHE.get(b.Id);
+        if (audit != null) {
+            dto.submittedByName = audit.Submitted_By__r == null ? null : audit.Submitted_By__r.Name;
+            dto.submittedAt = audit.Submitted_At__c;
+            dto.approvedByName = audit.Approved_By__r == null ? null : audit.Approved_By__r.Name;
+            dto.approvedAt = audit.Approved_At__c;
+        }
         dto.currencyCode = b.Currency__c;
         dto.lineCount = b.Budget_Line_Budget__r == null ? 0 : b.Budget_Line_Budget__r.size();
         return dto;

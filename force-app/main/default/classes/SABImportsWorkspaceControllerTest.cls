@@ -42,7 +42,7 @@ private class SABImportsWorkspaceControllerTest {
             SABTestGovernor.stopTest();
         }
         System.assert(data.canManage && data.canCommit && data.canViewLog, 'The importer holds every G20 permission.');
-        System.assertEquals(3, data.importTypes.size(), 'Three supported import types.');
+        System.assertEquals(6, data.importTypes.size(), 'Six supported import types.');
         System.assertEquals(1, data.jobs.size(), 'One import job.');
         System.assertEquals(2, data.jobs[0].rowCount, 'Two rows.');
         System.assertEquals(1, data.jobs[0].errorCount, 'One row has an invalid account type.');
@@ -59,6 +59,10 @@ private class SABImportsWorkspaceControllerTest {
         grantWorkspace(new List<String>{ SABImportTestFixture.OUTSIDER, SABImportTestFixture.IMPORTER });
         Id companyId = SABImportTestFixture.companyId();
         Map<String, String> messages = new Map<String, String>();
+        User viewer;
+        System.runAs(new User(Id = UserInfo.getUserId())) {
+            viewer = SABAppShellTestFixture.createUser('i20nov', 'SAB I20 No View', new List<String>{ 'SAB_App_User' });
+        }
         Test.startTest();
         System.runAs(SABImportTestFixture.user(SABImportTestFixture.OUTSIDER)) {
             try {
@@ -84,7 +88,8 @@ private class SABImportsWorkspaceControllerTest {
                 messages.put('company', ex.getMessage());
             }
         }
-        System.runAs(new User(Id = UserInfo.getUserId())) {
+        // A user without SAB_View_Imports; the running admin may hold it, so it cannot stand in for this check.
+        System.runAs(viewer) {
             try {
                 SABImportsWorkspaceController.getWorkspace(companyId);
             } catch (AuraHandledException ex) {

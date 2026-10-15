@@ -143,7 +143,7 @@ describe('c-sab-employees', () => {
         const el = mount();
         await flush();
         expect(el.shadowRoot.querySelector('.empty h3').textContent).toBe('No employees yet');
-        expect(el.shadowRoot.querySelector('.sab-new-employee').title).toBe('HR role cannot manage employees and pay');
+        expect(el.shadowRoot.querySelector('.sab-new-employee').title).toBe('Needs the SAB Manage Employee Compensation Action permission set');
 
         getOptions.mockResolvedValue({ ...OPTIONS, payComponents: [] });
         const el2 = mount();
@@ -160,5 +160,16 @@ describe('c-sab-employees', () => {
         el3.shadowRoot.querySelector('.banner .btn').click();
         await flush();
         expect(el3.shadowRoot.querySelector('.sab-employees')).not.toBeNull();
+    });
+
+    it('names the missing permission sets and shows a status for employments without one', async () => {
+        getOptions.mockResolvedValue({ ...OPTIONS, canManage: false, canApprove: false });
+        getEmployments.mockResolvedValue([{ employmentId: 'M7', employeeReference: 'Emp_KV', startDate: '2026-09-27' }]);
+        const el = mount();
+        await flush();
+        const root = el.shadowRoot;
+        expect(root.querySelector('.perm-note').textContent).toContain('SAB Manage Employee Compensation Action');
+        expect(root.querySelector('.perm-note').textContent).toContain('SAB Approve Employee Compensation Action');
+        expect(root.querySelector('.emp .chip').textContent).toContain('No status');
     });
 });

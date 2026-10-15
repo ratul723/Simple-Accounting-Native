@@ -26,6 +26,21 @@ jest.mock('@salesforce/apex/SABTrialBalanceController.getMovementLines', () => (
 jest.mock('@salesforce/apex/SABGeneralLedgerController.getFilters', () => ({ default: jest.fn() }), { virtual: true });
 jest.mock('@salesforce/apex/SABGeneralLedgerController.runGeneralLedger', () => ({ default: jest.fn() }), { virtual: true });
 
+jest.mock('@salesforce/apex/SABARAgingController.runAging', () => ({ default: jest.fn() }), { virtual: true });
+jest.mock('@salesforce/apex/SABAccountsPayableWorkspaceController.getWorkspace', () => ({ default: jest.fn() }), { virtual: true });
+jest.mock('@salesforce/apex/SABBankReconciliationWorkspaceController.getDashboard', () => ({ default: jest.fn() }), { virtual: true });
+jest.mock('@salesforce/apex/SABPayrollSummaryController.getSummary', () => ({ default: jest.fn() }), { virtual: true });
+jest.mock('@salesforce/apex/SABFixedAssetWorkspaceController.getDashboard', () => ({ default: jest.fn() }), { virtual: true });
+jest.mock('@salesforce/apex/SABBudgetVarianceService.getBudgetVsActual', () => ({ default: jest.fn() }), { virtual: true });
+jest.mock('@salesforce/apex/SABTaxReturnWorkspaceController.getWorkspace', () => ({ default: jest.fn() }), { virtual: true });
+import runArAging from '@salesforce/apex/SABARAgingController.runAging';
+import getPayables from '@salesforce/apex/SABAccountsPayableWorkspaceController.getWorkspace';
+import getBankDashboard from '@salesforce/apex/SABBankReconciliationWorkspaceController.getDashboard';
+import getPayrollSummary from '@salesforce/apex/SABPayrollSummaryController.getSummary';
+import getAssetDashboard from '@salesforce/apex/SABFixedAssetWorkspaceController.getDashboard';
+import getBudgetVsActual from '@salesforce/apex/SABBudgetVarianceService.getBudgetVsActual';
+import getTaxWorkspace from '@salesforce/apex/SABTaxReturnWorkspaceController.getWorkspace';
+
 const d = new Date();
 const y = d.getFullYear();
 const mm = String(d.getMonth() + 1).padStart(2, '0');
@@ -52,8 +67,8 @@ function mount(props = {}) {
     return el;
 }
 
-function pick(root, index) {
-    root.querySelectorAll('.sab-report-list .li')[index].click();
+function pick(root, id) {
+    root.querySelector(`.sab-report-list .li[data-id="${id}"]`).click();
 }
 
 describe('c-sab-reports-workspace', () => {
@@ -115,7 +130,7 @@ describe('c-sab-reports-workspace', () => {
         const nav = jest.fn();
         el.addEventListener('sabnavigate', nav);
         const root = el.shadowRoot;
-        pick(root, 1);
+        pick(root, 'pnl');
         await flush();
         expect(runProfitLoss.mock.calls[0][0]).toMatchObject({ reportDefinitionId: 'DEF1', fromDate: `${y}-01-01`, comparisonFromDate: null, departmentId: null });
         const rows = Array.from(root.querySelectorAll('.sab-pnl tbody tr')).map((r) => r.textContent);
@@ -144,7 +159,7 @@ describe('c-sab-reports-workspace', () => {
         const el = mount();
         await flush();
         const root = el.shadowRoot;
-        pick(root, 2);
+        pick(root, 'bs');
         await flush();
         expect(root.querySelector('.banner.t-good').textContent).toContain('Balance sheet balances');
         expect(root.querySelector('.sab-bs').textContent).toContain('Current year earnings');
@@ -157,7 +172,7 @@ describe('c-sab-reports-workspace', () => {
         asof.dispatchEvent(new CustomEvent('change'));
         await flush();
         expect(runBalanceSheet.mock.calls[1][0].asOfDate).toBe(`${y}-01-31`);
-        pick(root, 3);
+        pick(root, 'tb');
         await flush();
         expect(root.querySelector('.banner.t-good').textContent).toContain('Debits and credits both total 700.00 AUD.');
         expect(root.querySelector('.sab-tb tfoot').textContent).toBe('Total700.00700.00');
@@ -176,7 +191,7 @@ describe('c-sab-reports-workspace', () => {
         const toast = jest.fn();
         el.addEventListener('sabtoast', toast);
         const root = el.shadowRoot;
-        pick(root, 4);
+        pick(root, 'gl');
         await flush();
         const rows = root.querySelectorAll('.sab-gl tbody tr');
         expect(rows[0].textContent).toContain('100.00');
@@ -193,35 +208,33 @@ describe('c-sab-reports-workspace', () => {
         account.dispatchEvent(new CustomEvent('change'));
         await flush();
         expect(runGeneralLedger.mock.calls[1][0].glAccountId).toBe('G2');
-        pick(root, 5);
+        pick(root, 'cf');
         await flush();
         expect(root.querySelector('.banner.t-good').textContent).toContain('Cash flow reconciles');
         expect(root.querySelector('.sab-cf').textContent).toContain('Net cash from operating');
         root.querySelector('.sab-export').click();
-        expect(link.download).toBe('cash-flow.csv');
-        pick(root, 1);
+        expect(link.download).toBe('cash-flow-statement.csv');
+        pick(root, 'pnl');
         await flush();
         root.querySelector('.sab-export').click();
         expect(decodeURIComponent(link.href)).toContain('Revenue: Sales product');
-        pick(root, 3);
+        pick(root, 'tb');
         await flush();
         root.querySelector('.sab-export').click();
-        pick(root, 0);
+        pick(root, 'overview');
         await flush();
         root.querySelector('.sab-export').click();
         expect(toast).toHaveBeenCalledTimes(5);
     });
 
-    it('sends receivables aging to sales and handles errors and missing definitions', async () => {
+    it('handles errors and missing definitions', async () => {
         const el = mount({ visibleWorkspaces: [] });
         await flush();
         const nav = jest.fn();
         el.addEventListener('sabnavigate', nav);
         const root = el.shadowRoot;
-        pick(root, 6);
-        expect(nav.mock.calls[0][0].detail.workspace).toBe('sales');
         runTrialBalance.mockResolvedValueOnce({ balanced: false, closingDifference: 10, rows: [] });
-        pick(root, 3);
+        pick(root, 'tb');
         await flush();
         expect(root.querySelector('.banner.t-bad').textContent).toContain('Trial balance is out');
         expect(root.querySelector('.sab-report .panel-b > .muted').textContent).toBe('No balances in this range.');
@@ -233,11 +246,11 @@ describe('c-sab-reports-workspace', () => {
         await flush();
         expect(root.querySelector('c-sab-drawer .banner').textContent).toBe('No access');
         getBsFilters.mockResolvedValueOnce({ definitions: [] });
-        pick(root, 2);
+        pick(root, 'bs');
         await flush();
         expect(root.querySelector('.banner.t-bad').textContent).toContain('No balance sheet report definition');
         runGeneralLedger.mockRejectedValueOnce({ body: { message: 'General ledger permission is required.' } });
-        pick(root, 4);
+        pick(root, 'gl');
         await flush();
         expect(root.querySelector('.banner.t-bad').textContent).toContain('General ledger permission is required.');
         root.querySelector('.banner .btn').click();
@@ -247,8 +260,58 @@ describe('c-sab-reports-workspace', () => {
         getPnlFilters.mockResolvedValueOnce({ definitions: [], periods: PERIODS });
         const el2 = mount();
         await flush();
-        el2.shadowRoot.querySelectorAll('.sab-report-list .li')[1].click();
+        el2.shadowRoot.querySelector('.sab-report-list .li[data-id="pnl"]').click();
         await flush();
         expect(el2.shadowRoot.querySelector('.banner.t-bad').textContent).toContain('No profit and loss report definition');
+    });
+
+    it('lists every report on the left and runs the table reports', async () => {
+        runArAging.mockResolvedValue({ totalOutstanding: 900, rows: [{ customerName: 'Greenfield', legalNumber: 'INV-1', dueDate: '2026-09-01', daysPastDue: 40,
+            agingBucket: '31-60', outstandingDocumentAmount: 900 }, { customerName: 'Paid', outstandingDocumentAmount: 0 }] });
+        getPayables.mockResolvedValue({ totalOutstanding: 500, bills: [{ supplierName: 'Fuel Co', billNumber: 'BILL-1', vendorReference: 'F-9', status: 'Posted', outstandingAmount: 500,
+            daysPastDue: 0, agingBucket: 'Current' }, { status: 'Draft', outstandingAmount: 10 }] });
+        getBankDashboard.mockResolvedValue({ bankAccounts: [{ name: 'Operating', bankName: 'CBA', currencyCode: 'AUD', glAccountCode: '1000', glAccountName: 'Bank', currentBookBalance: 1200 }] });
+        getPayrollSummary.mockResolvedValue({ runs: [{ name: 'PAY-1', periodStart: '2026-09-01', periodEnd: '2026-09-30', state: 'Posted', employeeCount: 5, grossTotal: 1000,
+            deductionTotal: 100, employerTotal: 50, netTotal: 900 }] });
+        getAssetDashboard.mockResolvedValue({ netBookValue: 40000, assets: [{ assetTag: 'FA-1', name: 'Forklift', categoryName: 'Equipment', status: 'In Service', cost: 50000,
+            postedDepreciation: 10000, netBookValue: 40000 }] });
+        getBudgetVsActual.mockRejectedValueOnce({ body: { message: 'No Approved budget exists for 2026.' } }).mockResolvedValue({ rows: [{ accountCode: '4000', accountName: 'Sales',
+            budget: 100, actual: 110, variance: 10, variancePercent: 10 }] });
+        getTaxWorkspace.mockResolvedValue({ returns: [{ name: 'BAS Q1', returnVersion: 2, registrationName: 'GST', periodStart: '2026-07-01', periodEnd: '2026-09-30', status: 'Prepared',
+            netTaxDue: 1240 }] });
+        const el = mount();
+        await flush();
+        const root = el.shadowRoot;
+        expect(Array.from(root.querySelectorAll('.sab-report-list .t')).map((t) => t.textContent)).toEqual(['Management overview', 'Trial balance', 'General ledger',
+            'Profit & loss', 'Balance sheet', 'AR aging', 'AP aging', 'Cash & bank', 'Payroll cost', 'Asset register', 'Budget vs actual', 'Tax summary', 'Cash flow statement']);
+        const checks = [['ar', 'Greenfield', '900.00'], ['ap', 'BILL-1 (F-9)', '500.00'], ['cash', 'Operating', '1,200.00'], ['payroll', 'PAY-1', '900.00'],
+            ['assets', 'FA-1 Forklift', '40,000.00']];
+        for (const [id, text, total] of checks) {
+            pick(root, id);
+            // eslint-disable-next-line no-await-in-loop
+            await flush();
+            const rows = root.querySelectorAll('.sab-table-report tbody tr');
+            expect(rows.length).toBe(1);
+            expect(rows[0].textContent).toContain(text);
+            expect(root.querySelector('.sab-table-report tfoot').textContent).toContain(total);
+        }
+        pick(root, 'tax');
+        await flush();
+        expect(root.querySelector('.sab-table-report tbody tr').textContent).toContain('BAS Q1 v2');
+        expect(root.querySelector('.sab-table-report tfoot')).toBeNull();
+        const link = root.querySelector('.sab-download');
+        link.click = jest.fn();
+        root.querySelector('.sab-export').click();
+        expect(link.download).toBe('tax-summary.csv');
+        pick(root, 'bva');
+        await flush();
+        expect(root.querySelector('.banner.t-bad').textContent).toContain('No Approved budget');
+        root.querySelector('.banner .btn').click();
+        await flush();
+        expect(root.querySelector('.sab-table-report tbody tr').textContent).toContain('10.0%');
+        getTaxWorkspace.mockResolvedValueOnce({ returns: [] });
+        pick(root, 'tax');
+        await flush();
+        expect(root.querySelector('.sab-report .panel-b > div.muted').textContent).toBe('Nothing to report for this selection.');
     });
 });

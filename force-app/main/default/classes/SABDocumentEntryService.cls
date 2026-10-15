@@ -498,7 +498,7 @@ public with sharing class SABDocumentEntryService {
             Bank_Account__c = requireId(request.bankAccountId, 'Bank account'), Amount__c = request.amount,
             Effective_Date__c = requireDate(request.effectiveDate, 'Value date'), Method__c = String.isBlank(request.method) ? null : request.method,
             Reference__c = String.isBlank(request.reference) ? null : request.reference.trim(), Transaction_Currency__c = currencyOf(request.currencyCode, functional),
-            Functional_Currency__c = functional, Exchange_Rate__c = rateOf(request.currencyCode, functional, request.exchangeRate));
+            Functional_Currency__c = functional, Exchange_Rate__c = paymentRate(request.currencyCode, functional, request.exchangeRate));
         if (request.recordId == null) {
             payment.Processing_State__c = DRAFT;
         } else {
@@ -659,6 +659,14 @@ public with sharing class SABDocumentEntryService {
         return value;
     }
 
+    /** Foreign-currency payments take the approved Spot rate when they are authorised, so a rate is optional here. */
+    private static Decimal paymentRate(String requested, String functional, Decimal rate) {
+        if (String.isBlank(requested) || requested.trim().toUpperCase() == functional) {
+            return 1;
+        }
+        return rate != null && rate > 0 ? rate : null;
+    }
+
     private static Decimal rateOf(String requested, String functional, Decimal rate) {
         if (String.isBlank(requested) || requested.trim().toUpperCase() == functional) {
             return 1;
@@ -718,6 +726,11 @@ public with sharing class SABDocumentEntryService {
     private static void assertCompany(Id companyId) {
         if (companyId == null || !SABCompanyAccessService.hasCompanyAccess(companyId)) {
             throw new DocumentEntryException('You do not have active access to this Accounting Company.');
+        }
+        try {
+            SABCompanyAccessService.assertCompanyActive(companyId);
+        } catch (SABCompanyAccessService.CompanyAccessDeniedException ex) {
+            throw new DocumentEntryException(ex.getMessage());
         }
     }
 

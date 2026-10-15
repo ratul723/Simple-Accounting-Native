@@ -84,7 +84,7 @@ export default class SabEmployees extends LightningElement {
     }
 
     get manageTitle() {
-        return this.manageDisabled ? `${this.personaLabel} role cannot manage employees and pay` : undefined;
+        return this.manageDisabled ? 'Needs the SAB Manage Employee Compensation Action permission set' : undefined;
     }
 
     get rows() {
@@ -96,14 +96,15 @@ export default class SabEmployees extends LightningElement {
                 chip: chipClass(p.status, p.status === 'Draft' ? 'neutral' : undefined),
                 canApprove: p.status === 'Draft',
                 approveDisabled: !(this.options && this.options.canApprove) || this.busyId === p.assignmentId,
-                approveTitle: this.options && this.options.canApprove ? undefined : `${this.personaLabel} role cannot approve pay`
+                approveTitle: this.options && this.options.canApprove ? undefined : 'Needs the SAB Approve Employee Compensation Action permission set'
             }));
             const approved = lines.filter((l) => l.status === 'Approved').length;
             return {
                 ...e,
                 departmentText: [e.departmentName, e.costCenterName].filter(Boolean).join(', ') || '\u2014',
                 startText: formatDate(e.startDate),
-                chip: chipClass(e.employmentStatus, e.employmentStatus === 'Active' ? 'good' : 'neutral'),
+                chip: chipClass(e.employmentStatus || 'No status', e.employmentStatus === 'Active' ? 'good' : 'neutral'),
+                statusText: e.employmentStatus || 'No status',
                 lines,
                 hasLines: lines.length > 0,
                 warning: e.employmentStatus === 'Active' && approved === 0 ? 'No approved pay: payroll will not calculate a line for this employee.' : ''
@@ -113,6 +114,20 @@ export default class SabEmployees extends LightningElement {
 
     get hasEmployees() {
         return this.employments.length > 0;
+    }
+
+    get permissionNote() {
+        if (!this.options || (this.options.canManage && this.options.canApprove)) {
+            return undefined;
+        }
+        const missing = [];
+        if (!this.options.canManage) {
+            missing.push('SAB Manage Employee Compensation Action (add employees, pay components and pay)');
+        }
+        if (!this.options.canApprove) {
+            missing.push('SAB Approve Employee Compensation Action (approve pay)');
+        }
+        return `Ask an administrator for: ${missing.join('; ')}.`;
     }
 
     get summary() {

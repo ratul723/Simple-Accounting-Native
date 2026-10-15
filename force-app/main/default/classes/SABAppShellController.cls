@@ -30,7 +30,7 @@ public with sharing class SABAppShellController {
         new WorkspaceRule('close', null, Accounting_Period__c.SObjectType, ACCESS_READ, null),
         new WorkspaceRule('audit', null, Business_Action__c.SObjectType, ACCESS_READ, null),
         new WorkspaceRule('sales', null, Invoice__c.SObjectType, ACCESS_READ, null),
-        new WorkspaceRule('purchases', 'SAB_View_Accounts_Payable_Workspace', null, null, null),
+        new WorkspaceRule('purchases', 'SAB_View_Accounts_Payable_Workspace', null, null, 'PURCHASING'),
         new WorkspaceRule('payments', null, Accounting_Payment__c.SObjectType, ACCESS_READ, null),
         new WorkspaceRule('expenses', 'SAB_View_Expense_Operations', null, null, null),
         new WorkspaceRule('bank', null, Bank_Reconciliation__c.SObjectType, ACCESS_READ, null),
@@ -60,6 +60,8 @@ public with sharing class SABAppShellController {
         @AuraEnabled public String periodStatus { get; set; }
         @AuraEnabled public Boolean canCreateJournal { get; set; }
         @AuraEnabled public Boolean canCreateInvoice { get; set; }
+        /** True when the company is switched off: only Finance home, Company setup and Configuration stay open. */
+        @AuraEnabled public Boolean companyInactive { get; set; }
         /** Features switched off for the company (Company_Feature__c.Enabled__c = false); a feature with no row counts as on. */
         @AuraEnabled public List<String> disabledFeatures { get; set; }
         @AuraEnabled public Boolean canCreateCompany { get; set; }
@@ -92,6 +94,13 @@ public with sharing class SABAppShellController {
         }
     }
 
+    private static final Set<String> INACTIVE_WORKSPACES = new Set<String>{ 'home', 'setup', 'config' };
+
+    private static Boolean isCompanyActive(Id companyId) {
+        List<Accounting_Company__c> rows = [SELECT Is_Active__c FROM Accounting_Company__c WHERE Id = :companyId WITH SYSTEM_MODE LIMIT 1];
+        return !rows.isEmpty() && rows[0].Is_Active__c == true;
+    }
+
     @AuraEnabled
     public static ShellContext getShellContext(Id companyId) {
         if (companyId != null) {
@@ -102,6 +111,16 @@ public with sharing class SABAppShellController {
         context.persona = SABPersonaService.current();
         Map<String, Boolean> features = companyId == null ? new Map<String, Boolean>() : featureStates(companyId);
         context.visibleWorkspaces = visibleWorkspaces(features, companyId != null);
+        context.companyInactive = companyId != null && !isCompanyActive(companyId);
+        if (context.companyInactive) {
+            List<String> open = new List<String>();
+            for (String id : context.visibleWorkspaces) {
+                if (INACTIVE_WORKSPACES.contains(id)) {
+                    open.add(id);
+                }
+            }
+            context.visibleWorkspaces = open;
+        }
         context.disabledFeatures = new List<String>();
         for (String featureKey : features.keySet()) {
             if (features.get(featureKey) == false) {

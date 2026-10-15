@@ -72,16 +72,18 @@
                 </table></div>
             </template>
             <template lwc:else><p class="muted small">Nothing allocated yet.</p></template>
+            <template lwc:if={view.foreign}><div class="banner t-info steps sab-foreign-note"><c-sab-icon name="refresh"></c-sab-icon><div class="small">{view.foreignText}</div>
+                <template lwc:if={view.showForeignAllocate}><span class="spacer"></span><button class="btn sm sab-open-fx" type="button" onclick={handleOpenFx}>Allocate in Foreign exchange</button></template></div></template>
             <template lwc:if={view.showAllocate}>
-                <h3 class="section allocate-title">Allocate {view.remainingText} to open invoices</h3>
+                <h3 class="section allocate-title">{view.allocateTitleText}</h3>
                 <div class="tbl-wrap"><table class="tbl egrid sab-open-invoices">
-                    <thead><tr><th>Invoice</th><th>Due</th><th class="n">Outstanding</th><th class="n">Allocate</th></tr></thead>
+                    <thead><tr><th>{view.documentLabel}</th><th>Due</th><th class="n">Outstanding</th><th class="n">Allocate</th></tr></thead>
                     <tbody><template for:each={view.openInvoices} for:item="i"><tr key={i.documentId}><td><span class="id">{i.documentNumber}</span></td><td>{i.dueText}</td>
                         <td class="n num">{i.outstandingText}</td><td class="amt"><input class="input n" inputmode="decimal" data-id={i.documentId} value={i.value}
                         aria-label={i.label} oninput={handleAllocationInput} /></td></tr></template></tbody>
                 </table></div>
             </template>
-            <template lwc:if={view.noOpenInvoices}><p class="muted small">This customer has no open posted invoices to allocate to.</p></template>
+            <template lwc:if={view.noOpenInvoices}><p class="muted small">{view.noOpenText}</p></template>
         </template>
         <template lwc:if={drawerOpen}>
             <template lwc:if={view.canAuthorize}>
@@ -99,7 +101,7 @@
                 <button slot="footer" class="btn primary sab-retry" type="button" disabled={view.editDisabled} title={view.editTitle} onclick={handleRetry}>Retry</button>
             </template>
             <template lwc:if={view.showAllocate}>
-                <button slot="footer" class="btn primary sab-allocate" type="button" disabled={busy} onclick={handleAllocate}>Allocate</button>
+                <button slot="footer" class="btn primary sab-allocate" type="button" disabled={view.allocateDisabled} title={view.allocateTitle} onclick={handleAllocate}>Allocate</button>
             </template>
         </template>
     </c-sab-drawer>

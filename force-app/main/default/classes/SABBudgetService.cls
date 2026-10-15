@@ -88,7 +88,12 @@ public with sharing class SABBudgetService {
             throw new BudgetException('Budget name cannot exceed 80 characters.');
         }
         budget.Name = name;
-        List<Budget_Line__c> lines = validateLines(request.companyId, request.fiscalYear, toLines(request.lines));
+        // List<Budget_Line__c> lines = validateLines(request.companyId, request.fiscalYear, toLines(request.lines));
+        // A draft may start empty ("Add lines next"); Submit still requires at least one line.
+        List<Budget_Line__c> requested = toLines(request.lines);
+        List<Budget_Line__c> lines = requested.isEmpty()
+            ? requested
+            : validateLines(request.companyId, request.fiscalYear, requested);
         new Writer().saveDraft(budget, lines);
         return budget.Id;
     }

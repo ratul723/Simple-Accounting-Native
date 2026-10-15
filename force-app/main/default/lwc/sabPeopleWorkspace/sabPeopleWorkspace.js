@@ -295,8 +295,29 @@ export default class SabPeopleWorkspace extends LightningElement {
             approveTitle: reason(c.approve, 'approve payroll'),
             showCancel: ['Draft', 'Calculated', 'Submitted', 'Approved'].includes(r.state),
             cancelDisabled: this.busy || !c.cancel,
-            cancelTitle: reason(c.cancel, 'cancel payroll')
+            cancelTitle: reason(c.cancel, 'cancel payroll'),
+            hint: this.prepHint(r, c, activeEmployments.length)
         };
+    }
+
+    /** The reason the next step is unavailable, shown in the panel rather than only as a tooltip. */
+    prepHint(r, c, activeCount) {
+        if ((r.state === 'Draft' || r.state === 'Calculated') && !activeCount) {
+            return 'No active employees yet. Add employees and approved pay in Employees & pay.';
+        }
+        if ((r.state === 'Draft' || r.state === 'Calculated') && !c.calculate) {
+            return `${this.personaLabel} role cannot calculate payroll. HR prepares the run.`;
+        }
+        if (r.state === 'Calculated' && !c.submit) {
+            return `${this.personaLabel} role cannot submit payroll. HR submits the run for approval.`;
+        }
+        if (r.state === 'Submitted' && !c.approve) {
+            return `Waiting for approval. ${this.personaLabel} role cannot approve payroll; a finance manager or director approves it.`;
+        }
+        if (r.state === 'Approved') {
+            return 'Approved. Finance posts the run in Finance posting, then Treasury releases net pay.';
+        }
+        return undefined;
     }
 
     get newRunDisabled() {
@@ -388,15 +409,22 @@ export default class SabPeopleWorkspace extends LightningElement {
     get settlementRows() {
         const r = this.run;
         const returnAllowed = Boolean(this.can.processPayment) && (r.state === 'Posted' || r.state === 'Settled');
-        return ((this.detail && this.detail.lines) || []).map((l) => ({
-            ...l,
-            netText: this.money(l.netAmount),
-            settledText: this.money(l.settledAmount),
-            outstandingText: this.money(l.outstandingAmount),
-            chip: chipClass(l.outstandingAmount > 0 ? (l.settledAmount > 0 ? 'Part Settled' : 'Ready') : 'Settled', l.outstandingAmount > 0 && !l.settledAmount ? 'info' : undefined),
-            statusText: l.outstandingAmount > 0 ? (l.settledAmount > 0 ? 'Part Settled' : 'Ready') : 'Settled',
-            canReturn: returnAllowed && Boolean(l.effectiveSettlementId)
-        }));
+        // Before posting nothing is owed through payroll payable yet: show the full net pay as not yet payable.
+        const payable = r.state === 'Posted' || r.state === 'Settled';
+        return ((this.detail && this.detail.lines) || []).map((l) => {
+            const outstanding = payable ? Number(l.outstandingAmount) || 0 : Number(l.netAmount) || 0;
+            const settled = Number(l.settledAmount) || 0;
+            const status = !payable ? 'Not posted' : outstanding > 0 ? (settled > 0 ? 'Part Settled' : 'Ready') : 'Settled';
+            return {
+                ...l,
+                netText: this.money(l.netAmount),
+                settledText: this.money(settled),
+                outstandingText: this.money(outstanding),
+                chip: chipClass(status, status === 'Not posted' ? 'neutral' : status === 'Ready' ? 'info' : undefined),
+                statusText: status,
+                canReturn: returnAllowed && Boolean(l.effectiveSettlementId)
+            };
+        });
     }
 
     get hasSettlementRows() {
@@ -410,11 +438,15 @@ export default class SabPeopleWorkspace extends LightningElement {
         const process = (allowed) => this.busy || !allowed;
         const title = (allowed, action) => (allowed ? undefined : `${this.personaLabel} role cannot ${action}`);
         if (!p) {
+            const posted = r.state === 'Posted';
             return {
                 hasPayment: false,
-                showPrepare: r.state === 'Posted',
-                prepareDisabled: process(c.processPayment),
-                prepareTitle: title(c.processPayment, 'prepare payroll payments')
+                showPrepare: true,
+                prepareDisabled: !posted || process(c.processPayment),
+                prepareTitle: !posted ? 'Available once the run is posted' : title(c.processPayment, 'prepare payroll payments'),
+                releaseTitle: !posted ? 'Available once the run is posted and its payment is prepared and authorised' : 'Prepare and authorise the payment first',
+                waitingText: posted ? 'No payment prepared yet. Prepare it, have it authorised, then release net pay.'
+                    : `Net pay is released after the run is posted. The run is ${r.state}.`
             };
         }
         return {

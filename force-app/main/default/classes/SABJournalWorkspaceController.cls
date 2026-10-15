@@ -906,19 +906,37 @@ public with sharing class SABJournalWorkspaceController {
             }
         }
 
-        Integer validGLCount = [
-            SELECT COUNT()
+                // Check each GL account on its own so the message names the account and the reason.
+        Map<Id, GL_Account__c> foundAccounts = new Map<Id, GL_Account__c>([
+            SELECT Id, Account_Code__c, Name, Company__c, Is_Active__c,
+                   Manual_Posting_Allowed__c, Is_Control_Account__c, Control_Type__c
             FROM GL_Account__c
             WHERE Id IN :glAccountIds
-              AND Company__c = :request.companyId
-              AND Is_Active__c = true
-              AND Manual_Posting_Allowed__c = true
-              AND Is_Control_Account__c = false
-        ];
+            WITH SYSTEM_MODE
+        ]);
 
-        if (validGLCount != glAccountIds.size()) {
+        List<String> accountProblems = new List<String>();
+        for (Id accountId : glAccountIds) {
+            GL_Account__c acct = foundAccounts.get(accountId);
+            if (acct == null || acct.Company__c != request.companyId) {
+                accountProblems.add('an account that does not belong to this company');
+                continue;
+            }
+            String accountLabel = acct.Account_Code__c + ' ' + acct.Name;
+            if (acct.Is_Active__c != true) {
+                accountProblems.add(accountLabel + ' is inactive');
+            } else if (acct.Is_Control_Account__c == true) {
+                accountProblems.add(accountLabel + ' is a ' + acct.Control_Type__c
+                    + ' control account and can only be posted through its own documents');
+            } else if (acct.Manual_Posting_Allowed__c != true) {
+                accountProblems.add(accountLabel + ' does not allow manual posting');
+            }
+        }
+
+        if (!accountProblems.isEmpty()) {
             throw new AuraHandledException(
-                'One or more GL Accounts are invalid for manual posting in the current Accounting Company.'
+                'Cannot use these accounts in a manual journal: '
+                + String.join(accountProblems, '; ') + '.'
             );
         }
 

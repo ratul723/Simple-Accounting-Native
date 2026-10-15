@@ -10,13 +10,14 @@
                 <button class="btn sm sab-new-component" type="button" disabled={manageDisabled} title={manageTitle} onclick={handleNewComponent}>New pay component</button>
                 <button class="btn sm primary sab-new-employee" type="button" disabled={manageDisabled} title={manageTitle} onclick={handleNewEmployee}>
                     <c-sab-icon name="plus" size="14"></c-sab-icon>New employee</button></div>
+            <template lwc:if={permissionNote}><div class="banner t-info perm-note"><c-sab-icon name="lock"></c-sab-icon><div class="small">{permissionNote}</div></div></template>
             <div class="panel-b flush">
                 <template lwc:if={hasEmployees}>
                     <div class="list">
                         <template for:each={rows} for:item="e">
                             <div key={e.employmentId} class="emp">
                                 <div class="row"><span class="strong">{e.employeeReference}</span><span class="small muted">{e.departmentText}, from {e.startText}</span>
-                                    <span class="spacer"></span><span class={e.chip}><span class="dot"></span>{e.employmentStatus}</span>
+                                    <span class="spacer"></span><span class={e.chip}><span class="dot"></span>{e.statusText}</span>
                                     <button class="btn sm ghost sab-add-pay" type="button" data-id={e.employmentId} disabled={manageDisabled} title={manageTitle} onclick={handleAddPay}>Add pay</button></div>
                                 <template lwc:if={e.warning}><div class="small down warn">{e.warning}</div></template>
                                 <template lwc:if={e.hasLines}>
