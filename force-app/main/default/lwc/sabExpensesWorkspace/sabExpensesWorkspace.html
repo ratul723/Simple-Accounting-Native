@@ -93,7 +93,7 @@
         </template>
         <template lwc:if={isClaimDrawer}>
             <template lwc:if={claimView.isDraft}>
-                <button slot="footer" class="btn ghost sab-edit-claim" type="button" disabled={claimView.submitDisabled} title={claimView.submitTitle} onclick={handleEditClaim}>Edit</button>
+                <template lwc:if={claimView.canSubmit}><button slot="footer" class="btn btn-edit sab-edit-claim" type="button" disabled={busy} onclick={handleEditClaim}><c-sab-icon name="edit" size="15"></c-sab-icon>Edit</button></template>
                 <button slot="footer" class="btn primary sab-submit-claim" type="button" disabled={claimView.submitDisabled} title={claimView.submitTitle} onclick={handleSubmit}>Submit for review</button>
             </template>
             <template lwc:if={claimView.isSubmitted}>

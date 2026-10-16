@@ -275,6 +275,7 @@ export default class SabExpensesWorkspace extends LightningElement {
             canSettle: ['Posted', 'Part Paid'].includes(c.status) && Number(c.remainingAmount) > 0,
             noPayment: payable.length === 0,
             submitDisabled: this.busy || !d.canSubmitClaim,
+            canSubmit: Boolean(d.canSubmitClaim),
             submitTitle: this.reason(d.canSubmitClaim, 'submit expense claims'),
             reviewDisabled: this.busy || !d.canReviewClaim,
             reviewTitle: this.reason(d.canReviewClaim, 'review expense claims'),

@@ -1,6 +1,11 @@
 import { LightningElement, api } from 'lwc';
 import getChart from '@salesforce/apex/SABAdminWorkspaceController.getChart';
-import saveAccount from '@salesforce/apex/SABSetupRecordService.saveAccount';
+import getMappingOptions from '@salesforce/apex/SABReportMappingService.getOptions';
+import saveAccountWithMapping from '@salesforce/apex/SABReportMappingService.saveAccountWithMapping';
+import moveAccount from '@salesforce/apex/SABReportMappingService.moveAccount';
+import createVersion from '@salesforce/apex/SABReportMappingService.createVersion';
+import activateVersion from '@salesforce/apex/SABReportMappingService.activateVersion';
+import deleteDraftVersion from '@salesforce/apex/SABReportMappingService.deleteDraftVersion';
 import saveDepartment from '@salesforce/apex/SABAdminWorkspaceService.saveDepartment';
 import saveCostCenter from '@salesforce/apex/SABAdminWorkspaceService.saveCostCenter';
 import { formatNumber, formatDate, chipClass } from 'c/sabFormat';
@@ -9,6 +14,8 @@ import { reduceError, newKey, toast } from 'c/sabMoneyShared';
 const TYPES = [['All', 'All'], ['Asset', 'Assets'], ['Liability', 'Liabilities'], ['Equity', 'Equity'], ['Revenue', 'Revenue'], ['Expense', 'Expenses']];
 const CONTROL_TYPES = ['None', 'AR', 'AP', 'Bank', 'Payroll', 'Tax', 'Equity', 'Other'];
 const CASH_FLOW = ['Operating', 'Investing', 'Financing', 'Cash'];
+const NEW_ROW = '__new__';
+const statementFor = (accountType) => (accountType === 'Revenue' || accountType === 'Expense' ? 'P&L' : 'Balance Sheet');
 
 /** Readable label for a mapping key such as OPERATING_EXPENSES. */
 function labelOf(key) {
@@ -28,8 +35,10 @@ export default class SabChartWorkspace extends LightningElement {
     @api persona;
     @api caps;
     @api visibleWorkspaces;
-    @api recordId;
     @api periodKey;
+    mapping;
+    viewOnly = false;
+    searchAccountId;
 
     data;
     errorMessage;
@@ -41,9 +50,24 @@ export default class SabChartWorkspace extends LightningElement {
     form = {};
     formError;
     saving = false;
+    saved;
     requestKey;
     loadSequence = 0;
     currentCompanyId;
+
+    /** A record opened from global search: the list shows only that account, with a Clear search chip. */
+    @api
+    get recordId() {
+        return this.searchAccountId;
+    }
+    set recordId(value) {
+        this.searchAccountId = value;
+        this.activeTab = 'gl';
+        this.typeFilter = 'All';
+        if (value && this.data) {
+            this.openAccountView(value);
+        }
+    }
 
     @api
     get companyId() {
@@ -69,6 +93,14 @@ export default class SabChartWorkspace extends LightningElement {
             const data = await getChart({ companyId });
             if (sequence === this.loadSequence) {
                 this.data = data;
+                this.loadMapping();
+                if (this.searchAccountId && !(data.accounts || []).some((a) => a.accountId === this.searchAccountId)) {
+                    // The searched account is not in this company: show the full list, no search chip.
+                    this.searchAccountId = undefined;
+                }
+                if (this.searchAccountId && !this.modal) {
+                    this.openAccountView(this.searchAccountId);
+                }
                 const defs = data.definitions || [];
                 if (!defs.some((d) => d.definitionId === this.definitionId)) {
                     const active = defs.find((d) => d.status === 'Active') || defs[0];
@@ -159,10 +191,12 @@ export default class SabChartWorkspace extends LightningElement {
 
     get accountRows() {
         return ((this.data && this.data.accounts) || [])
+            .filter((a) => !this.searchAccountId || a.accountId === this.searchAccountId)
             .filter((a) => this.typeFilter === 'All' || a.accountType === this.typeFilter)
             .map((a) => ({
                 ...a,
                 hasControl: a.controlType && a.controlType !== 'None',
+                statementRow: this.rowLabelFor(a),
                 balanceText: formatNumber(a.balance),
                 rowClass: a.active ? 'click' : 'click inactive',
                 inactiveText: a.active ? '' : 'Inactive'
@@ -180,15 +214,101 @@ export default class SabChartWorkspace extends LightningElement {
             }
             event.preventDefault();
         }
-        const a = this.data.accounts.find((x) => x.accountId === event.currentTarget.dataset.id);
+        this.openAccountView(event.currentTarget.dataset.id);
+    }
+
+    openAccountView(accountId) {
+        const a = ((this.data && this.data.accounts) || []).find((x) => x.accountId === accountId);
+        if (!a) {
+            return;
+        }
+        const current = this.mappingFor(a.accountId, a.accountType);
         this.openModal('account', { accountId: a.accountId, code: a.code, name: a.name, accountType: a.accountType, normalBalance: a.normalBalance,
             controlType: a.controlType || 'None', isControlAccount: a.isControlAccount, manualPostingAllowed: a.manualPostingAllowed, isActive: a.active,
-            cashFlowCategory: a.cashFlowCategory || '', reportGroup: a.reportGroup || '' });
+            cashFlowCategory: a.cashFlowCategory || '', rowKey: current ? current.rowKey : '', groupKey: current ? current.groupKey : '', newRowName: '', newSection: '' }, true);
     }
 
     handleNewAccount() {
         this.openModal('account', { accountId: null, code: '', name: '', accountType: 'Expense', normalBalance: 'Debit', controlType: 'None', isControlAccount: false,
-            manualPostingAllowed: true, isActive: true, cashFlowCategory: '', reportGroup: '' });
+            manualPostingAllowed: true, isActive: true, cashFlowCategory: '', rowKey: '', groupKey: '', newRowName: '', newSection: '' });
+    }
+
+    handleClearSearch() {
+        this.searchAccountId = undefined;
+        this.dispatchEvent(new CustomEvent('sabnavigate', { detail: { workspace: 'coa' }, bubbles: true, composed: true }));
+    }
+
+    get searchChip() {
+        if (!this.searchAccountId || !this.data) {
+            return undefined;
+        }
+        const a = (this.data.accounts || []).find((x) => x.accountId === this.searchAccountId);
+        return a ? `${a.code} ${a.name}` : 'Search result';
+    }
+
+    // ---------- report mapping ----------
+
+    async loadMapping() {
+        try {
+            this.mapping = await getMappingOptions({ companyId: this.currentCompanyId });
+        } catch (error) {
+            this.mapping = { definitions: [], mappings: [], unmapped: [], canManage: false, error: reduceError(error) };
+        }
+    }
+
+    activeDefinitionFor(accountType) {
+        const type = statementFor(accountType);
+        return ((this.mapping && this.mapping.definitions) || []).find((d) => d.reportType === type && d.status === 'Active');
+    }
+
+    mappingFor(accountId, accountType) {
+        const definition = this.activeDefinitionFor(accountType);
+        return definition ? ((this.mapping && this.mapping.mappings) || []).find((m) => m.accountId === accountId && m.definitionId === definition.definitionId) : undefined;
+    }
+
+    rowLabelFor(a) {
+        const m = this.mappingFor(a.accountId, a.accountType);
+        return m ? `${labelOf(m.groupKey)} / ${labelOf(m.rowKey)}` : 'Not mapped';
+    }
+
+    get statementLabel() {
+        return statementFor(this.form.accountType) === 'P&L' ? 'P&L' : 'Balance Sheet';
+    }
+
+    get sectionOptions() {
+        const definition = this.activeDefinitionFor(this.form.accountType);
+        const groups = [...new Set(((definition && definition.rows) || []).map((r) => r.groupKey).filter(Boolean))];
+        return groups.map((g) => ({ value: g, label: labelOf(g), selected: g === this.form.groupKey }));
+    }
+
+    get rowOptions() {
+        const definition = this.activeDefinitionFor(this.form.accountType);
+        return ((definition && definition.rows) || []).filter((r) => !this.form.groupKey || r.groupKey === this.form.groupKey)
+            .map((r) => ({ value: r.rowKey, label: labelOf(r.rowKey), selected: r.rowKey === this.form.rowKey }));
+    }
+
+    get newSectionHint() {
+        const pl = this.modal === 'move' ? Boolean(this.selectedDefinition && this.selectedDefinition.reportType === 'P&L') : statementFor(this.form.accountType) === 'P&L';
+        return pl ? 'For example Other expenses' : 'For example Current assets';
+    }
+
+    get isNewRow() {
+        return this.form.rowKey === NEW_ROW;
+    }
+
+    get newRowValue() {
+        return NEW_ROW;
+    }
+
+    get noDefinition() {
+        return Boolean(this.mapping) && !this.activeDefinitionFor(this.form.accountType);
+    }
+
+    get mappingText() {
+        if (!this.form.rowKey) {
+            return 'Not mapped';
+        }
+        return `${labelOf(this.form.groupKey)} / ${labelOf(this.form.rowKey)}`;
     }
 
     // ---------- dimensions ----------
@@ -239,7 +359,7 @@ export default class SabChartWorkspace extends LightningElement {
         const list = kind === 'department' ? this.data.departments : this.data.costCenters;
         const d = list.find((x) => x.recordId === event.currentTarget.dataset.id);
         this.openModal(kind, { recordId: d.recordId, code: d.code, name: d.name, parentId: d.parentId || '', active: d.active, activeFrom: d.activeFrom || '',
-            activeTo: d.activeTo || '' });
+            activeTo: d.activeTo || '' }, true);
     }
 
     // ---------- projects and mapping ----------
@@ -277,7 +397,8 @@ export default class SabChartWorkspace extends LightningElement {
     get definition() {
         const d = ((this.data && this.data.definitions) || []).find((x) => x.definitionId === this.definitionId);
         if (!d) {
-            return undefined;
+            // Never undefined: the template reads its fields while a version is being created or the chart reloads.
+            return { title: 'Report mapping', bannerTitle: 'Loading the definition', bannerText: '', bannerClass: 'banner t-info gap', rows: [], hasRows: false };
         }
         return {
             title: `Report mapping: ${d.reportType} v${d.version}`,
@@ -293,7 +414,9 @@ export default class SabChartWorkspace extends LightningElement {
 
     // ---------- modal ----------
 
-    openModal(kind, form) {
+    openModal(kind, form, viewOnly = false) {
+        this.viewOnly = viewOnly;
+        this.saved = { ...form };
         this.form = form;
         this.formError = undefined;
         this.requestKey = newKey(`COA-${kind}`, form.accountId || form.recordId);
@@ -306,8 +429,57 @@ export default class SabChartWorkspace extends LightningElement {
 
     get modalHeading() {
         const editing = this.form.accountId || this.form.recordId;
-        const noun = { account: 'GL account', department: 'department', costCenter: 'cost center' }[this.modal];
+        const noun = { account: 'GL account', department: 'department', costCenter: 'cost center', move: 'report mapping' }[this.modal];
+        if (this.modal === 'deleteDraft') {
+            return `Delete draft ${this.form.label}`;
+        }
+        if (this.modal === 'move') {
+            return 'Move an account to another row';
+        }
+        if (this.viewOnly) {
+            return this.modal === 'account' ? `${this.form.code} ${this.form.name}` : `${this.form.code} ${this.form.name}`;
+        }
         return `${editing ? 'Edit' : 'New'} ${noun}`;
+    }
+
+    get isViewOnly() {
+        return this.viewOnly;
+    }
+
+    get isEditable() {
+        return !this.viewOnly;
+    }
+
+    get showEditButton() {
+        return this.viewOnly && this.canManage;
+    }
+
+    handleStartEdit() {
+        this.viewOnly = false;
+    }
+
+    handleCancelEdit() {
+        if (this.isEditing && this.saved) {
+            this.form = { ...this.saved };
+            this.formError = undefined;
+            this.viewOnly = true;
+            return;
+        }
+        this.handleClose();
+    }
+
+    get viewFacts() {
+        const f = this.form;
+        if (this.modal === 'account') {
+            return [['Code', f.code], ['Name', f.name], ['Type', f.accountType], ['Normal balance', f.normalBalance], ['Control type', f.controlType || 'None'],
+                ['Manual posting', f.manualPostingAllowed ? 'Allowed' : 'Not allowed'], ['Cash flow category', f.cashFlowCategory || 'Operating (default)'],
+                [`${this.statementLabel} row`, this.mappingText], ['Status', f.isActive ? 'Active' : 'Inactive']]
+                .map(([label, value]) => ({ key: label, valueKey: `${label}-v`, label, value }));
+        }
+        const parent = ((this.data && this.data.departments) || []).find((d) => d.recordId === f.parentId);
+        return [['Code', f.code], ['Name', f.name], ...(this.modal === 'department' ? [['Parent', parent ? parent.name : '\u2014']] : []),
+            ['Active from', f.activeFrom ? formatDate(f.activeFrom) : '\u2014'], ['Active to', f.activeTo ? formatDate(f.activeTo) : '\u2014'],
+            ['Status', f.active ? 'Active' : 'Inactive']].map(([label, value]) => ({ key: label, valueKey: `${label}-v`, label, value }));
     }
 
     get modalSub() {
@@ -358,6 +530,13 @@ export default class SabChartWorkspace extends LightningElement {
         const form = { ...this.form, [field]: value };
         if (field === 'accountType') {
             form.normalBalance = ['Asset', 'Expense'].includes(value) ? 'Debit' : 'Credit';
+            if (statementFor(value) !== statementFor(this.form.accountType)) {
+                form.groupKey = '';
+                form.rowKey = '';
+            }
+        }
+        if (field === 'groupKey' && this.form.rowKey !== NEW_ROW) {
+            form.rowKey = '';
         }
         if (field === 'controlType') {
             form.isControlAccount = value !== 'None';
@@ -379,16 +558,31 @@ export default class SabChartWorkspace extends LightningElement {
         this.saving = true;
         this.formError = undefined;
         try {
-            if (this.modal === 'account') {
-                await saveAccount({ request: { accountId: f.accountId, companyId, code: f.code, name: f.name, accountType: f.accountType, normalBalance: f.normalBalance,
-                    controlType: f.controlType, isControlAccount: f.isControlAccount, manualPostingAllowed: f.manualPostingAllowed, isActive: f.isActive,
-                    cashFlowCategory: f.cashFlowCategory || null, reportGroup: f.reportGroup || null }, requestKey });
+            if (this.modal === 'deleteDraft') {
+                await deleteDraftVersion({ companyId, definitionId: f.definitionId, requestKey });
+                this.definitionId = undefined;
+            } else if (this.modal === 'move') {
+                await moveAccount({ companyId, accountId: f.moveAccountId || null, mapping: this.mappingChoice(f, f.moveDefinitionId), requestKey });
+            } else if (this.modal === 'account') {
+                const changed = f.rowKey !== (this.saved && this.saved.rowKey) || f.rowKey === NEW_ROW;
+                if (!f.accountId && !f.rowKey) {
+                    this.formError = `Choose where this account appears on the ${this.statementLabel}.`;
+                    return;
+                }
+                if (f.rowKey === NEW_ROW && !String(f.newRowName || '').trim()) {
+                    this.formError = 'Name the new statement row.';
+                    return;
+                }
+                await saveAccountWithMapping({ request: { accountId: f.accountId, companyId, code: f.code, name: f.name, accountType: f.accountType,
+                    normalBalance: f.normalBalance, controlType: f.controlType, isControlAccount: f.isControlAccount, manualPostingAllowed: f.manualPostingAllowed,
+                    isActive: f.isActive, cashFlowCategory: f.cashFlowCategory || null, reportGroup: null },
+                    mapping: f.rowKey && changed ? this.mappingChoice(f, null) : null, requestKey });
             } else {
                 const request = { recordId: f.recordId, companyId, code: f.code, name: f.name, parentId: f.parentId || null, active: f.active,
                     activeFrom: f.activeFrom || null, activeTo: f.activeTo || null };
                 await (this.modal === 'department' ? saveDepartment({ request, requestKey }) : saveCostCenter({ request, requestKey }));
             }
-            toast(this, `${this.modalHeading.replace(/^(New|Edit) /, '').replace(/^./, (c) => c.toUpperCase())} saved`);
+            toast(this, this.modal === 'deleteDraft' ? 'Draft version deleted' : this.modal === 'move' ? 'Report mapping updated' : `${this.modalHeading.replace(/^(New|Edit) /, '').replace(/^./, (c) => c.toUpperCase())} saved`);
             this.modal = undefined;
             await this.load();
         } catch (error) {
@@ -396,6 +590,97 @@ export default class SabChartWorkspace extends LightningElement {
         } finally {
             this.saving = false;
         }
+    }
+
+    mappingChoice(f, definitionId) {
+        const newRow = f.rowKey === NEW_ROW;
+        return { definitionId: definitionId || null, groupKey: (newRow ? f.newSection || f.groupKey : f.groupKey) || null, rowKey: newRow ? f.newRowName : f.rowKey };
+    }
+
+    // ---------- mapping table actions ----------
+
+    get canManageMappings() {
+        return Boolean(this.mapping && this.mapping.canManage);
+    }
+
+    get selectedDefinition() {
+        return ((this.mapping && this.mapping.definitions) || []).find((d) => d.definitionId === this.definitionId);
+    }
+
+    get canActivate() {
+        return this.canManageMappings && Boolean(this.selectedDefinition) && this.selectedDefinition.status === 'Draft';
+    }
+
+    get canMove() {
+        return this.canManageMappings && Boolean(this.selectedDefinition) && this.selectedDefinition.status !== 'Retired';
+    }
+
+    handleMoveAccount() {
+        const d = this.selectedDefinition;
+        this.openModal('move', { moveDefinitionId: d.definitionId, moveAccountId: '', accountType: d.reportType === 'P&L' ? 'Expense' : 'Asset', groupKey: '', rowKey: '',
+            newRowName: '', newSection: '' });
+    }
+
+    get moveAccountOptions() {
+        const d = this.selectedDefinition;
+        const pl = d && d.reportType === 'P&L';
+        return ((this.data && this.data.accounts) || []).filter((a) => (pl ? ['Revenue', 'Expense'] : ['Asset', 'Liability', 'Equity']).includes(a.accountType))
+            .map((a) => ({ value: a.accountId, label: `${a.code} ${a.name}`, selected: a.accountId === this.form.moveAccountId }));
+    }
+
+    get moveSectionOptions() {
+        const d = this.selectedDefinition;
+        const groups = [...new Set(((d && d.rows) || []).map((r) => r.groupKey).filter(Boolean))];
+        return groups.map((g) => ({ value: g, label: labelOf(g), selected: g === this.form.groupKey }));
+    }
+
+    get moveRowOptions() {
+        const d = this.selectedDefinition;
+        return ((d && d.rows) || []).filter((r) => !this.form.groupKey || r.groupKey === this.form.groupKey)
+            .map((r) => ({ value: r.rowKey, label: labelOf(r.rowKey), selected: r.rowKey === this.form.rowKey }));
+    }
+
+    get isMoveModal() {
+        return this.modal === 'move';
+    }
+
+    async runDefinitionAction(call, message) {
+        this.saving = true;
+        try {
+            const id = await call();
+            toast(this, message);
+            // Load first, then select: the new version is only in the data once the chart has reloaded.
+            await this.load();
+            if (id && ((this.data && this.data.definitions) || []).some((d) => d.definitionId === id)) {
+                this.definitionId = id;
+            }
+            await this.loadMapping();
+        } catch (error) {
+            toast(this, reduceError(error), 'bad');
+        } finally {
+            this.saving = false;
+        }
+    }
+
+    handleNewVersion() {
+        const definitionId = this.definitionId;
+        this.runDefinitionAction(() => createVersion({ companyId: this.currentCompanyId, definitionId, requestKey: newKey('MAPVER', definitionId) }),
+            'New draft version created. Change its rows, then activate it.');
+    }
+
+    handleDeleteDraft() {
+        const d = this.selectedDefinition;
+        this.openModal('deleteDraft', { definitionId: d.definitionId, label: `${d.reportType} v${d.version}` });
+    }
+
+    get isDeleteModal() {
+        return this.modal === 'deleteDraft';
+    }
+
+    handleActivate() {
+        const definitionId = this.definitionId;
+        this.runDefinitionAction(() => activateVersion({ companyId: this.currentCompanyId, definitionId, requestKey: newKey('MAPACT', definitionId) }),
+            'Version activated. The previous version is retired.');
     }
 
     handleRetry() {

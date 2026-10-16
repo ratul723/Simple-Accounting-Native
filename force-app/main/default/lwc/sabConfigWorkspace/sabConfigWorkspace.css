@@ -44,3 +44,24 @@ tr.click:focus-visible {
 .row.center {
     justify-content: center;
 }
+
+.view-head {
+    margin-bottom: 10px;
+    align-items: center;
+}
+
+.view-facts {
+    margin: 0;
+}
+
+.linkish {
+    background: none;
+    border: 0;
+    padding: 0;
+    margin-top: 4px;
+    font: inherit;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--accent);
+    cursor: pointer;
+}

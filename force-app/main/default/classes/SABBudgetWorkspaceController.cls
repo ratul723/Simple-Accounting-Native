@@ -58,6 +58,7 @@ public with sharing class SABBudgetWorkspaceController {
         @AuraEnabled public List<OptionDTO> accounts;
         @AuraEnabled public List<OptionDTO> departments;
         @AuraEnabled public List<OptionDTO> costCenters;
+        @AuraEnabled public List<OptionDTO> projects;
     }
 
     public class LineDTO {
@@ -70,6 +71,8 @@ public with sharing class SABBudgetWorkspaceController {
         @AuraEnabled public String departmentName;
         @AuraEnabled public Id costCenterId;
         @AuraEnabled public String costCenterName;
+        @AuraEnabled public Id projectId;
+        @AuraEnabled public String projectName;
         @AuraEnabled public Decimal amount;
     }
 
@@ -147,6 +150,13 @@ public with sharing class SABBudgetWorkspaceController {
                 ORDER BY Name LIMIT :ROW_LIMIT]) {
             result.costCenters.add(option(c.Name, c.Id));
         }
+        result.projects = new List<OptionDTO>();
+        if (Schema.SObjectType.Project__c.isAccessible()) {
+            for (Project__c p : [SELECT Id, Name, Project_Code__c FROM Project__c WHERE Company__c = :companyId AND Status__c IN ('Planned', 'Active')
+                    WITH USER_MODE ORDER BY Project_Code__c LIMIT :ROW_LIMIT]) {
+                result.projects.add(option(p.Project_Code__c + ' ' + p.Name, p.Id));
+            }
+        }
         return result;
     }
 
@@ -168,7 +178,7 @@ public with sharing class SABBudgetWorkspaceController {
         detail.lines = new List<LineDTO>();
         detail.total = 0;
         for (Budget_Line__c l : [SELECT Id, Accounting_Period__c, Accounting_Period__r.Name, GL_Account__c, GL_Account__r.Account_Code__c,
-                GL_Account__r.Name, Department__c, Department__r.Name, Cost_Center__c, Cost_Center__r.Name, Amount__c FROM Budget_Line__c
+                GL_Account__r.Name, Department__c, Department__r.Name, Cost_Center__c, Cost_Center__r.Name, Project__c, Project__r.Name, Amount__c FROM Budget_Line__c
                 WHERE Budget__c = :budgetId WITH USER_MODE ORDER BY Accounting_Period__r.Start_Date__c, GL_Account__r.Account_Code__c
                 LIMIT 2001]) {
             LineDTO dto = new LineDTO();
@@ -181,6 +191,8 @@ public with sharing class SABBudgetWorkspaceController {
             dto.departmentName = l.Department__r == null ? null : l.Department__r.Name;
             dto.costCenterId = l.Cost_Center__c;
             dto.costCenterName = l.Cost_Center__r == null ? null : l.Cost_Center__r.Name;
+            dto.projectId = l.Project__c;
+            dto.projectName = l.Project__r == null ? null : l.Project__r.Name;
             dto.amount = l.Amount__c;
             detail.total += l.Amount__c == null ? 0 : l.Amount__c;
             detail.lines.add(dto);

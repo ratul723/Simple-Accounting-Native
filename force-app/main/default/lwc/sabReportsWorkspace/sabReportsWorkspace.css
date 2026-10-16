@@ -76,3 +76,11 @@ tr.click:focus-visible {
         grid-template-columns: 1fr;
     }
 }
+
+.sab-bs-mode {
+    margin-bottom: 12px;
+}
+
+.recon-summary {
+    margin: 0 0 10px;
+}

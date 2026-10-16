@@ -27,19 +27,21 @@
                 <div class="seg" role="group" aria-label="Account type">
                     <template for:each={typeButtons} for:item="b"><button key={b.id} class={b.className} type="button" aria-pressed={b.pressed} data-id={b.id} onclick={handleType}>{b.label}</button></template>
                 </div>
-                <span class="spacer"></span><span class="hint">Select an account to inspect or change it.</span>
+                <template lwc:if={searchChip}><span class="chip t-info search-chip">Search: {searchChip}
+                    <button class="linkish sab-clear-search" type="button" aria-label="Clear search" onclick={handleClearSearch}>Clear search</button></span></template>
+                <span class="spacer"></span><span class="hint">Select an account to see its details.</span>
             </div>
             <section class="panel"><div class="panel-b flush">
                 <template lwc:if={hasAccounts}>
                     <div class="tbl-wrap"><table class="tbl sab-accounts">
-                        <thead><tr><th>Code</th><th>Account</th><th>Type</th><th>Normal</th><th>Control</th><th class="c">Manual posting</th><th>Report group</th><th class="n">Balance</th></tr></thead>
+                        <thead><tr><th>Code</th><th>Account</th><th>Type</th><th>Normal</th><th>Control</th><th class="c">Manual posting</th><th>Statement row</th><th class="n">Balance</th></tr></thead>
                         <tbody><template for:each={accountRows} for:item="a"><tr key={a.accountId} class={a.rowClass} tabindex="0" data-id={a.accountId} onclick={handleAccount} onkeydown={handleAccount}>
                             <td><span class="id">{a.code}</span></td><td>{a.name}<template lwc:if={a.inactiveText}><div class="small muted">{a.inactiveText}</div></template></td>
                             <td>{a.accountType}</td><td>{a.normalBalance}</td>
                             <td><template lwc:if={a.hasControl}><span class="tag">{a.controlType}</span></template><template lwc:else><span class="faint">&#8212;</span></template></td>
                             <td class="c"><template lwc:if={a.manualPostingAllowed}><c-sab-icon name="check" size="16"></c-sab-icon></template>
                                 <template lwc:else><span class="lock faint" title="Control account"><c-sab-icon name="lock" size="14"></c-sab-icon></span></template></td>
-                            <td>{a.reportGroup}</td><td class="n num">{a.balanceText}</td></tr></template></tbody>
+                            <td>{a.statementRow}</td><td class="n num">{a.balanceText}</td></tr></template></tbody>
                     </table></div>
                 </template>
                 <template lwc:else><div class="panel-b muted">No accounts of this type.</div></template>
@@ -104,7 +106,12 @@
             <template lwc:if={hasDefinitions}>
                 <div class="row filters"><label class="row small muted gap-label">Definition
                     <select class="select sab-definition" onchange={handleDefinition}>
-                        <template for:each={definitionOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label></div>
+                        <template for:each={definitionOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+                    <span class="spacer"></span>
+                    <template lwc:if={canMove}><button class="btn sm sab-move-account" type="button" disabled={saving} onclick={handleMoveAccount}>Move an account</button></template>
+                    <template lwc:if={canManageMappings}><button class="btn sm sab-new-version" type="button" disabled={saving} onclick={handleNewVersion}>New version</button></template>
+                    <template lwc:if={canActivate}><button class="btn sm danger sab-delete-draft" type="button" disabled={saving} onclick={handleDeleteDraft}>Delete draft</button>
+                        <button class="btn sm primary sab-activate" type="button" disabled={saving} onclick={handleActivate}>Activate</button></template></div>
                 <div class={definition.bannerClass}><c-sab-icon name="info"></c-sab-icon><div><b>{definition.bannerTitle}</b><div class="small">{definition.bannerText}</div></div></div>
                 <section class="panel">
                     <div class="panel-h"><div><h2>{definition.title}</h2></div></div>
@@ -127,7 +134,30 @@
 
     <c-sab-modal open={modalOpen} heading={modalHeading} subheading={modalSub} onclose={handleClose}>
         <template lwc:if={formError}><div class="banner t-bad form-error" role="alert"><c-sab-icon name="alert"></c-sab-icon><div>{formError}</div></div></template>
-        <template lwc:if={isAccountModal}>
+        <template lwc:if={isViewOnly}>
+            <div class="row view-head"><span class="small muted">Read only</span><span class="spacer"></span>
+                <template lwc:if={showEditButton}><button class="btn btn-edit sab-start-edit" type="button" onclick={handleStartEdit}><c-sab-icon name="edit" size="15"></c-sab-icon>Edit</button></template></div>
+            <dl class="kv view-facts"><template for:each={viewFacts} for:item="f"><dt key={f.key}>{f.label}</dt><dd key={f.valueKey}>{f.value}</dd></template></dl>
+        </template>
+        <template lwc:elseif={isDeleteModal}>
+            <p>This removes the draft version and its row mappings. The active version and the reports are not affected. This cannot be undone.</p>
+        </template>
+        <template lwc:elseif={isMoveModal}>
+            <div class="grid g2 form">
+                <label class="field wide"><span>Account</span><select class="select" data-field="moveAccountId" onchange={handleField}><option value="">Select</option>
+                    <template for:each={moveAccountOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+                <label class="field"><span>Section</span><select class="select" data-field="groupKey" onchange={handleField}><option value="">Any section</option>
+                    <template for:each={moveSectionOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+                <label class="field"><span>Statement row</span><select class="select" data-field="rowKey" onchange={handleField}><option value="">Select</option>
+                    <template for:each={moveRowOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template>
+                    <option value={newRowValue}>Add a new row...</option></select></label>
+                <template lwc:if={isNewRow}>
+                    <label class="field"><span>New row name</span><input class="input" data-field="newRowName" value={form.newRowName} oninput={handleField} /></label>
+                    <label class="field"><span>Section for the new row</span><input class="input" data-field="newSection" value={form.newSection} placeholder={newSectionHint} oninput={handleField} /></label>
+                </template>
+            </div>
+        </template>
+        <template lwc:elseif={isAccountModal}>
             <div class="grid g2 form">
                 <label class="field"><span>Code</span><input class="input" data-field="code" value={form.code} oninput={handleField} /></label>
                 <label class="field"><span>Name</span><input class="input" data-field="name" value={form.name} oninput={handleField} /></label>
@@ -139,7 +169,20 @@
                     <template for:each={controlOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
                 <label class="field"><span>Cash flow category</span><select class="select" data-field="cashFlowCategory" onchange={handleField}><option value="">Operating (default)</option>
                     <template for:each={cashFlowOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
-                <label class="field"><span>Report group</span><input class="input" data-field="reportGroup" value={form.reportGroup} oninput={handleField} /></label>
+                <template lwc:if={noDefinition}>
+                    <div class="banner t-warn wide"><c-sab-icon name="alert"></c-sab-icon><div class="small">There is no active {statementLabel} definition. Add one in Report mapping first.</div></div>
+                </template>
+                <template lwc:else>
+                    <label class="field"><span>{statementLabel} section</span><select class="select" data-field="groupKey" onchange={handleField}><option value="">Any section</option>
+                        <template for:each={sectionOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+                    <label class="field"><span>Statement row</span><select class="select sab-row" data-field="rowKey" onchange={handleField}><option value="">Choose a row</option>
+                        <template for:each={rowOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template>
+                        <option value={newRowValue}>Add a new row...</option></select></label>
+                    <template lwc:if={isNewRow}>
+                        <label class="field"><span>New row name</span><input class="input" data-field="newRowName" value={form.newRowName} oninput={handleField} /></label>
+                        <label class="field"><span>Section for the new row</span><input class="input" data-field="newSection" value={form.newSection} placeholder={newSectionHint} oninput={handleField} /></label>
+                    </template>
+                </template>
                 <div class="checks">
                     <label class="check"><input type="checkbox" data-field="isControlAccount" checked={form.isControlAccount} onchange={handleField} />Control account</label>
                     <label class="check"><input type="checkbox" data-field="manualPostingAllowed" checked={form.manualPostingAllowed} onchange={handleField} />Manual posting allowed</label>
@@ -160,7 +203,13 @@
                 <label class="check"><input type="checkbox" data-field="active" checked={form.active} onchange={handleField} />Active</label>
             </div>
         </template>
-        <button slot="footer" class="btn ghost sab-modal-close" type="button" onclick={handleClose}>Cancel</button>
-        <button slot="footer" class="btn primary sab-modal-save" type="button" disabled={saving} onclick={handleSave}>Save</button>
+        <template lwc:if={isViewOnly}>
+            <button slot="footer" class="btn ghost sab-modal-close" type="button" onclick={handleClose}>Close</button>
+        </template>
+        <template lwc:else>
+            <button slot="footer" class="btn ghost sab-modal-close" type="button" onclick={handleCancelEdit}>Cancel</button>
+            <template lwc:if={isDeleteModal}><button slot="footer" class="btn danger sab-modal-save" type="button" disabled={saving} onclick={handleSave}>Delete draft</button></template>
+            <template lwc:else><button slot="footer" class="btn primary sab-modal-save" type="button" disabled={saving} onclick={handleSave}>Save</button></template>
+        </template>
     </c-sab-modal>
 </template>

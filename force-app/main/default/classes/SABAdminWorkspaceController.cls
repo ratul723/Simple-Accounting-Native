@@ -141,6 +141,9 @@ public with sharing class SABAdminWorkspaceController {
         @AuraEnabled public String title { get; set; }
         @AuraEnabled public String detail { get; set; }
         @AuraEnabled public String status { get; set; }
+        /** Where to fix the problem, such as 'coa'; blank when there is nothing to open. */
+        @AuraEnabled public String actionWorkspace { get; set; }
+        @AuraEnabled public String actionLabel { get; set; }
 
         CheckRow(String title, String detail, String status) {
             this.title = title;
@@ -546,6 +549,26 @@ public with sharing class SABAdminWorkspaceController {
             rows.add(blank == 0
                 ? new CheckRow('Cash flow categories', 'Every active balance sheet account has a cash flow category.', 'Pass')
                 : new CheckRow('Cash flow categories', blank + ' balance sheet accounts have no cash flow category and report as operating.', 'Warning'));
+        }
+        try {
+            List<SABReportMappingService.UnmappedAccount> unmapped = SABReportMappingService.unmappedPostedAccounts(companyId);
+            if (unmapped.isEmpty()) {
+                rows.add(new CheckRow('Report mappings', 'Every account with postings appears on the balance sheet or P&L.', 'Pass'));
+            } else {
+                List<String> codes = new List<String>();
+                for (SABReportMappingService.UnmappedAccount a : unmapped) {
+                    if (codes.size() < 8) {
+                        codes.add(a.code + ' ' + a.name);
+                    }
+                }
+                CheckRow row = new CheckRow('Report mappings', unmapped.size() + ' accounts have postings but no report mapping: ' + String.join(codes, ', ')
+                    + (unmapped.size() > codes.size() ? ' and more' : '') + '. Statements stop as incomplete until they are mapped.', 'Fail');
+                row.actionWorkspace = 'coa';
+                row.actionLabel = 'Fix in Chart of accounts';
+                rows.add(row);
+            }
+        } catch (Exception ex) {
+            rows.add(new CheckRow('Report mappings', ex.getMessage(), 'Warning'));
         }
         if (Schema.SObjectType.Report_Definition__c.isAccessible()) {
             Set<String> types = new Set<String>();

@@ -231,7 +231,7 @@ export default class SabBudgetsWorkspace extends LightningElement {
     }
 
     get groupButtons() {
-        return [['ACCOUNT', 'Account'], ['ACCOUNT_DEPARTMENT', 'Department'], ['ACCOUNT_COST_CENTER', 'Cost center']].map(([id, label]) => ({
+        return [['ACCOUNT', 'Account'], ['ACCOUNT_DEPARTMENT', 'Department'], ['ACCOUNT_COST_CENTER', 'Cost center'], ['ACCOUNT_PROJECT', 'Project']].map(([id, label]) => ({
             id, label, className: id === this.groupBy ? 'on' : '', pressed: id === this.groupBy ? 'true' : 'false' }));
     }
 
@@ -240,11 +240,11 @@ export default class SabBudgetsWorkspace extends LightningElement {
     }
 
     get dimensionLabel() {
-        return this.groupBy === 'ACCOUNT_COST_CENTER' ? 'Cost center' : 'Department';
+        return this.groupBy === 'ACCOUNT_COST_CENTER' ? 'Cost center' : this.groupBy === 'ACCOUNT_PROJECT' ? 'Project' : 'Department';
     }
 
     get dimensionOptions() {
-        const list = this.groupBy === 'ACCOUNT_COST_CENTER' ? this.data.costCenters : this.data.departments;
+        const list = this.groupBy === 'ACCOUNT_COST_CENTER' ? this.data.costCenters : this.groupBy === 'ACCOUNT_PROJECT' ? this.data.projects : this.data.departments;
         return (list || []).map((d) => ({ ...d, selected: d.value === this.dimensionId }));
     }
 
@@ -298,10 +298,12 @@ export default class SabBudgetsWorkspace extends LightningElement {
         return {
             showSubmit: b.status === 'Draft',
             showEdit: b.status === 'Draft',
+            showEditButton: b.status === 'Draft' && Boolean(this.can.manage),
             showApprove: b.status === 'Submitted',
             showReturn: b.status === 'Submitted',
             showRevise: b.status === 'Approved',
             manageDisabled: this.busy || !this.can.manage,
+            canManage: Boolean(this.can.manage),
             manageTitle: manageReason,
             approveDisabled: this.busy || !this.can.approve,
             approveTitle: approveReason
@@ -465,6 +467,7 @@ export default class SabBudgetsWorkspace extends LightningElement {
                 continue;
             }
             lines.push({ accountingPeriodId: to[index], glAccountId: l.glAccountId, departmentId: l.departmentId || null, costCenterId: l.costCenterId || null,
+                projectId: l.projectId || null,
                 amount: Math.round((Number(l.amount) || 0) * factor * 100) / 100 });
         }
         if (!to.length) {
@@ -480,11 +483,19 @@ export default class SabBudgetsWorkspace extends LightningElement {
     }
 
     handleSpreadToggle() {
-        this.spread = this.spread ? undefined : { glAccountId: '', departmentId: '', costCenterId: '', annual: '' };
+        this.spread = this.spread ? undefined : { glAccountId: '', departmentId: '', costCenterId: '', projectId: '', annual: '' };
     }
 
     get spreadAccountOptions() {
         return ((this.data && this.data.accounts) || []).map((o) => ({ ...o, selected: this.spread && o.value === this.spread.glAccountId }));
+    }
+
+    get spreadProjectOptions() {
+        return ((this.data && this.data.projects) || []).map((o) => ({ ...o, selected: this.spread && o.value === this.spread.projectId }));
+    }
+
+    get hasProjects() {
+        return ((this.data && this.data.projects) || []).length > 0;
     }
 
     get spreadDepartmentOptions() {
@@ -505,7 +516,7 @@ export default class SabBudgetsWorkspace extends LightningElement {
         const each = Math.floor((annual / periods.length) * 100) / 100;
         const last = Math.round((annual - each * (periods.length - 1)) * 100) / 100;
         const added = periods.map((p, i) => ({ key: `s${Date.now()}${i}`, accountingPeriodId: p.value, glAccountId: this.spread.glAccountId,
-            departmentId: this.spread.departmentId || '', costCenterId: '', amount: String(i === periods.length - 1 ? last : each) }));
+            departmentId: this.spread.departmentId || '', costCenterId: '', projectId: this.spread.projectId || '', amount: String(i === periods.length - 1 ? last : each) }));
         const kept = this.lines.filter((l) => l.glAccountId || l.amount);
         this.lines = [...kept, ...added];
         this.spread = undefined;
@@ -515,7 +526,8 @@ export default class SabBudgetsWorkspace extends LightningElement {
     handleEdit() {
         this.spread = undefined;
         this.lines = ((this.detail && this.detail.lines) || []).map((l, i) => ({ key: `l${i}`, accountingPeriodId: l.accountingPeriodId, glAccountId: l.glAccountId,
-            departmentId: l.departmentId || '', costCenterId: l.costCenterId || '', amount: l.amount === null || l.amount === undefined ? '' : String(l.amount) }));
+            departmentId: l.departmentId || '', costCenterId: l.costCenterId || '', projectId: l.projectId || '',
+            amount: l.amount === null || l.amount === undefined ? '' : String(l.amount) }));
         if (!this.lines.length) {
             this.lines = [this.blankLine()];
         }
@@ -524,7 +536,7 @@ export default class SabBudgetsWorkspace extends LightningElement {
 
     blankLine() {
         const period = ((this.data && this.data.periods) || []).find((p) => p.fiscalYear === this.fiscalYear);
-        return { key: `n${Date.now()}${Math.random()}`, accountingPeriodId: period ? period.value : '', glAccountId: '', departmentId: this.departmentId || '', costCenterId: '', amount: '' };
+        return { key: `n${Date.now()}${Math.random()}`, accountingPeriodId: period ? period.value : '', glAccountId: '', departmentId: this.departmentId || '', costCenterId: '', projectId: '', amount: '' };
     }
 
     get modalOpen() {
@@ -570,6 +582,7 @@ export default class SabBudgetsWorkspace extends LightningElement {
             accountOptions: opts(this.data.accounts, l.glAccountId),
             departmentOptions: opts(this.data.departments, l.departmentId),
             costCenterOptions: opts(this.data.costCenters, l.costCenterId),
+            projectOptions: opts(this.data.projects, l.projectId),
             label: `line ${i + 1}`
         }));
     }
@@ -636,7 +649,8 @@ export default class SabBudgetsWorkspace extends LightningElement {
             try {
                 await saveDraft({ request: { budgetId, companyId: this.currentCompanyId, fiscalYear: this.budget.fiscalYear, name: this.budget.name,
                     lines: this.lines.filter((l) => l.glAccountId && l.accountingPeriodId).map((l) => ({ accountingPeriodId: l.accountingPeriodId, glAccountId: l.glAccountId,
-                        departmentId: l.departmentId || null, costCenterId: l.costCenterId || null, amount: l.amount === '' ? null : Number(l.amount) })) } });
+                        departmentId: l.departmentId || null, costCenterId: l.costCenterId || null, projectId: l.projectId || null,
+                        amount: l.amount === '' ? null : Number(l.amount) })) } });
                 toast(this, 'Budget lines saved');
                 ok = true;
             } catch (error) {

@@ -66,7 +66,9 @@
                     <button class="btn sm sab-run-checks" type="button" onclick={handleRunChecks}><c-sab-icon name="refresh" size="14"></c-sab-icon>Run checks</button></div>
                 <div class="panel-b flush"><div class="list sab-checks">
                     <template for:each={checkRows} for:item="c"><div key={c.key} class="li"><span class={c.iconClass}><c-sab-icon name={c.icon}></c-sab-icon></span>
-                        <div class="body"><div class="t">{c.title}</div><div class="d">{c.detail}</div></div><span class={c.chip}><span class="dot"></span>{c.status}</span></div></template>
+                        <div class="body"><div class="t">{c.title}</div><div class="d">{c.detail}</div>
+                            <template lwc:if={c.actionWorkspace}><button class="linkish sab-check-action" type="button" data-workspace={c.actionWorkspace} onclick={handleCheckAction}>{c.actionLabel}</button></template></div>
+                        <span class={c.chip}><span class="dot"></span>{c.status}</span></div></template>
                 </div></div>
             </section>
         </template>
@@ -90,6 +92,12 @@
 
     <c-sab-modal open={modalOpen} heading={modalHeading} subheading="Access takes effect immediately. You cannot change your own access." onclose={handleClose}>
         <template lwc:if={formError}><div class="banner t-bad form-error" role="alert"><c-sab-icon name="alert"></c-sab-icon><div>{formError}</div></div></template>
+        <template lwc:if={isViewOnly}>
+            <div class="row view-head"><span class="small muted">Read only</span><span class="spacer"></span>
+                <template lwc:if={showEditButton}><button class="btn btn-edit sab-start-edit" type="button" onclick={handleStartEdit}><c-sab-icon name="edit" size="15"></c-sab-icon>Edit</button></template></div>
+            <dl class="kv view-facts"><template for:each={grantFacts} for:item="f"><dt key={f.key}>{f.label}</dt><dd key={f.valueKey}>{f.value}</dd></template></dl>
+        </template>
+        <template lwc:else>
         <div class="grid g2 form">
             <template lwc:if={isNewGrant}>
                 <label class="field"><span>Find user</span><input class="input sab-user-search" value={form.search} placeholder="Type a name or username" oninput={handleSearch} /></label>
@@ -103,7 +111,13 @@
             <label class="field"><span>Effective to</span><input class="input" type="date" data-field="effectiveTo" value={form.effectiveTo} oninput={handleField} /></label>
             <label class="check"><input type="checkbox" data-field="active" checked={form.active} onchange={handleField} />Active</label>
         </div>
-        <button slot="footer" class="btn ghost sab-modal-close" type="button" onclick={handleClose}>Cancel</button>
-        <button slot="footer" class="btn primary sab-modal-save" type="button" disabled={saving} onclick={handleSave}>Save</button>
+        </template>
+        <template lwc:if={isViewOnly}>
+            <button slot="footer" class="btn ghost sab-modal-close" type="button" onclick={handleClose}>Close</button>
+        </template>
+        <template lwc:else>
+            <button slot="footer" class="btn ghost sab-modal-close" type="button" onclick={handleCancelEdit}>Cancel</button>
+            <button slot="footer" class="btn primary sab-modal-save" type="button" disabled={saving} onclick={handleSave}>Save</button>
+        </template>
     </c-sab-modal>
 </template>

@@ -12,7 +12,7 @@
  *   Opening Balances    same columns as Journal Entries
  *   Customers           name [, tax_number] [, credit_limit]                                    -> account + customer profile
  *   Suppliers           name [, tax_number]                                                     -> account + supplier profile
- *   Budgets             budget_name, fiscal_year, period_key, account_code, amount [, department_code] [, cost_center_code]
+ *   Budgets             budget_name, fiscal_year, period_key, account_code, amount [, department_code] [, cost_center_code] [, project_code]
  *                       -> one Draft budget version per budget_name and fiscal_year, through SABBudgetService.saveDraft
  * Party imports use the company's first active AR or AP control account and skip names that already have a profile.
  * Journal imports create Draft journals (Manual or Opening) grouped by journal_key: each must balance, fall in an Open period
@@ -168,6 +168,7 @@ public with sharing class SABImportService {
         Map<String, Accounting_Period__c> periods = store.periodsByKey(job.Company__c);
         Map<String, Id> departments = store.dimensionsByCode(job.Company__c, 'Department__c');
         Map<String, Id> costCenters = store.dimensionsByCode(job.Company__c, 'Cost_Center__c');
+        Map<String, Id> projects = store.projectsByCode(job.Company__c);
         Set<String> seen = new Set<String>();
         for (Import_Row__c row : rows) {
             Map<String, String> v = values(row);
@@ -201,8 +202,12 @@ public with sharing class SABImportService {
             if (String.isNotBlank(costCenter) && !costCenters.containsKey(costCenter)) {
                 errors.add('cost_center_code is not a cost center of the company');
             }
+            String project = v.get('project_code');
+            if (String.isNotBlank(project) && !projects.containsKey(project)) {
+                errors.add('project_code is not a project of the company');
+            }
             String key = String.join(new List<String>{ v.get('budget_name'), v.get('fiscal_year'), v.get('period_key'), v.get('account_code'),
-                department == null ? '' : department, costCenter == null ? '' : costCenter }, '|');
+                department == null ? '' : department, costCenter == null ? '' : costCenter, project == null ? '' : project }, '|');
             if (seen.contains(key)) {
                 errors.add('the same budget, period, account and dimensions appear more than once');
             }
@@ -460,6 +465,7 @@ public with sharing class SABImportService {
         Map<String, GL_Account__c> accounts = store.accountsByCode(job.Company__c);
         Map<String, Id> departments = store.dimensionsByCode(job.Company__c, 'Department__c');
         Map<String, Id> costCenters = store.dimensionsByCode(job.Company__c, 'Cost_Center__c');
+        Map<String, Id> projects = store.projectsByCode(job.Company__c);
         Map<String, SABBudgetService.BudgetRequest> budgets = new Map<String, SABBudgetService.BudgetRequest>();
         Map<String, List<Import_Row__c>> rowsByBudget = new Map<String, List<Import_Row__c>>();
         for (Import_Row__c row : valid) {
@@ -479,6 +485,7 @@ public with sharing class SABImportService {
             line.glAccountId = accounts.get(v.get('account_code')).Id;
             line.departmentId = String.isBlank(v.get('department_code')) ? null : departments.get(v.get('department_code'));
             line.costCenterId = String.isBlank(v.get('cost_center_code')) ? null : costCenters.get(v.get('cost_center_code'));
+            line.projectId = String.isBlank(v.get('project_code')) ? null : projects.get(v.get('project_code'));
             line.amount = parseAmount(v.get('amount'));
             budgets.get(key).lines.add(line);
             rowsByBudget.get(key).add(row);
@@ -633,6 +640,14 @@ public with sharing class SABImportService {
             Map<String, Accounting_Period__c> rows = new Map<String, Accounting_Period__c>();
             for (Accounting_Period__c p : [SELECT Id, Period_Key__c, Fiscal_Year__c FROM Accounting_Period__c WHERE Company__c = :companyId WITH SYSTEM_MODE LIMIT 2000]) {
                 rows.put(p.Period_Key__c, p);
+            }
+            return rows;
+        }
+
+        Map<String, Id> projectsByCode(Id companyId) {
+            Map<String, Id> rows = new Map<String, Id>();
+            for (Project__c p : [SELECT Id, Project_Code__c FROM Project__c WHERE Company__c = :companyId WITH SYSTEM_MODE LIMIT 2000]) {
+                rows.put(p.Project_Code__c, p.Id);
             }
             return rows;
         }

@@ -11,7 +11,7 @@ import runTrialBalance from '@salesforce/apex/SABTrialBalanceController.runTrial
 import getMovementLines from '@salesforce/apex/SABTrialBalanceController.getMovementLines';
 import getGlFilters from '@salesforce/apex/SABGeneralLedgerController.getFilters';
 import runGeneralLedger from '@salesforce/apex/SABGeneralLedgerController.runGeneralLedger';
-import { formatNumber, formatDate, formatDateTime } from 'c/sabFormat';
+import { formatNumber, formatDate, formatDateTime, chipClass } from 'c/sabFormat';
 import { reduceError, todayIso, toast } from 'c/sabMoneyShared';
 import runArAging from '@salesforce/apex/SABARAgingController.runAging';
 import getPayables from '@salesforce/apex/SABAccountsPayableWorkspaceController.getWorkspace';
@@ -20,6 +20,7 @@ import getPayrollSummary from '@salesforce/apex/SABPayrollSummaryController.getS
 import getAssetDashboard from '@salesforce/apex/SABFixedAssetWorkspaceController.getDashboard';
 import getBudgetVsActual from '@salesforce/apex/SABBudgetVarianceService.getBudgetVsActual';
 import getTaxWorkspace from '@salesforce/apex/SABTaxReturnWorkspaceController.getWorkspace';
+import getReconciliation from '@salesforce/apex/SABBalanceSheetReconciliationService.getReconciliation';
 
 const REPORTS = [
     { id: 'overview', label: 'Management overview', tag: 'Available' },
@@ -83,6 +84,10 @@ export default class SabReportsWorkspace extends LightningElement {
     drillLines = [];
     drillError;
     loadSequence = 0;
+    bsMode = 'statement';
+    recon;
+    reconError;
+    reconSection;
     currentCompanyId;
 
     @api
@@ -291,6 +296,9 @@ export default class SabReportsWorkspace extends LightningElement {
         const field = event.target.dataset.field;
         this[field] = field === 'compare' ? event.target.checked : event.target.value;
         this.run();
+        if (this.report === 'bs' && this.bsMode === 'recon') {
+            this.loadRecon();
+        }
     }
 
     get showLoading() {
@@ -384,6 +392,98 @@ export default class SabReportsWorkspace extends LightningElement {
         return table([{ label: 'Return' }, { label: 'Registration' }, { label: 'Period' }, { label: 'Status' }, { label: 'Net due', n: true }],
             returns.map((x) => [`${x.name}${x.returnVersion > 1 ? ` v${x.returnVersion}` : ''}`, x.registrationName, `${date(x.periodStart)} to ${date(x.periodEnd)}`,
                 x.status, amount(x.netTaxDue)]), undefined, 'Tax returns prepared from posted tax lines. Prepare and lodge them in Tax.');
+    }
+
+    // ---------- balance sheet reconciliation ----------
+
+    get bsModeButtons() {
+        return [['statement', 'Statement'], ['recon', 'Reconciliation']].map(([id, label]) => ({ id, label, className: id === this.bsMode ? 'on' : '',
+            pressed: id === this.bsMode ? 'true' : 'false' }));
+    }
+
+    get isRecon() {
+        return this.bsMode === 'recon';
+    }
+
+    async handleBsMode(event) {
+        this.bsMode = event.currentTarget.dataset.id;
+        if (this.bsMode === 'recon') {
+            await this.loadRecon();
+        }
+    }
+
+    async loadRecon() {
+        const period = this.periodById(this.asOfPeriod);
+        this.reconError = undefined;
+        this.recon = undefined;
+        try {
+            this.recon = await getReconciliation({ companyId: this.currentCompanyId, asOfDate: period ? period.endDate : todayIso() });
+        } catch (error) {
+            this.reconError = reduceError(error);
+        }
+    }
+
+    get reconRows() {
+        const amountOrDash = (v) => (v === null || v === undefined ? '\u2014' : formatNumber(v));
+        return ((this.recon && this.recon.sections) || []).map((sec) => ({
+            ...sec,
+            ledgerText: amountOrDash(sec.ledger),
+            subledgerText: amountOrDash(sec.subledger),
+            differenceText: sec.difference === null || sec.difference === undefined ? '\u2014' : formatNumber(sec.difference),
+            differenceClass: sec.difference ? 'n num down' : 'n num',
+            chip: chipClass(sec.status, { Agreed: 'good', Difference: 'bad', 'Ledger only': 'neutral', 'Not available': 'warn', Dependency: 'neutral' }[sec.status])
+        }));
+    }
+
+    get reconSummary() {
+        const r = this.recon;
+        if (!r) {
+            return '';
+        }
+        const diffs = (r.sections || []).filter((x) => x.status === 'Difference').length;
+        return `Total assets ${formatNumber(r.totalAssets)} ${this.cur}, liabilities and equity ${formatNumber(r.totalLiabilitiesAndEquity)} ${this.cur}. `
+            + (diffs ? `${diffs} ${diffs === 1 ? 'section differs' : 'sections differ'} from its source.` : 'Every matched section agrees with its source.');
+    }
+
+    handleReconRow(event) {
+        if (event.type === 'keydown' && event.key !== 'Enter' && event.key !== ' ') {
+            return;
+        }
+        this.reconSection = this.reconRows.find((x) => x.key === event.currentTarget.dataset.key);
+    }
+
+    get reconDrawerOpen() {
+        return Boolean(this.reconSection);
+    }
+
+    get reconDrawer() {
+        const sec = this.reconSection;
+        if (!sec) {
+            return {};
+        }
+        const visible = this.visibleWorkspaces || [];
+        return {
+            title: sec.label,
+            sub: `${sec.sourceLabel || 'Ledger'}: ${sec.status}`,
+            note: sec.note,
+            accounts: (sec.accounts || []).map((a) => ({ ...a, key: a.accountId, amountText: formatNumber(a.balance) })),
+            hasAccounts: (sec.accounts || []).length > 0,
+            sources: (sec.sources || []).map((x, i) => ({ ...x, key: x.recordId || `s${i}`, amountText: formatNumber(x.amount) })),
+            hasSources: (sec.sources || []).length > 0,
+            canOpen: Boolean(sec.workspace) && visible.includes(sec.workspace),
+            openLabel: `Open ${sec.sourceLabel || 'workspace'}`
+        };
+    }
+
+    handleCloseRecon() {
+        this.reconSection = undefined;
+    }
+
+    handleOpenSource(event) {
+        const sec = this.reconSection;
+        const recordId = event.currentTarget.dataset.id || undefined;
+        this.reconSection = undefined;
+        this.dispatchEvent(new CustomEvent('sabnavigate', { detail: { workspace: sec.workspace, recordId }, bubbles: true, composed: true }));
     }
 
     get isTable() {

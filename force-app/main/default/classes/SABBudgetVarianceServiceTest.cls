@@ -55,11 +55,13 @@ private class SABBudgetVarianceServiceTest {
     static void filtersPeriodsAndGroupsByDepartment() {
         SABBudgetVarianceService.VarianceResult october;
         SABBudgetVarianceService.VarianceResult byDepartment;
+        SABBudgetVarianceService.VarianceResult byProject;
         System.runAs(SABBudgetTestFixture.user(SABBudgetTestFixture.APPROVER)) {
             SABTestGovernor.startTest();
             october = SABBudgetVarianceService.getBudgetVsActual(SABBudgetTestFixture.companyId(), 2026, null,
                 new List<Id>{SABBudgetTestFixture.periodId('B13-2026-10')}, 'account');
             byDepartment = SABBudgetVarianceService.getBudgetVsActual(SABBudgetTestFixture.companyId(), 2026, null, null, 'ACCOUNT_DEPARTMENT');
+            byProject = SABBudgetVarianceService.getBudgetVsActual(SABBudgetTestFixture.companyId(), 2026, null, null, 'ACCOUNT_PROJECT');
             SABTestGovernor.stopTest();
         }
         SABBudgetVarianceService.VarianceRow octSupplies = byKey(october).get('6000');
@@ -71,6 +73,8 @@ private class SABBudgetVarianceServiceTest {
         System.assertEquals(300, departments.get('6000|Sales').actual, 'Sales department actual.');
         System.assertEquals(100, departments.get('6000').budget, 'Budget without a department stays on its own row.');
         System.assertEquals(0, departments.get('6000').actual, 'No undepartmented supplies actuals.');
+        System.assertEquals('ACCOUNT_PROJECT', byProject.groupBy, 'Grouped by project.');
+        System.assertEquals(350, byKey(byProject).get('6000').budget, 'Lines without a project share one row per account.');
     }
 
     @IsTest

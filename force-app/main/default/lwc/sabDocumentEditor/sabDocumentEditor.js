@@ -184,6 +184,9 @@ export default class SabDocumentEditor extends LightningElement {
     get partyLabel() {
         return this.config.party;
     }
+    get partyLabelLower() {
+    return (this.partyLabel || '').toLowerCase();
+}
 
     get accountLabel() {
         return this.config.accountLabel;
@@ -294,6 +297,16 @@ export default class SabDocumentEditor extends LightningElement {
 
     handleField(event) {
         const field = event.target.dataset.field;
+
+        // "+ Add new customer/supplier" picked from the dropdown
+        if (field === 'partyProfileId' && event.target.value === '__new__') {
+            event.target.value = this.form.partyProfileId || ''; // keep the previous selection, never save "__new__"
+            if (!this.partyFormOpen) {
+                this.handleTogglePartyForm(); // opens the Name + Add row
+            }
+            return;
+        }
+
         const form = { ...this.form, [field]: event.target.value };
         if (field === 'documentDate' && this.isDocument && this.form.dueDate === addDays(this.form.documentDate, 30)) {
             form.dueDate = addDays(event.target.value, 30);

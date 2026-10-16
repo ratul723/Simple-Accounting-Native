@@ -70,3 +70,7 @@ td.cat {
 .party-error {
     margin-top: 2px;
 }
+.form {
+    gap: 12px 14px;
+    align-items: start;   /* stop fields stretching to the tallest cell in the row */
+}

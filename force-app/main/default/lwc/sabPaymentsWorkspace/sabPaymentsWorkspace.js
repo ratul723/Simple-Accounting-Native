@@ -297,6 +297,7 @@ export default class SabPaymentsWorkspace extends LightningElement {
             approveTitle: approveReason,
             editDisabled: this.busy || Boolean(editReason),
             editTitle: editReason,
+            canEdit: !editReason,
             postDisabled: this.busy || Boolean(postReason),
             postTitle: postReason
         };

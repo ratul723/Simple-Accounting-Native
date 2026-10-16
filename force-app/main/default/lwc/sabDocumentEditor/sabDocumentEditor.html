@@ -7,12 +7,12 @@
                 <div class="grid g2 form">
                     <div class="field party">
                         <label class="field"><span>{partyLabel}</span><select class="select" data-field="partyProfileId" onchange={handleField}><option value="">Select</option>
-                            <template for:each={partyOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
-                        <button class="linkish sab-new-party" type="button" onclick={handleTogglePartyForm}>{newPartyLabel}</button>
+                        <template for:each={partyOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template><option value="__new__">+ Add new {partyLabelLower}</option></select></label></select></label>
                         <template lwc:if={partyFormOpen}>
                             <div class="party-form">
                                 <input class="input sab-party-name" value={newPartyName} placeholder="Name" aria-label="Name" oninput={handlePartyName} />
                                 <button class="btn sm primary sab-party-save" type="button" disabled={partySaving} onclick={handleSaveParty}>Add</button>
+                                <button class="btn sm" type="button" onclick={handleTogglePartyForm}>Cancel</button>
                             </div>
                             <template lwc:if={partyError}><div class="small down party-error">{partyError}</div></template>
                         </template>
@@ -43,12 +43,12 @@
                     <template lwc:else>
                         <div class="field party">
                             <label class="field"><span>{partyLabel}</span><select class="select" data-field="partyProfileId" onchange={handleField}><option value="">Select</option>
-                                <template for:each={partyOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
-                            <button class="linkish sab-new-party" type="button" onclick={handleTogglePartyForm}>{newPartyLabel}</button>
+                            <template for:each={partyOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template><option value="__new__">+ Add new {partyLabelLower}</option></select></label></select></label>
                             <template lwc:if={partyFormOpen}>
                                 <div class="party-form">
                                     <input class="input sab-party-name" value={newPartyName} placeholder="Name" aria-label="Name" oninput={handlePartyName} />
                                     <button class="btn sm primary sab-party-save" type="button" disabled={partySaving} onclick={handleSaveParty}>Add</button>
+                                    <button class="btn sm" type="button" onclick={handleTogglePartyForm}>Cancel</button>
                                 </div>
                                 <template lwc:if={partyError}><div class="small down party-error">{partyError}</div></template>
                             </template>

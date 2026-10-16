@@ -170,10 +170,10 @@ private class SABImportServiceTest {
 
     @IsTest
     static void budgetLinesValidateAgainstPeriodsAndAccounts() {
-        String csv = 'budget_name,fiscal_year,period_key,account_code,amount,department_code\n'
-            + 'FY26 Plan,2026,I20-2026-01,4000,1500,\n'
-            + 'FY26 Plan,2026,I20-2099-01,4000,10,\n'
-            + 'FY26 Plan,26,I20-2026-01,9999,abc,NOPE\n';
+        String csv = 'budget_name,fiscal_year,period_key,account_code,amount,department_code,project_code\n'
+            + 'FY26 Plan,2026,I20-2026-01,4000,1500,,\n'
+            + 'FY26 Plan,2026,I20-2099-01,4000,10,,\n'
+            + 'FY26 Plan,26,I20-2026-01,9999,abc,NOPE,NOPROJ\n';
         SABImportService.ActionResult validated;
         System.runAs(SABImportTestFixture.user(SABImportTestFixture.IMPORTER)) {
             SABTestGovernor.startTest();
@@ -185,7 +185,8 @@ private class SABImportServiceTest {
         Map<Decimal, Import_Row__c> byRow = rows(validated.importJobId);
         System.assert(byRow.get(2).Validation_Message__c.contains('period_key'), byRow.get(2).Validation_Message__c);
         String third = byRow.get(3).Validation_Message__c;
-        System.assert(third.contains('fiscal_year') && third.contains('account_code') && third.contains('amount') && third.contains('department_code'), third);
+        System.assert(third.contains('fiscal_year') && third.contains('account_code') && third.contains('amount') && third.contains('department_code')
+            && third.contains('project_code'), third);
         System.assertEquals(2026, SABImportService.parseYear('2026'), 'Year parsing.');
         System.assertEquals(null, SABImportService.parseYear('26'), 'Two digits rejected.');
     }

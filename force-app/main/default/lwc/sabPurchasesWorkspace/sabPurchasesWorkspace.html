@@ -118,7 +118,7 @@
         </template>
         <template lwc:if={drawerOpen}>
             <template lwc:if={view.isDraft}>
-                <button slot="footer" class="btn ghost sab-edit-bill" type="button" disabled={view.editDisabled} title={view.editTitle} onclick={handleEditBill}>Edit</button>
+                <template lwc:if={view.canEdit}><button slot="footer" class="btn btn-edit sab-edit-bill" type="button" disabled={busy} onclick={handleEditBill}><c-sab-icon name="edit" size="15"></c-sab-icon>Edit</button></template>
                 <button slot="footer" class="btn ghost sab-cancel-bill" type="button" disabled={view.editDisabled} title={view.editTitle} onclick={handleCancel}>Cancel bill</button>
                 <button slot="footer" class="btn primary sab-submit-bill" type="button" disabled={view.editDisabled} title={view.editTitle} onclick={handleSubmit}>Submit for approval</button>
             </template>

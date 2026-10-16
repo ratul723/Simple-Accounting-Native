@@ -133,6 +133,10 @@ export default class SabBankWorkspace extends LightningElement {
             }
             this.dashboard = result;
             const banks = result.bankAccounts || [];
+            // A bank account opened from global search is selected straight away.
+            if (this.recordId && banks.some((b) => b.bankAccountId === this.recordId)) {
+                this.selectedBankId = this.recordId;
+            }
             if (!banks.some((b) => b.bankAccountId === this.selectedBankId)) {
                 this.selectedBankId = (banks[0] || {}).bankAccountId;
             }
@@ -435,21 +439,10 @@ export default class SabBankWorkspace extends LightningElement {
         return this.ledgerRows.find((r) => r.journalEntryLineId === this.selectedLedgerId);
     }
 
-    /** Gap between the two amounts still to match, compared by size. null when one is money in and the other money out. */
-    matchGap(s, l) {
-        const size = (v) => Math.abs(Number(v) || 0);
-        const sameDirection = Math.sign(Number(s.amount) || 0) === Math.sign(Number(l.amount) || 0);
-        return sameDirection ? Math.abs(size(s.remainingAmount) - size(l.remainingAmount)) : null;
-    }
-
     get canMatch() {
         const s = this.selectedLine;
         const l = this.selectedLedger;
-        if (!s || !l) {
-            return false;
-        }
-        const gap = this.matchGap(s, l);
-        return gap !== null && Math.round(gap * 100) === 0;
+        return Boolean(s && l && Math.round((s.remainingAmount - l.remainingAmount) * 100) === 0);
     }
 
     get locked() {
@@ -490,11 +483,7 @@ export default class SabBankWorkspace extends LightningElement {
             return 'Select a statement line to see suggestions.';
         }
         if (l) {
-            const gap = this.matchGap(s, l);
-            if (gap === null) {
-                return 'One is money in and the other money out. Pick a line in the same direction.';
-            }
-            return this.canMatch ? 'Amounts agree. Match them.' : `Amounts differ by ${formatNumber(gap)}.`;
+            return this.canMatch ? 'Amounts agree. Match them.' : `Amounts differ by ${formatNumber(Math.abs(s.remainingAmount - l.remainingAmount))}.`;
         }
         return this.candidates.length ? 'Suggested ledger lines are highlighted on the right.' : 'No ledger line found. Record it as a bank adjustment.';
     }

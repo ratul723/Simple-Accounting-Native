@@ -152,6 +152,7 @@ private class SABBudgetServiceTest {
         List<String> messages = new List<String>();
         SABTestGovernor.startTest();
         System.runAs(SABBudgetTestFixture.user(SABBudgetTestFixture.PLANNER)) {
+            messages.add(failure(request(null, new List<SABBudgetService.LineRequest>())));
             messages.add(failure(request(null, new List<SABBudgetService.LineRequest>{line('B13-2025-12', '4000', null, 1)})));
             messages.add(failure(request(null, new List<SABBudgetService.LineRequest>{line('B13-2026-10', '6100', null, 1)})));
             messages.add(failure(request(null, new List<SABBudgetService.LineRequest>{line('B13-2026-10', '4000', null, 1),
@@ -164,30 +165,12 @@ private class SABBudgetServiceTest {
             messages.add(failure(request(null, standardLines())));
         }
         SABTestGovernor.stopTest();
-        List<String> fragments = new List<String>{'fiscal year 2026', 'active and belong', 'only once',
+        List<String> fragments = new List<String>{'between 1 and', 'fiscal year 2026', 'active and belong', 'only once',
             'a period, a GL account and an amount', 'cannot exceed 80', 'already has a Draft or Submitted'};
         System.assertEquals(fragments.size(), messages.size(), 'Every invalid request was checked.');
         for (Integer i = 0; i < fragments.size(); i++) {
             System.assert(matches(messages[i], fragments[i]), 'Expected "' + fragments[i] + '" but got: ' + messages[i]);
         }
-    }
-    @IsTest
-    static void emptyDraftIsAllowedButCannotBeSubmitted() {
-        Id budgetId;
-        String message;
-        SABTestGovernor.startTest();
-        System.runAs(SABBudgetTestFixture.user(SABBudgetTestFixture.PLANNER)) {
-            budgetId = SABBudgetService.saveDraft(request(null, new List<SABBudgetService.LineRequest>()));
-            try {
-                SABBudgetService.submit(budgetId, 'B13-EMPTY-SUBMIT');
-            } catch (Exception ex) {
-                message = ex.getMessage();
-            }
-        }
-        SABTestGovernor.stopTest();
-        System.assertEquals('Draft', [SELECT Status__c FROM Budget__c WHERE Id = :budgetId WITH SYSTEM_MODE].Status__c,
-            'An empty draft is created.');
-        System.assert(matches(message, 'between 1 and'), 'Submit still needs lines: ' + message);
     }
 
     @IsTest

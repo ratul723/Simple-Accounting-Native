@@ -87,7 +87,7 @@
         </template>
         <template lwc:if={drawerOpen}>
             <template lwc:if={view.canAuthorize}>
-                <button slot="footer" class="btn ghost sab-edit-payment" type="button" disabled={view.editDisabled} title={view.editTitle} onclick={handleEditPayment}>Edit</button>
+                <template lwc:if={view.canEdit}><button slot="footer" class="btn btn-edit sab-edit-payment" type="button" disabled={busy} onclick={handleEditPayment}><c-sab-icon name="edit" size="15"></c-sab-icon>Edit</button></template>
                 <button slot="footer" class="btn primary sab-authorize" type="button" disabled={view.approveDisabled} title={view.approveTitle} onclick={handleAuthorize}>Authorise</button>
             </template>
             <template lwc:if={view.canRelease}>

@@ -44,6 +44,8 @@ export default class SabConfigWorkspace extends LightningElement {
     activeTab = 'feat';
     busyKey;
     modalOpen = false;
+    viewOnly = false;
+    saved;
     form = {};
     formError;
     saving = false;
@@ -202,9 +204,6 @@ export default class SabConfigWorkspace extends LightningElement {
     }
 
     handleGrant(event) {
-        if (!this.canManageAccess) {
-            return;
-        }
         if (event.type === 'keydown') {
             if (event.key !== 'Enter' && event.key !== ' ') {
                 return;
@@ -213,10 +212,49 @@ export default class SabConfigWorkspace extends LightningElement {
         }
         const g = this.data.grants.find((x) => x.grantId === event.currentTarget.dataset.id);
         this.openModal({ grantId: g.grantId, userId: g.userId, userName: g.userName, role: g.role, effectiveFrom: g.effectiveFrom, effectiveTo: g.effectiveTo || '',
-            approvalLimit: g.approvalLimit === null || g.approvalLimit === undefined ? '' : String(g.approvalLimit), active: g.active });
+            approvalLimit: g.approvalLimit === null || g.approvalLimit === undefined ? '' : String(g.approvalLimit), active: g.active }, true);
     }
 
-    openModal(form) {
+    get isViewOnly() {
+        return this.viewOnly;
+    }
+
+    get isEditable() {
+        return !this.viewOnly;
+    }
+
+    get showEditButton() {
+        return this.viewOnly && this.canManageAccess;
+    }
+
+    handleStartEdit() {
+        this.viewOnly = false;
+    }
+
+    handleCancelEdit() {
+        if (this.form.grantId && this.saved) {
+            this.form = { ...this.saved };
+            this.formError = undefined;
+            this.viewOnly = true;
+            return;
+        }
+        this.handleClose();
+    }
+
+    get grantFacts() {
+        const f = this.form;
+        return [['User', f.userName], ['Role', f.role], ['Approval limit', f.approvalLimit === '' ? 'No limit' : f.approvalLimit],
+            ['Effective from', f.effectiveFrom ? formatDate(f.effectiveFrom) : '\u2014'], ['Effective to', f.effectiveTo ? formatDate(f.effectiveTo) : 'Open-ended'],
+            ['Status', f.active ? 'Active' : 'Inactive']].map(([label, value]) => ({ key: label, valueKey: `${label}-v`, label, value }));
+    }
+
+    handleCheckAction(event) {
+        this.dispatchEvent(new CustomEvent('sabnavigate', { detail: { workspace: event.currentTarget.dataset.workspace }, bubbles: true, composed: true }));
+    }
+
+    openModal(form, viewOnly = false) {
+        this.viewOnly = viewOnly;
+        this.saved = { ...form };
         this.form = form;
         this.formError = undefined;
         this.requestKey = newKey('GRANT', form.grantId);
@@ -224,6 +262,9 @@ export default class SabConfigWorkspace extends LightningElement {
     }
 
     get modalHeading() {
+        if (this.viewOnly) {
+            return `Access for ${this.form.userName}`;
+        }
         return this.form.grantId ? `Edit access for ${this.form.userName}` : 'Grant access';
     }
 

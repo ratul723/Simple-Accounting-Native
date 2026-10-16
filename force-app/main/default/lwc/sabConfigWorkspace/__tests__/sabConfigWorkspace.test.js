@@ -127,6 +127,16 @@ describe('c-sab-config-workspace', () => {
         expect(saveGrant.mock.calls[1][0].request).toMatchObject({ grantId: null, userId: 'U9', role: 'Auditor', approvalLimit: 2500, active: true });
         root.querySelectorAll('.sab-grants tbody tr')[1].dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
         await flush();
+        expect(root.querySelector('c-sab-modal').heading).toBe('Access for Sam Lee');
+        expect(root.querySelector('.view-facts').textContent).toContain('Sam Lee');
+        root.querySelector('.sab-start-edit').click();
+        await flush();
+        set(root, 'approvalLimit', '987654');
+        root.querySelector('.sab-modal-close').click();
+        await flush();
+        expect(root.querySelector('.view-facts').textContent).not.toContain('987654');
+        root.querySelector('.sab-start-edit').click();
+        await flush();
         expect(root.querySelector('c-sab-modal').heading).toBe('Edit access for Sam Lee');
         expect(root.querySelector('.sab-user-search')).toBeNull();
         set(root, 'active', true);
@@ -174,6 +184,10 @@ describe('c-sab-config-workspace', () => {
         expect(root.querySelector('.sab-new-grant').title).toBe('Bookkeeper role cannot grant access');
         root.querySelector('.sab-grants tbody tr').click();
         await flush();
+        expect(root.querySelector('c-sab-modal').heading).toContain('Access for');
+        expect(root.querySelector('.sab-start-edit')).toBeNull();
+        root.querySelector('.sab-modal-close').click();
+        await flush();
         expect(root.querySelector('c-sab-modal').open).toBe(false);
         root.querySelectorAll('.tab')[2].click();
         await flush();
@@ -215,8 +229,24 @@ describe('c-sab-config-workspace', () => {
         await flush();
         root.querySelector('.sab-grants tbody tr').click();
         await flush();
+        root.querySelector('.sab-start-edit').click();
+        await flush();
         root.querySelector('.sab-modal-save').click();
         await flush();
         expect(refresh).toHaveBeenCalledTimes(2);
+    });
+
+    it('links a failing check to the workspace that fixes it', async () => {
+        getConfiguration.mockResolvedValue(config({ checks: [{ title: 'Report mappings', detail: '2 accounts have postings but no report mapping: 1234 Test.',
+            status: 'Fail', actionWorkspace: 'coa', actionLabel: 'Fix in Chart of accounts' }] }));
+        const el = mount();
+        await flush();
+        const nav = jest.fn();
+        el.addEventListener('sabnavigate', nav);
+        const root = el.shadowRoot;
+        root.querySelectorAll('.tab')[3].click();
+        await flush();
+        root.querySelector('.sab-check-action').click();
+        expect(nav.mock.calls[0][0].detail.workspace).toBe('coa');
     });
 });

@@ -207,6 +207,7 @@ export default class SabPurchaseOrders extends LightningElement {
             canReceive: RECEIVABLE.includes(o.status),
             canCancel: ['Draft', 'Submitted', 'Approved'].includes(o.status),
             manageDisabled: this.busy || !this.can.manage,
+            canManage: Boolean(this.can.manage),
             manageTitle: this.reason(this.can.manage, 'change purchase orders'),
             approveDisabled: this.busy || !this.can.approve,
             approveTitle: this.reason(this.can.approve, 'approve purchase orders'),

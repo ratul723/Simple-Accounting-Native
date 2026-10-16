@@ -172,6 +172,30 @@ describe('c-sab-app-shell', () => {
         expect(el.shadowRoot.querySelector('.search-pop').className).not.toContain('open');
     });
 
+    it('names the company of each result and clearing the box returns to the full list', async () => {
+        searchRecords.mockResolvedValue([{ kind: 'journal', recordId: 'a0J000000000001AAA', companyId: COMPANIES[0].companyId, companyName: 'Harbourline Trading',
+            title: 'JE-000318', detail: 'Accrual, Posted', workspace: 'journal', icon: 'journal' }]);
+        const el = mount();
+        await settle();
+        jest.useFakeTimers();
+        const input = el.shadowRoot.querySelector('.search-input');
+        input.value = 'JE';
+        input.dispatchEvent(new CustomEvent('input'));
+        await flush();
+        jest.advanceTimersByTime(300);
+        jest.useRealTimers();
+        await settle();
+        expect(el.shadowRoot.querySelector('.search-pop .d').textContent).toBe('Accrual, Posted \u00b7 Harbourline Trading');
+        input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+        await settle();
+        expect(el.shadowRoot.querySelector('.nav-item[data-id="journal"]').getAttribute('aria-current')).toBe('page');
+        input.value = '';
+        input.dispatchEvent(new CustomEvent('input'));
+        await settle();
+        expect(el.shadowRoot.querySelector('.nav-item[data-id="journal"]').getAttribute('aria-current')).toBe('page');
+        expect(el.shadowRoot.querySelector('.search-pop').className).not.toContain('open');
+    });
+
     it('matches workspaces locally for short terms and shows an empty state', async () => {
         const el = mount();
         await settle();

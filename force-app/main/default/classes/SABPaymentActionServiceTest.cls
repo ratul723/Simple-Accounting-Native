@@ -21,15 +21,20 @@ private class SABPaymentActionServiceTest {
             GL_Account__c ap = new GL_Account__c(Company__c = companyId, Account_Code__c = '2000', Name = 'Payables', Account_Type__c = 'Liability',
                 Normal_Balance__c = 'Credit', Control_Type__c = 'AP', Is_Control_Account__c = true, Manual_Posting_Allowed__c = false, Is_Active__c = true,
                 Company_Account_Key__c = SABAppShellTestFixture.ACTIVE_KEY + '-2000');
-            GL_Account__c ar = new GL_Account__c(Company__c = companyId, Account_Code__c = '1200', Name = 'Receivables', Account_Type__c = 'Asset',
-                Normal_Balance__c = 'Debit', Control_Type__c = 'AR', Is_Control_Account__c = true, Manual_Posting_Allowed__c = false, Is_Active__c = true,
-                Company_Account_Key__c = SABAppShellTestFixture.ACTIVE_KEY + '-1200');
-            insert as system new List<GL_Account__c>{ ap, ar };
+            insert as system ap;
             Account supplier = new Account(Name = 'Fuel Co');
             insert as system supplier;
+            Id arId;
+            if (direction == 'Receipt') {
+                GL_Account__c ar = new GL_Account__c(Company__c = companyId, Account_Code__c = '1100', Name = 'Receivables', Account_Type__c = 'Asset',
+                    Normal_Balance__c = 'Debit', Control_Type__c = 'AR', Is_Control_Account__c = true, Manual_Posting_Allowed__c = false, Is_Active__c = true,
+                    Company_Account_Key__c = SABAppShellTestFixture.ACTIVE_KEY + '-1100');
+                insert as system ar;
+                arId = ar.Id;
+            }
+            // A customer profile needs an AR control account; the receipt case uses a profile that is both customer and supplier.
             Party_Accounting_Profile__c profile = new Party_Accounting_Profile__c(Company__c = companyId, Account__c = supplier.Id, Profile_Key__c = 'PAS-S1',
-                Is_Supplier__c = true, Is_Customer__c = direction == 'Receipt', Is_Active__c = true,
-                AP_Control_Account__c = ap.Id, AR_Control_Account__c = ar.Id);
+                Is_Supplier__c = true, Is_Customer__c = direction == 'Receipt', Is_Active__c = true, AP_Control_Account__c = ap.Id, AR_Control_Account__c = arId);
             insert as system profile;
             payment = new Accounting_Payment__c(Company__c = companyId, Direction__c = direction, Party_Profile__c = profile.Id,
                 Bank_Account__c = [SELECT Id FROM Bank_Account__c WHERE Company__c = :companyId WITH SYSTEM_MODE LIMIT 1].Id, Amount__c = 100,

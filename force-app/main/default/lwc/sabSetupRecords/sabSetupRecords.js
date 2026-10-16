@@ -42,6 +42,16 @@ const GENERATE_FIELDS = [
     { name: 'periodPattern', label: 'Period pattern', type: 'select', options: PATTERNS }
 ];
 
+/** Quarter of the fiscal year a date falls in, for a fiscal year starting in startMonth (1-12). */
+export function fiscalQuarterOf(isoDate, startMonth) {
+    const month = Number(String(isoDate || '').slice(5, 7));
+    if (!month) {
+        return '';
+    }
+    const offset = (month - (Number(startMonth) || 1) + 12) % 12;
+    return String(Math.floor(offset / 3) + 1);
+}
+
 /** First day of the fiscal year that contains today, for a calendar company starting in startMonth. */
 function fiscalYearStart(startMonth) {
     const today = new Date();
@@ -86,7 +96,7 @@ const KINDS = {
             { name: 'endDate', label: 'End date', type: 'date', required: true },
             { name: 'fiscalYear', label: 'Fiscal year', type: 'number', required: true },
             { name: 'periodNumber', label: 'Period number', type: 'number', required: true },
-            { name: 'fiscalQuarter', label: 'Fiscal quarter', type: 'number', hint: 'Worked out from the period number when blank' }],
+            { name: 'fiscalQuarter', label: 'Fiscal quarter', type: 'number', hint: 'Filled in from the start date and the fiscal year start; change it if needed' }],
         editable: (r) => r.Status__c === 'Open',
         lockedReason: 'Closed periods are changed through period reopen',
         fromRecord: (r) => ({ periodId: r.Id, periodKey: r.Period_Key__c, startDate: r.Start_Date__c, endDate: r.End_Date__c,
@@ -183,6 +193,8 @@ export default class SabSetupRecords extends LightningElement {
     listError;
     saving = false;
     generating = false;
+    fiscalStartMonth = 1;
+    quarterTouched = false;
     canManage = false;
     isOpen = false;
     currentKind;
@@ -292,6 +304,8 @@ export default class SabSetupRecords extends LightningElement {
                     return { key: field, text };
                 }),
                 editDisabled: !this.canManage || locked,
+                canEdit: this.canManage && !locked,
+                lockText: locked ? 'Locked' : '',
                 editTitle: !this.canManage ? this.manageReason : locked ? config.lockedReason : undefined
             };
         });
@@ -364,11 +378,27 @@ export default class SabSetupRecords extends LightningElement {
 
     handleNew() {
         this.edit({ ...(this.config.defaults || {}) });
+        this.loadFiscalStart();
+    }
+
+    /** The company's fiscal year start month, used to fill in a period's quarter from its start date. */
+    async loadFiscalStart() {
+        if (this.currentKind !== 'period') {
+            return;
+        }
+        this.quarterTouched = false;
+        try {
+            const o = await getSetupOptions({ companyId: this.companyId });
+            this.fiscalStartMonth = (o && o.fiscalYearStartMonth) || 1;
+        } catch {
+            this.fiscalStartMonth = 1;
+        }
     }
 
     handleEdit(event) {
         const record = this.rows.find((r) => r.Id === event.currentTarget.dataset.id);
         this.edit(this.config.fromRecord(record));
+        this.loadFiscalStart();
     }
 
     handleBack() {
@@ -383,6 +413,15 @@ export default class SabSetupRecords extends LightningElement {
         const form = { ...this.form, [field]: value };
         if (this.currentKind === 'newCompany' && field === 'fiscalYearStartMonth' && !isCustom(form)) {
             form.firstDay = fiscalYearStart(Number(value));
+        }
+        if (this.currentKind === 'period') {
+            if (field === 'fiscalQuarter') {
+                this.quarterTouched = value !== '';
+            } else if (field === 'startDate' && !this.quarterTouched) {
+                form.fiscalQuarter = fiscalQuarterOf(value, this.fiscalStartMonth);
+            } else if (field === 'periodNumber' && !this.quarterTouched && !form.startDate && Number(value) > 0) {
+                form.fiscalQuarter = String(Math.min(4, Math.ceil(Number(value) / 3)));
+            }
         }
         this.form = form;
     }

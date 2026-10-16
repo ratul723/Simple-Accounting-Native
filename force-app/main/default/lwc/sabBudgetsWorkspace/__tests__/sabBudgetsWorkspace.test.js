@@ -24,7 +24,7 @@ function ws(overrides = {}) {
         budgets: [{ budgetId: 'B1', name: 'FY27', fiscalYear: 2027, version: 1, status: 'Approved' }, { budgetId: 'B2', name: 'FY27', fiscalYear: 2027, version: 2, status: 'Draft' }],
         periods: [{ value: 'P1', label: 'Jul 2026', fiscalYear: 2027 }, { value: 'P2', label: 'Aug 2026', fiscalYear: 2027 }],
         accounts: [{ value: 'G1', label: '4000 Sales' }, { value: 'G2', label: '6000 Wages' }],
-        departments: [{ value: 'D1', label: 'Operations' }], costCenters: [{ value: 'K1', label: 'CC-1' }],
+        departments: [{ value: 'D1', label: 'Operations' }], costCenters: [{ value: 'K1', label: 'CC-1' }], projects: [{ value: 'PJ1', label: 'PRJ-1 Fit-out' }],
         ...overrides
     };
 }
@@ -177,8 +177,8 @@ describe('c-sab-budgets-workspace', () => {
         root.querySelector('.sab-modal-save').click();
         await flush();
         expect(saveDraft.mock.calls[2][0].request.lines).toEqual([
-            { accountingPeriodId: 'P1', glAccountId: 'G2', departmentId: 'D1', costCenterId: null, amount: 500 },
-            { accountingPeriodId: 'P1', glAccountId: 'G2', departmentId: null, costCenterId: null, amount: 250 }]);
+            { accountingPeriodId: 'P1', glAccountId: 'G2', departmentId: 'D1', costCenterId: null, projectId: null, amount: 500 },
+            { accountingPeriodId: 'P1', glAccountId: 'G2', departmentId: null, costCenterId: null, projectId: null, amount: 250 }]);
     });
 
     it('handles permissions, empty years, variance errors and load errors', async () => {
@@ -249,7 +249,7 @@ describe('c-sab-budgets-workspace', () => {
         root.querySelector('.sab-modal-save').click();
         await flush();
         const request = saveDraft.mock.calls[0][0].request;
-        expect(request.lines).toEqual([{ accountingPeriodId: 'P1', glAccountId: 'G1', departmentId: null, costCenterId: null, amount: 1100 }]);
+        expect(request.lines).toEqual([{ accountingPeriodId: 'P1', glAccountId: 'G1', departmentId: null, costCenterId: null, projectId: null, amount: 1100 }]);
         root.querySelector('.sab-edit-lines').click();
         await flush();
         root.querySelector('.sab-spread').click();
@@ -279,5 +279,27 @@ describe('c-sab-budgets-workspace', () => {
         el2.shadowRoot.querySelector('.sab-modal-save').click();
         await flush();
         expect(el2.shadowRoot.querySelector('.form-error').textContent).toContain('FY 2030 has no accounting periods');
+    });
+
+    it('budgets lines by project and compares by project', async () => {
+        const el = mount();
+        await flush();
+        const root = el.shadowRoot;
+        expect(Array.from(root.querySelectorAll('.sab-group button')).map((b) => b.textContent)).toContain('Project');
+        root.querySelectorAll('.sab-group button')[3].click();
+        await flush();
+        expect(getBudgetVsActual.mock.calls.find((c) => c[0].groupBy === 'ACCOUNT_PROJECT')).toBeDefined();
+        expect(root.querySelector('.sab-dimension option:nth-child(2)').textContent).toBe('PRJ-1 Fit-out');
+        root.querySelectorAll('.sab-versions button')[1].click();
+        await flush();
+        root.querySelector('.sab-edit-lines').click();
+        await flush();
+        const project = root.querySelector('.sab-lines [data-field="projectId"]');
+        expect(project).not.toBeNull();
+        project.value = 'PJ1';
+        project.dispatchEvent(new CustomEvent('change'));
+        root.querySelector('.sab-modal-save').click();
+        await flush();
+        expect(saveDraft.mock.calls[saveDraft.mock.calls.length - 1][0].request.lines[0].projectId).toBe('PJ1');
     });
 });

@@ -1,12 +1,33 @@
 import { createElement } from 'lwc';
 import SabChartWorkspace from 'c/sabChartWorkspace';
 import getChart from '@salesforce/apex/SABAdminWorkspaceController.getChart';
-import saveAccount from '@salesforce/apex/SABSetupRecordService.saveAccount';
+import getMappingOptions from '@salesforce/apex/SABReportMappingService.getOptions';
+import saveAccount from '@salesforce/apex/SABReportMappingService.saveAccountWithMapping';
+import moveAccount from '@salesforce/apex/SABReportMappingService.moveAccount';
+import createVersion from '@salesforce/apex/SABReportMappingService.createVersion';
+import activateVersion from '@salesforce/apex/SABReportMappingService.activateVersion';
+import deleteDraftVersion from '@salesforce/apex/SABReportMappingService.deleteDraftVersion';
 import saveDepartment from '@salesforce/apex/SABAdminWorkspaceService.saveDepartment';
 import saveCostCenter from '@salesforce/apex/SABAdminWorkspaceService.saveCostCenter';
 
 jest.mock('@salesforce/apex/SABAdminWorkspaceController.getChart', () => ({ default: jest.fn() }), { virtual: true });
-jest.mock('@salesforce/apex/SABSetupRecordService.saveAccount', () => ({ default: jest.fn() }), { virtual: true });
+jest.mock('@salesforce/apex/SABReportMappingService.getOptions', () => ({ default: jest.fn() }), { virtual: true });
+jest.mock('@salesforce/apex/SABReportMappingService.saveAccountWithMapping', () => ({ default: jest.fn() }), { virtual: true });
+jest.mock('@salesforce/apex/SABReportMappingService.moveAccount', () => ({ default: jest.fn() }), { virtual: true });
+jest.mock('@salesforce/apex/SABReportMappingService.createVersion', () => ({ default: jest.fn() }), { virtual: true });
+jest.mock('@salesforce/apex/SABReportMappingService.activateVersion', () => ({ default: jest.fn() }), { virtual: true });
+jest.mock('@salesforce/apex/SABReportMappingService.deleteDraftVersion', () => ({ default: jest.fn() }), { virtual: true });
+
+const MAPPING = {
+    canManage: true,
+    definitions: [
+        { definitionId: 'R1', reportType: 'P&L', version: 3, status: 'Active', rows: [{ groupKey: 'INCOME', rowKey: 'REVENUE' }, { groupKey: 'EXPENSES', rowKey: 'OFFICE' }] },
+        { definitionId: 'R3', reportType: 'Balance Sheet', version: 1, status: 'Active', rows: [{ groupKey: 'ASSETS', rowKey: 'CASH' }] },
+        { definitionId: 'R2', reportType: 'Balance Sheet', version: 2, status: 'Draft', rows: [{ groupKey: 'ASSETS', rowKey: 'CASH' }] }
+    ],
+    mappings: [{ accountId: 'A1', definitionId: 'R3', groupKey: 'ASSETS', rowKey: 'CASH' }],
+    unmapped: []
+};
 jest.mock('@salesforce/apex/SABAdminWorkspaceService.saveDepartment', () => ({ default: jest.fn() }), { virtual: true });
 jest.mock('@salesforce/apex/SABAdminWorkspaceService.saveCostCenter', () => ({ default: jest.fn() }), { virtual: true });
 
@@ -61,6 +82,7 @@ function set(root, field, value) {
 describe('c-sab-chart-workspace', () => {
     beforeEach(() => {
         getChart.mockResolvedValue(chart());
+        getMappingOptions.mockResolvedValue(MAPPING);
         [saveAccount, saveDepartment, saveCostCenter].forEach((m) => m.mockResolvedValue('X'));
     });
 
@@ -93,11 +115,13 @@ describe('c-sab-chart-workspace', () => {
         expect(nav.mock.calls[0][0].detail.workspace).toBe('import');
     });
 
-    it('creates and edits GL accounts', async () => {
+    it('creates accounts with their statement row and opens existing ones read-only', async () => {
         saveAccount.mockRejectedValueOnce({ body: { message: 'Control Type must be None unless the account is marked as a Control Account.' } });
         const el = mount();
         await flush();
         const root = el.shadowRoot;
+        expect(root.querySelectorAll('.sab-accounts tbody tr')[0].textContent).toContain('Assets / Cash');
+        expect(root.querySelectorAll('.sab-accounts tbody tr')[1].textContent).toContain('Not mapped');
         root.querySelector('.sab-new-account').click();
         await flush();
         expect(root.querySelector('c-sab-modal').heading).toBe('New GL account');
@@ -107,6 +131,12 @@ describe('c-sab-chart-workspace', () => {
         await flush();
         expect(root.querySelector('c-sab-modal [data-field="normalBalance"]').value).toBe('Credit');
         set(root, 'accountType', 'Expense');
+        await flush();
+        root.querySelector('.sab-modal-save').click();
+        await flush();
+        expect(root.querySelector('.form-error').textContent).toBe('Choose where this account appears on the P&L.');
+        expect(Array.from(root.querySelectorAll('.sab-row option')).map((o) => o.textContent)).toEqual(['Choose a row', 'Revenue', 'Office', 'Add a new row...']);
+        set(root, 'rowKey', 'OFFICE');
         set(root, 'controlType', 'AP');
         set(root, 'isControlAccount', false);
         root.querySelector('.sab-modal-save').click();
@@ -117,13 +147,67 @@ describe('c-sab-chart-workspace', () => {
         await flush();
         expect(saveAccount.mock.calls[1][0].request).toMatchObject({ accountId: null, code: '6500', name: 'Freight', accountType: 'Expense', normalBalance: 'Debit',
             controlType: 'None', isControlAccount: false, manualPostingAllowed: true });
+        expect(saveAccount.mock.calls[1][0].mapping).toEqual({ definitionId: null, groupKey: null, rowKey: 'OFFICE' });
         expect(saveAccount.mock.calls[1][0].requestKey).toBe(saveAccount.mock.calls[0][0].requestKey);
+
         root.querySelector('.sab-accounts tbody tr').dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
         await flush();
+        expect(root.querySelector('c-sab-modal').heading).toBe('1000 Operating account');
+        expect(root.querySelector('c-sab-modal [data-field="code"]')).toBeNull();
+        expect(root.querySelector('.view-facts').textContent).toContain('Assets / Cash');
+        root.querySelector('.sab-start-edit').click();
+        await flush();
         expect(root.querySelector('c-sab-modal').heading).toBe('Edit GL account');
-        expect(root.querySelector('c-sab-modal [data-field="code"]').value).toBe('1000');
+        set(root, 'name', 'Changed');
         root.querySelector('.sab-modal-close').click();
+        await flush();
+        expect(root.querySelector('.view-facts').textContent).toContain('Operating account');
+        root.querySelector('.sab-start-edit').click();
+        await flush();
+        set(root, 'rowKey', '__new__');
+        await flush();
+        set(root, 'newRowName', 'Petty cash');
+        set(root, 'newSection', 'Assets');
+        root.querySelector('.sab-modal-save').click();
+        await flush();
+        expect(saveAccount.mock.calls[2][0].mapping).toEqual({ definitionId: null, groupKey: 'Assets', rowKey: 'Petty cash' });
         root.querySelector('.sab-accounts tbody tr').dispatchEvent(new KeyboardEvent('keydown', { key: 'x' }));
+    });
+
+    it('opens an account from search and moves accounts between rows and versions', async () => {
+        [moveAccount, createVersion, activateVersion].forEach((m) => m.mockResolvedValue('R2'));
+        const el = mount();
+        el.recordId = 'A1';
+        await flush();
+        const nav = jest.fn();
+        el.addEventListener('sabnavigate', nav);
+        const root = el.shadowRoot;
+        expect(root.querySelectorAll('.sab-accounts tbody tr').length).toBe(1);
+        expect(root.querySelector('.search-chip').textContent).toContain('1000 Operating account');
+        expect(root.querySelector('c-sab-modal').heading).toBe('1000 Operating account');
+        root.querySelector('.sab-modal-close').click();
+        root.querySelector('.sab-clear-search').click();
+        expect(nav.mock.calls[0][0].detail.workspace).toBe('coa');
+        await flush();
+        root.querySelectorAll('.tab')[4].click();
+        await flush();
+        const select = root.querySelector('.sab-definition');
+        select.value = 'R2';
+        select.dispatchEvent(new CustomEvent('change'));
+        await flush();
+        root.querySelector('.sab-activate').click();
+        await flush();
+        expect(activateVersion.mock.calls[0][0]).toMatchObject({ definitionId: 'R2' });
+        root.querySelector('.sab-new-version').click();
+        await flush();
+        expect(createVersion.mock.calls[0][0]).toMatchObject({ definitionId: 'R2' });
+        root.querySelector('.sab-move-account').click();
+        await flush();
+        set(root, 'moveAccountId', 'A1');
+        set(root, 'rowKey', 'CASH');
+        root.querySelector('.sab-modal-save').click();
+        await flush();
+        expect(moveAccount.mock.calls[0][0]).toMatchObject({ accountId: 'A1', mapping: { definitionId: 'R2', rowKey: 'CASH' } });
     });
 
     it('adds and edits departments and cost centers', async () => {
@@ -145,12 +229,17 @@ describe('c-sab-chart-workspace', () => {
         expect(saveDepartment.mock.calls[0][0].request).toMatchObject({ recordId: null, code: 'SAL', name: 'Sales', parentId: 'D1', active: true });
         root.querySelectorAll('.sab-departments tbody tr')[0].click();
         await flush();
+        expect(root.querySelector('.view-facts').textContent).toContain('Operations');
+        root.querySelector('.sab-start-edit').click();
+        await flush();
         expect(root.querySelector('c-sab-modal [data-field="code"]').disabled).toBe(true);
         expect(Array.from(root.querySelectorAll('c-sab-modal [data-field="parentId"] option')).map((o) => o.value)).toEqual(['', 'D2']);
         root.querySelector('.sab-modal-close').click();
         root.querySelectorAll('.tab')[2].click();
         await flush();
         root.querySelector('.sab-cost-centers tbody tr').dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+        await flush();
+        root.querySelector('.sab-start-edit').click();
         await flush();
         set(root, 'name', 'Head office east');
         root.querySelector('.sab-modal-save').click();
@@ -204,5 +293,63 @@ describe('c-sab-chart-workspace', () => {
         el2.shadowRoot.querySelector('.empty .btn').click();
         await flush();
         expect(el2.shadowRoot.querySelector('.sab-accounts')).not.toBeNull();
+    });
+
+    it('creates a new version from the active definition without losing the view, then selects it', async () => {
+        const created = { definitionId: 'R9', definitionKey: 'BS-V9', reportType: 'Balance Sheet', version: 9, status: 'Draft', rows: [] };
+        let resolveCreate;
+        createVersion.mockReturnValue(new Promise((resolve) => {
+            resolveCreate = resolve;
+        }));
+        const el = mount();
+        await flush();
+        const root = el.shadowRoot;
+        root.querySelectorAll('.tab')[4].click();
+        await flush();
+        root.querySelector('.sab-new-version').click();
+        await flush();
+        expect(root.querySelector('.sab-definition')).not.toBeNull();
+        const base = chart();
+        getChart.mockResolvedValue({ ...base, definitions: [...base.definitions, created] });
+        resolveCreate('R9');
+        await flush();
+        await flush();
+        expect(root.querySelector('.sab-definition').value).toBe('R9');
+        expect(root.querySelector('.panel-h h2').textContent).toBe('Report mapping: Balance Sheet v9');
+    });
+
+    it('deletes a draft version after confirming', async () => {
+        deleteDraftVersion.mockRejectedValueOnce({ body: { message: 'Only a Draft version can be deleted.' } }).mockResolvedValue('R2');
+        const el = mount();
+        await flush();
+        const root = el.shadowRoot;
+        root.querySelectorAll('.tab')[4].click();
+        await flush();
+        expect(root.querySelector('.sab-delete-draft')).toBeNull();
+        const select = root.querySelector('.sab-definition');
+        select.value = 'R2';
+        select.dispatchEvent(new CustomEvent('change'));
+        await flush();
+        root.querySelector('.sab-delete-draft').click();
+        await flush();
+        expect(root.querySelector('c-sab-modal').heading).toBe('Delete draft Balance Sheet v2');
+        root.querySelector('.sab-modal-save').click();
+        await flush();
+        expect(root.querySelector('.form-error').textContent).toContain('Only a Draft version');
+        root.querySelector('.sab-modal-save').click();
+        await flush();
+        expect(deleteDraftVersion.mock.calls[1][0]).toMatchObject({ definitionId: 'R2' });
+        expect(deleteDraftVersion.mock.calls[1][0].requestKey).toBe(deleteDraftVersion.mock.calls[0][0].requestKey);
+        expect(root.querySelector('c-sab-modal').open).toBe(false);
+    });
+
+    it('ignores a searched account from another company and shows the full list', async () => {
+        const el = mount();
+        el.recordId = 'OTHER-COMPANY-ACCOUNT';
+        await flush();
+        const root = el.shadowRoot;
+        expect(root.querySelector('.search-chip')).toBeNull();
+        expect(root.querySelectorAll('.sab-accounts tbody tr').length).toBeGreaterThan(1);
+        expect(root.querySelector('c-sab-modal').open).toBe(false);
     });
 });

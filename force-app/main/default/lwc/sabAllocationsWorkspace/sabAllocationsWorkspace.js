@@ -273,6 +273,7 @@ export default class SabAllocationsWorkspace extends LightningElement {
             isApproved: r.status === 'Approved',
             manageDisabled: this.busy || !this.can.manage,
             manageTitle: this.reason(this.can.manage, 'manage allocation rules'),
+            canManage: Boolean(this.can.manage),
             approveDisabled: this.busy || !this.can.approve,
             approveTitle: this.reason(this.can.approve, 'approve allocation rules')
         };

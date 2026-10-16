@@ -11,7 +11,17 @@
     <description>G13: read budgets and budget versus actual for companies the user holds a grant for. Budget actions need the G13 _Action sets.</description>
     <fieldPermissions>
         <editable>false</editable>
+        <field>Journal_Entry_Line__c.Project__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
         <field>Budget_Line__c.Cost_Center__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Budget_Line__c.Project__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>

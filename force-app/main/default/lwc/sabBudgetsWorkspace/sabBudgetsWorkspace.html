@@ -5,7 +5,7 @@
             <c-sab-icon name="plus" size="16"></c-sab-icon>New budget</button>
         <template lwc:if={hasBudget}>
             <template lwc:if={actions.showRevise}><button slot="actions" class="btn sab-revise" type="button" disabled={actions.manageDisabled} title={actions.manageTitle} onclick={handleRevise}>New version</button></template>
-            <template lwc:if={actions.showEdit}><button slot="actions" class="btn sab-edit-lines" type="button" disabled={actions.manageDisabled} title={actions.manageTitle} onclick={handleEdit}>Edit lines</button></template>
+            <template lwc:if={actions.showEditButton}><button slot="actions" class="btn btn-edit sab-edit-lines" type="button" disabled={busy} onclick={handleEdit}><c-sab-icon name="edit" size="15"></c-sab-icon>Edit lines</button></template>
             <template lwc:if={actions.showSubmit}><button slot="actions" class="btn primary sab-submit" type="button" disabled={actions.manageDisabled} title={actions.manageTitle} onclick={handleSubmit}>Submit for approval</button></template>
             <template lwc:if={actions.showReturn}><button slot="actions" class="btn sab-return" type="button" disabled={actions.approveDisabled} title={actions.approveTitle} onclick={handleReturn}>Return to draft</button></template>
             <template lwc:if={actions.showApprove}><button slot="actions" class="btn primary sab-approve" type="button" disabled={actions.approveDisabled} title={actions.approveTitle} onclick={handleApprove}>Approve</button></template>
@@ -117,7 +117,7 @@
         </template>
         <template lwc:if={isLinesModal}>
             <div class="tbl-wrap"><table class="tbl egrid sab-lines">
-                <thead><tr><th>Period</th><th>Account</th><th>Department</th><th>Cost center</th><th class="n">Amount</th><th><span class="sr">Remove</span></th></tr></thead>
+                <thead><tr><th>Period</th><th>Account</th><th>Department</th><th>Cost center</th><template lwc:if={hasProjects}><th>Project</th></template><th class="n">Amount</th><th><span class="sr">Remove</span></th></tr></thead>
                 <tbody><template for:each={lineRows} for:item="l"><tr key={l.key}>
                     <td><select class="select" data-index={l.index} data-field="accountingPeriodId" aria-label="Period" onchange={handleLineField}><option value="">Period</option>
                         <template for:each={l.periodOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></td>
@@ -127,6 +127,8 @@
                         <template for:each={l.departmentOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></td>
                     <td><select class="select" data-index={l.index} data-field="costCenterId" aria-label="Cost center" onchange={handleLineField}><option value="">&#8212;</option>
                         <template for:each={l.costCenterOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></td>
+                    <template lwc:if={hasProjects}><td><select class="select" data-index={l.index} data-field="projectId" aria-label="Project" onchange={handleLineField}><option value="">&#8212;</option>
+                        <template for:each={l.projectOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></td></template>
                     <td class="amt"><input class="input n" inputmode="decimal" data-index={l.index} data-field="amount" value={l.amount} aria-label="Amount" oninput={handleLineField} /></td>
                     <td><button class="btn ghost sm sab-remove-line" type="button" data-index={l.index} aria-label="Remove line" onclick={handleRemoveLine}>Remove</button></td>
                 </tr></template></tbody>
@@ -138,6 +140,8 @@
                         <template for:each={spreadAccountOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select>
                     <select class="select" data-field="departmentId" aria-label="Department" onchange={handleSpreadField}><option value="">No department</option>
                         <template for:each={spreadDepartmentOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select>
+                    <template lwc:if={hasProjects}><select class="select" data-field="projectId" aria-label="Project" onchange={handleSpreadField}><option value="">No project</option>
+                        <template for:each={spreadProjectOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></template>
                     <input class="input n sab-spread-amount" type="number" step="0.01" data-field="annual" placeholder="Annual amount" aria-label="Annual amount" oninput={handleSpreadField} />
                     <button class="btn sm primary sab-spread-apply" type="button" onclick={handleSpreadApply}>Spread across periods</button>
                 </div>

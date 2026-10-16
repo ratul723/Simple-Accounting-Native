@@ -40,7 +40,7 @@
                 <div class="split">
                     <section class="panel sab-project">
                         <div class="panel-h"><div><h2>{panelTitle}</h2><div class="sub">{panelSub}</div></div><span class="spacer"></span>
-                            <button class="btn sm sab-edit-project" type="button" disabled={manageDisabled} title={manageTitle} onclick={handleEdit}>Edit</button></div>
+                            <template lwc:if={canManage}><button class="btn btn-edit sab-edit-project" type="button" onclick={handleEdit}><c-sab-icon name="edit" size="15"></c-sab-icon>Edit</button></template></div>
                         <div class="panel-b">
                             <template lwc:if={reportError}><div class="banner t-bad" role="alert"><c-sab-icon name="alert"></c-sab-icon><div>{reportError}</div></div></template>
                             <template lwc:elseif={report}>

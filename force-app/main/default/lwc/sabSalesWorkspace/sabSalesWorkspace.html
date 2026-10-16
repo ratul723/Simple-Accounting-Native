@@ -154,7 +154,7 @@
         </template>
         <template lwc:if={drawerOpen}>
             <template lwc:if={view.isDraft}>
-                <button slot="footer" class="btn ghost sab-edit-invoice" type="button" disabled={createDisabled} title={createTitle} onclick={handleEditDocument}>Edit</button>
+                <template lwc:if={canCreate}><button slot="footer" class="btn btn-edit sab-edit-invoice" type="button" onclick={handleEditDocument}><c-sab-icon name="edit" size="15"></c-sab-icon>Edit</button></template>
                 <button slot="footer" class="btn primary sab-submit-invoice" type="button" disabled={createDisabled} title={createTitle} onclick={handleSubmitInvoice}>Submit for approval</button>
             </template>
             <template lwc:if={view.isSubmitted}>

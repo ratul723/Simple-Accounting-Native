@@ -675,6 +675,10 @@ export default class SabAppShell extends NavigationMixin(LightningElement) {
         this.searchTerm = event.target.value || '';
         clearTimeout(this.searchTimer);
         const term = this.searchTerm.trim();
+        if (!term && this.recordId) {
+            // Clearing the search box also clears the record the search opened: back to the workspace's full list.
+            this.navigateTo(this.workspaceId, undefined, true);
+        }
         if (term.length < SEARCH_MIN_LENGTH) {
             this.searchResults = this.localMatches(term);
             this.searchPopOpen = term.length > 0;
@@ -711,7 +715,7 @@ export default class SabAppShell extends NavigationMixin(LightningElement) {
             }
             const records = (rows || [])
                 .filter((r) => this.isVisible(r.workspace))
-                .map((r) => ({ ...r, key: `${r.kind}-${r.recordId}` }));
+                .map((r) => ({ ...r, key: `${r.kind}-${r.recordId}`, detail: r.companyName ? [r.detail, r.companyName].filter(Boolean).join(' \u00b7 ') : r.detail }));
             this.searchResults = [...records, ...this.localMatches(term)].slice(0, SEARCH_MAX_RESULTS);
         } catch {
             if (sequence === this.searchSequence) {

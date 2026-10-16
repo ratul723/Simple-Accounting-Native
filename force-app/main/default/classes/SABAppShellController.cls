@@ -30,7 +30,7 @@ public with sharing class SABAppShellController {
         new WorkspaceRule('close', null, Accounting_Period__c.SObjectType, ACCESS_READ, null),
         new WorkspaceRule('audit', null, Business_Action__c.SObjectType, ACCESS_READ, null),
         new WorkspaceRule('sales', null, Invoice__c.SObjectType, ACCESS_READ, null),
-        new WorkspaceRule('purchases', 'SAB_View_Accounts_Payable_Workspace', null, null, 'PURCHASING'),
+        new WorkspaceRule('purchases', 'SAB_View_Accounts_Payable_Workspace', null, null, null),
         new WorkspaceRule('payments', null, Accounting_Payment__c.SObjectType, ACCESS_READ, null),
         new WorkspaceRule('expenses', 'SAB_View_Expense_Operations', null, null, null),
         new WorkspaceRule('bank', null, Bank_Reconciliation__c.SObjectType, ACCESS_READ, null),
@@ -68,6 +68,7 @@ public with sharing class SABAppShellController {
     }
 
     public class SearchResult {
+        @AuraEnabled public String companyName { get; set; }
         @AuraEnabled public String kind { get; set; }
         @AuraEnabled public Id recordId { get; set; }
         @AuraEnabled public Id companyId { get; set; }
@@ -159,6 +160,10 @@ public with sharing class SABAppShellController {
         results.addAll(searchPayments(searchTerm, companyIds));
         results.addAll(searchAccounts(searchTerm, companyIds));
         results.addAll(searchAssets(searchTerm, companyIds));
+        results.addAll(searchBanks(cleaned, companyIds));
+        // SOSL is word-based and its index can lag a new record; codes, numbers and names also match by prefix in SOQL.
+        addLikeMatches(results, cleaned, companyIds);
+        addCompanyNames(results);
         return results;
     }
 
@@ -402,6 +407,75 @@ public with sharing class SABAppShellController {
             }
         } catch (QueryException ex) {
             rows.clear();
+        }
+        return rows;
+    }
+
+    /** Every result names its company, so a record from another company is recognisable before it is opened. */
+    private static void addCompanyNames(List<SearchResult> results) {
+        Set<Id> ids = new Set<Id>();
+        for (SearchResult r : results) {
+            if (r.companyId != null) {
+                ids.add(r.companyId);
+            }
+        }
+        if (ids.isEmpty()) {
+            return;
+        }
+        Map<Id, Accounting_Company__c> names = new Map<Id, Accounting_Company__c>([SELECT Id, Name__c FROM Accounting_Company__c WHERE Id IN :ids WITH USER_MODE]);
+        for (SearchResult r : results) {
+            Accounting_Company__c c = names.get(r.companyId);
+            r.companyName = c == null ? null : c.Name__c;
+        }
+    }
+
+    private static void addLikeMatches(List<SearchResult> results, String cleaned, Set<Id> companyIds) {
+        Set<Id> seen = new Set<Id>();
+        for (SearchResult r : results) {
+            seen.add(r.recordId);
+        }
+        String prefix = cleaned + '%';
+        String contains = '%' + cleaned + '%';
+        if (Schema.SObjectType.GL_Account__c.isAccessible()) {
+            for (GL_Account__c account : [SELECT Id, Name, Account_Code__c, Account_Type__c, Company__c FROM GL_Account__c
+                    WHERE Company__c IN :companyIds AND (Account_Code__c LIKE :prefix OR Name LIKE :contains)
+                    WITH USER_MODE ORDER BY Account_Code__c LIMIT 5]) {
+                if (seen.add(account.Id)) {
+                    results.add(result('account', account, account.Company__c,
+                        String.isBlank(account.Account_Code__c) ? account.Name : account.Account_Code__c + ' ' + account.Name,
+                        account.Account_Type__c, 'coa', 'coa'));
+                }
+            }
+        }
+        if (Schema.SObjectType.Invoice__c.isAccessible()) {
+            for (Invoice__c invoice : [SELECT Id, Name, Legal_Number__c, Status__c, Company__c FROM Invoice__c
+                    WHERE Company__c IN :companyIds AND (Name LIKE :prefix OR Legal_Number__c LIKE :prefix)
+                    WITH USER_MODE ORDER BY Document_Date__c DESC LIMIT 5]) {
+                if (seen.add(invoice.Id)) {
+                    results.add(result('invoice', invoice, invoice.Company__c, String.isBlank(invoice.Legal_Number__c) ? invoice.Name : invoice.Legal_Number__c,
+                        joinDetail('Invoice', invoice.Status__c), 'sales', 'sales'));
+                }
+            }
+        }
+        if (Schema.SObjectType.Journal_Entry__c.isAccessible()) {
+            for (Journal_Entry__c journal : [SELECT Id, Name, Description__c, Status__c, Company__c FROM Journal_Entry__c
+                    WHERE Company__c IN :companyIds AND Name LIKE :prefix WITH USER_MODE ORDER BY Name DESC LIMIT 5]) {
+                if (seen.add(journal.Id)) {
+                    results.add(result('journal', journal, journal.Company__c, journal.Name, joinDetail(journal.Description__c, journal.Status__c), 'journal', 'journal'));
+                }
+            }
+        }
+    }
+
+    private static List<SearchResult> searchBanks(String cleaned, Set<Id> companyIds) {
+        List<SearchResult> rows = new List<SearchResult>();
+        if (!Schema.SObjectType.Bank_Account__c.isAccessible()) {
+            return rows;
+        }
+        String contains = '%' + cleaned + '%';
+        for (Bank_Account__c bank : [SELECT Id, Name, Bank_Name__c, Currency__c, Company__c FROM Bank_Account__c
+                WHERE Company__c IN :companyIds AND (Name LIKE :contains OR Bank_Name__c LIKE :contains) WITH USER_MODE ORDER BY Name LIMIT 5]) {
+            rows.add(result('bank', bank, bank.Company__c, bank.Name, joinDetail(joinDetail('Bank account', bank.Bank_Name__c), bank.Currency__c), 'bank', 'bank'));
         }
         return rows;
     }

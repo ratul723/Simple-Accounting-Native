@@ -1,5 +1,5 @@
 import { createElement } from 'lwc';
-import SabSetupRecords from 'c/sabSetupRecords';
+import SabSetupRecords, { fiscalQuarterOf } from 'c/sabSetupRecords';
 import getSetupRecords from '@salesforce/apex/SABSetupRecordService.getSetupRecords';
 import canManageSetup from '@salesforce/apex/SABSetupRecordService.canManageSetup';
 import createCompany from '@salesforce/apex/SABSetupRecordService.createCompany';
@@ -122,8 +122,10 @@ describe('c-sab-setup-records', () => {
         const root = el.shadowRoot;
         const rows = root.querySelectorAll('tbody tr');
         expect(rows[0].textContent).toContain('1 Jul 2026');
-        expect(rows[0].querySelector('.edit').disabled).toBe(true);
-        expect(rows[0].querySelector('.edit').title).toBe('Closed periods are changed through period reopen');
+        expect(rows[0].querySelector('.edit')).toBeNull();
+        expect(rows[0].querySelector('.act span').title).toBe('Closed periods are changed through period reopen');
+        expect(rows[0].querySelector('.act span').textContent).toBe('Locked');
+        expect(rows[1].querySelector('.edit').className).toContain('btn-edit');
         rows[1].querySelector('.edit').click();
         await flush();
         expect(root.querySelector('c-sab-modal').heading).toBe('Edit accounting periods');
@@ -139,7 +141,7 @@ describe('c-sab-setup-records', () => {
         root.querySelector('.save').click();
         await flush();
         expect(savePeriod.mock.calls[0][0].request).toEqual({ companyId: COMPANY, periodId: null, periodKey: 'FY27-P03', startDate: '2026-09-01',
-            endDate: '2026-09-30', fiscalYear: 2027, periodNumber: 3, fiscalQuarter: null });
+            endDate: '2026-09-30', fiscalYear: 2027, periodNumber: 3, fiscalQuarter: 3 });
         expect(getSetupRecords).toHaveBeenCalledTimes(2);
         expect(root.querySelector('tbody')).not.toBeNull();
     });
@@ -191,7 +193,7 @@ describe('c-sab-setup-records', () => {
         const root = el.shadowRoot;
         expect(root.querySelector('tbody tr').textContent).toContain('Yes');
         expect(root.querySelector('.new').disabled).toBe(true);
-        expect(root.querySelector('.edit').title).toBe('Your role cannot manage company setup');
+        expect(root.querySelector('.edit')).toBeNull();
     });
 
     it('shows load errors and closes', async () => {
@@ -281,5 +283,29 @@ describe('c-sab-setup-records', () => {
         root.querySelector('.back').click();
         await flush();
         expect(root.querySelector('c-sab-modal').heading).toBe('Accounting periods');
+    });
+
+    it('fills the fiscal quarter from the start date and the fiscal year start', async () => {
+        expect(fiscalQuarterOf('2027-01-01', 1)).toBe('1');
+        expect(fiscalQuarterOf('2026-10-01', 7)).toBe('2');
+        expect(fiscalQuarterOf('2027-06-30', 7)).toBe('4');
+        expect(fiscalQuarterOf('', 7)).toBe('');
+        getSetupRecords.mockResolvedValue([]);
+        getSetupOptions.mockResolvedValue({ fiscalYearStartMonth: 7 });
+        const el = mount('period');
+        await flush();
+        const root = el.shadowRoot;
+        root.querySelector('.new').click();
+        await flush();
+        setField(root, 'periodNumber', '5');
+        await flush();
+        expect(root.querySelector('[data-field="fiscalQuarter"]').value).toBe('2');
+        setField(root, 'startDate', '2027-01-01');
+        await flush();
+        expect(root.querySelector('[data-field="fiscalQuarter"]').value).toBe('3');
+        setField(root, 'fiscalQuarter', '4');
+        setField(root, 'startDate', '2026-07-01');
+        await flush();
+        expect(root.querySelector('[data-field="fiscalQuarter"]').value).toBe('4');
     });
 });

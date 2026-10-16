@@ -56,3 +56,30 @@ tr.click:focus-visible {
 .row.center {
     justify-content: center;
 }
+
+.view-head {
+    margin-bottom: 10px;
+    align-items: center;
+}
+
+.view-facts {
+    margin: 0;
+}
+
+.wide {
+    grid-column: 1 / -1;
+}
+
+.search-chip {
+    gap: 8px;
+}
+
+.linkish {
+    background: none;
+    border: 0;
+    padding: 0;
+    font: inherit;
+    font-weight: 600;
+    color: var(--accent);
+    cursor: pointer;
+}

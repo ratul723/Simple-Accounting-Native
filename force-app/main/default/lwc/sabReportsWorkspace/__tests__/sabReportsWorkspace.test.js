@@ -40,6 +40,8 @@ import getPayrollSummary from '@salesforce/apex/SABPayrollSummaryController.getS
 import getAssetDashboard from '@salesforce/apex/SABFixedAssetWorkspaceController.getDashboard';
 import getBudgetVsActual from '@salesforce/apex/SABBudgetVarianceService.getBudgetVsActual';
 import getTaxWorkspace from '@salesforce/apex/SABTaxReturnWorkspaceController.getWorkspace';
+jest.mock('@salesforce/apex/SABBalanceSheetReconciliationService.getReconciliation', () => ({ default: jest.fn() }), { virtual: true });
+import getReconciliation from '@salesforce/apex/SABBalanceSheetReconciliationService.getReconciliation';
 
 const d = new Date();
 const y = d.getFullYear();
@@ -313,5 +315,40 @@ describe('c-sab-reports-workspace', () => {
         pick(root, 'tax');
         await flush();
         expect(root.querySelector('.sab-report .panel-b > div.muted').textContent).toBe('Nothing to report for this selection.');
+    });
+
+    it('reconciles each balance sheet section to its source records', async () => {
+        getReconciliation.mockRejectedValueOnce({ body: { message: 'No ledger access.' } }).mockResolvedValue({ totalAssets: 1200, totalLiabilitiesAndEquity: 1200,
+            sections: [{ key: 'cash', label: 'Cash and bank', ledger: 1200, subledger: 1000, difference: 200, status: 'Difference', sourceLabel: 'Bank statements',
+                workspace: 'bank', note: 'Timing.', accounts: [{ accountId: 'G1', label: '1000 Bank', balance: 1200 }],
+                sources: [{ recordId: 'BA1', label: 'Operating', detail: 'BS-1', amount: 1000 }] },
+            { key: 'inventory', label: 'Inventory', ledger: null, status: 'Dependency', sourceLabel: 'Inventory records', accounts: [], sources: [] }] });
+        const el = mount({ visibleWorkspaces: ['bank', 'journal'] });
+        await flush();
+        const nav = jest.fn();
+        el.addEventListener('sabnavigate', nav);
+        const root = el.shadowRoot;
+        pick(root, 'bs');
+        await flush();
+        root.querySelectorAll('.sab-bs-mode button')[1].click();
+        await flush();
+        expect(root.querySelector('.banner.t-bad').textContent).toBe('No ledger access.');
+        root.querySelectorAll('.sab-bs-mode button')[0].click();
+        await flush();
+        root.querySelectorAll('.sab-bs-mode button')[1].click();
+        await flush();
+        const rows = root.querySelectorAll('.sab-recon tbody tr');
+        expect(rows.length).toBe(2);
+        expect(rows[0].textContent).toContain('200.00');
+        expect(root.querySelector('.recon-summary').textContent).toContain('1 section differs');
+        rows[0].click();
+        await flush();
+        expect(root.querySelector('.sab-recon-sources').textContent).toContain('Operating');
+        root.querySelector('.sab-open-source').click();
+        expect(nav.mock.calls[0][0].detail).toEqual({ workspace: 'bank', recordId: 'BA1' });
+        rows[1].dispatchEvent(new KeyboardEvent('keydown', { key: 'x' }));
+        rows[1].dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+        await flush();
+        expect(root.querySelector('.sab-open-workspace')).toBeNull();
     });
 });

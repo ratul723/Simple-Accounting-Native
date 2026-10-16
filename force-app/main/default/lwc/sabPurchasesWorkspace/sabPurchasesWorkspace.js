@@ -309,6 +309,7 @@ export default class SabPurchasesWorkspace extends LightningElement {
             isApproved: b.status === 'Approved',
             editDisabled: this.busy || Boolean(editReason),
             editTitle: editReason,
+            canEdit: !editReason,
             approveDisabled: this.busy || Boolean(approveReason),
             approveTitle: approveReason,
             postDisabled: this.busy || Boolean(postReason),

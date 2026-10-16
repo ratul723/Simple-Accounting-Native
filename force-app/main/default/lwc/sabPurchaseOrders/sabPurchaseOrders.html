@@ -67,7 +67,7 @@
         <template lwc:if={order}>
             <template lwc:if={view.isDraft}>
                 <button slot="footer" class="btn ghost sab-cancel-po" type="button" data-kind="cancel" disabled={view.manageDisabled} title={view.manageTitle} onclick={handleReasonAction}>Cancel</button>
-                <button slot="footer" class="btn ghost sab-edit-po" type="button" disabled={view.manageDisabled} title={view.manageTitle} onclick={handleEdit}>Edit</button>
+                <template lwc:if={view.canManage}><button slot="footer" class="btn btn-edit sab-edit-po" type="button" disabled={busy} onclick={handleEdit}><c-sab-icon name="edit" size="15"></c-sab-icon>Edit</button></template>
                 <button slot="footer" class="btn primary sab-submit-po" type="button" disabled={view.manageDisabled} title={view.manageTitle} onclick={handleSubmit}>Submit for approval</button>
             </template>
             <template lwc:if={view.isSubmitted}>

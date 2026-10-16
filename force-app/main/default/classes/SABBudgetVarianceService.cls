@@ -6,7 +6,7 @@
  * Posted and Reversed journals (a reversal journal is itself Posted, so reversed activity nets to zero), netted in
  * the account's normal-balance direction (Debit: debit - credit; Credit: credit - debit).
  *
- * Grouping: ACCOUNT, ACCOUNT_DEPARTMENT or ACCOUNT_COST_CENTER. Accounts with actuals but no budget line appear as
+ * Grouping: ACCOUNT, ACCOUNT_DEPARTMENT, ACCOUNT_COST_CENTER or ACCOUNT_PROJECT. Accounts with actuals but no budget line appear as
  * unbudgeted rows. variance = actual - budget; Revenue is favourable when variance >= 0 and Expense when
  * variance <= 0; balance-sheet accounts carry no favourable flag.
  *
@@ -18,7 +18,8 @@ public with sharing class SABBudgetVarianceService {
     public static final String BY_ACCOUNT = 'ACCOUNT';
     public static final String BY_DEPARTMENT = 'ACCOUNT_DEPARTMENT';
     public static final String BY_COST_CENTER = 'ACCOUNT_COST_CENTER';
-    private static final Set<String> GROUPINGS = new Set<String>{BY_ACCOUNT, BY_DEPARTMENT, BY_COST_CENTER};
+    public static final String BY_PROJECT = 'ACCOUNT_PROJECT';
+    private static final Set<String> GROUPINGS = new Set<String>{BY_ACCOUNT, BY_DEPARTMENT, BY_COST_CENTER, BY_PROJECT};
 
     public class VarianceRow {
         @AuraEnabled public Id glAccountId;
@@ -61,7 +62,7 @@ public with sharing class SABBudgetVarianceService {
         }
         String grouping = String.isBlank(groupBy) ? BY_ACCOUNT : groupBy.trim().toUpperCase();
         if (!GROUPINGS.contains(grouping)) {
-            throw new BudgetVarianceException('Group by must be ACCOUNT, ACCOUNT_DEPARTMENT or ACCOUNT_COST_CENTER.');
+            throw new BudgetVarianceException('Group by must be ACCOUNT, ACCOUNT_DEPARTMENT, ACCOUNT_COST_CENTER or ACCOUNT_PROJECT.');
         }
         SABCompanyAccessService.assertCompanyAccess(companyId);
         assertReadAccess();
@@ -70,22 +71,33 @@ public with sharing class SABBudgetVarianceService {
 
         Map<String, VarianceRow> rows = new Map<String, VarianceRow>();
         Map<Id, GL_Account__c> accounts = new Map<Id, GL_Account__c>();
-        for (Budget_Line__c line : [SELECT GL_Account__c, Department__c, Department__r.Name, Cost_Center__c, Cost_Center__r.Name, Amount__c
-                FROM Budget_Line__c WHERE Budget__c = :budget.Id AND Accounting_Period__c IN :periods WITH USER_MODE LIMIT 2001]) {
-            Id dimension = dimensionOf(grouping, line.Department__c, line.Cost_Center__c);
+        // Project fields are read only when grouping by project, so users without project field access keep their report.
+        Boolean byProject = grouping == BY_PROJECT;
+        Id scopeBudgetId = budget.Id;
+        List<Budget_Line__c> budgetLines = (List<Budget_Line__c>) Database.queryWithBinds(
+            'SELECT GL_Account__c, Department__c, Department__r.Name, Cost_Center__c, Cost_Center__r.Name, Amount__c'
+            + (byProject ? ', Project__c, Project__r.Name' : '')
+            + ' FROM Budget_Line__c WHERE Budget__c = :scopeBudgetId AND Accounting_Period__c IN :periods LIMIT 2001',
+            new Map<String, Object>{ 'scopeBudgetId' => scopeBudgetId, 'periods' => periods }, AccessLevel.USER_MODE);
+        for (Budget_Line__c line : budgetLines) {
+            Id dimension = dimensionOf(grouping, line.Department__c, line.Cost_Center__c, byProject ? line.Project__c : null);
             String dimensionName = grouping == BY_DEPARTMENT ? (line.Department__r == null ? null : line.Department__r.Name)
-                : (grouping == BY_COST_CENTER ? (line.Cost_Center__r == null ? null : line.Cost_Center__r.Name) : null);
+                : grouping == BY_COST_CENTER ? (line.Cost_Center__r == null ? null : line.Cost_Center__r.Name)
+                : byProject ? (line.Project__r == null ? null : line.Project__r.Name) : null;
             VarianceRow row = rowFor(rows, line.GL_Account__c, dimension, dimensionName);
             row.budget += line.Amount__c;
             row.unbudgeted = false;
             accounts.put(line.GL_Account__c, null);
         }
 
-        List<AggregateResult> actuals = [SELECT GL_Account__c accountId, Department__c departmentId, Cost_Center__c costCenterId,
-            SUM(Debit_Base__c) debitTotal, SUM(Credit_Base__c) creditTotal FROM Journal_Entry_Line__c
-            WHERE Journal_Entry__r.Company__c = :companyId AND Journal_Entry__r.Status__c IN ('Posted', 'Reversed')
-            AND Journal_Entry__r.Accounting_Period__c IN :periods WITH USER_MODE
-            GROUP BY GL_Account__c, Department__c, Cost_Center__c LIMIT 2000];
+        List<AggregateResult> actuals = (List<AggregateResult>) Database.queryWithBinds(
+            'SELECT GL_Account__c accountId, Department__c departmentId, Cost_Center__c costCenterId'
+            + (byProject ? ', Project__c projectId' : '')
+            + ', SUM(Debit_Base__c) debitTotal, SUM(Credit_Base__c) creditTotal FROM Journal_Entry_Line__c'
+            + ' WHERE Journal_Entry__r.Company__c = :companyId AND Journal_Entry__r.Status__c IN (\'Posted\', \'Reversed\')'
+            + ' AND Journal_Entry__r.Accounting_Period__c IN :periods'
+            + ' GROUP BY GL_Account__c, Department__c, Cost_Center__c' + (byProject ? ', Project__c' : '') + ' LIMIT 2000',
+            new Map<String, Object>{ 'companyId' => companyId, 'periods' => periods }, AccessLevel.USER_MODE);
         for (AggregateResult ar : actuals) {
             accounts.put((Id) ar.get('accountId'), null);
         }
@@ -100,7 +112,7 @@ public with sharing class SABBudgetVarianceService {
             Decimal debit = ar.get('debitTotal') == null ? 0 : (Decimal) ar.get('debitTotal');
             Decimal credit = ar.get('creditTotal') == null ? 0 : (Decimal) ar.get('creditTotal');
             Decimal net = account.Normal_Balance__c == 'Credit' ? credit - debit : debit - credit;
-            Id dimension = dimensionOf(grouping, (Id) ar.get('departmentId'), (Id) ar.get('costCenterId'));
+            Id dimension = dimensionOf(grouping, (Id) ar.get('departmentId'), (Id) ar.get('costCenterId'), projectOf(grouping, ar));
             VarianceRow row = rowFor(rows, account.Id, dimension, dimensionNames.get(dimension));
             row.actual += net;
         }
@@ -188,8 +200,12 @@ public with sharing class SABBudgetVarianceService {
         return requested;
     }
 
-    private static Id dimensionOf(String grouping, Id departmentId, Id costCenterId) {
-        return grouping == BY_DEPARTMENT ? departmentId : (grouping == BY_COST_CENTER ? costCenterId : null);
+    private static Id projectOf(String grouping, AggregateResult ar) {
+        return grouping == BY_PROJECT ? (Id) ar.get('projectId') : null;
+    }
+
+    private static Id dimensionOf(String grouping, Id departmentId, Id costCenterId, Id projectId) {
+        return grouping == BY_DEPARTMENT ? departmentId : grouping == BY_COST_CENTER ? costCenterId : grouping == BY_PROJECT ? projectId : null;
     }
 
     private static Map<Id, String> dimensionNames(String grouping, List<AggregateResult> actuals) {
@@ -199,7 +215,7 @@ public with sharing class SABBudgetVarianceService {
         }
         Set<Id> ids = new Set<Id>();
         for (AggregateResult ar : actuals) {
-            Id dimension = dimensionOf(grouping, (Id) ar.get('departmentId'), (Id) ar.get('costCenterId'));
+            Id dimension = dimensionOf(grouping, (Id) ar.get('departmentId'), (Id) ar.get('costCenterId'), projectOf(grouping, ar));
             if (dimension != null) {
                 ids.add(dimension);
             }
@@ -207,6 +223,10 @@ public with sharing class SABBudgetVarianceService {
         if (grouping == BY_DEPARTMENT) {
             for (Department__c d : [SELECT Id, Name FROM Department__c WHERE Id IN :ids WITH USER_MODE]) {
                 names.put(d.Id, d.Name);
+            }
+        } else if (grouping == BY_PROJECT) {
+            for (Project__c p : [SELECT Id, Name FROM Project__c WHERE Id IN :ids WITH USER_MODE]) {
+                names.put(p.Id, p.Name);
             }
         } else {
             for (Cost_Center__c c : [SELECT Id, Name FROM Cost_Center__c WHERE Id IN :ids WITH USER_MODE]) {

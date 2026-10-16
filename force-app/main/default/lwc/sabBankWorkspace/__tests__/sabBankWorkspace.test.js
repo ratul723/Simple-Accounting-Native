@@ -302,4 +302,11 @@ describe('c-sab-bank-workspace', () => {
         await flush();
         expect(el4.shadowRoot.querySelector('c-sab-modal').open).toBe(false);
     });
+
+    it('selects the bank account opened from search', async () => {
+        const el = mount({ recordId: 'B2' });
+        await flush();
+        const selected = Array.from(el.shadowRoot.querySelectorAll('[aria-pressed="true"], .sel, .selected')).map((x) => x.textContent).join(' ');
+        expect(selected).toContain('USD receipts');
+    });
 });

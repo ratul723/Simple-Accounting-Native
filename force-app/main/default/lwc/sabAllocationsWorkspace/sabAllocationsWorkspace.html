@@ -86,7 +86,7 @@
         </template>
         <template lwc:if={isRuleDrawer}>
             <template lwc:if={ruleView.isDraft}>
-                <button slot="footer" class="btn ghost sab-edit-rule" type="button" disabled={ruleView.manageDisabled} title={ruleView.manageTitle} onclick={handleEditRule}>Edit</button>
+                <template lwc:if={ruleView.canManage}><button slot="footer" class="btn btn-edit sab-edit-rule" type="button" disabled={busy} onclick={handleEditRule}><c-sab-icon name="edit" size="15"></c-sab-icon>Edit</button></template>
                 <button slot="footer" class="btn primary sab-approve-rule" type="button" disabled={ruleView.approveDisabled} title={ruleView.approveTitle} onclick={handleApproveRule}>Approve</button>
             </template>
             <template lwc:if={ruleView.isApproved}>

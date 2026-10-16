@@ -34,6 +34,7 @@ public with sharing class SABBudgetService {
         @AuraEnabled public Id glAccountId { get; set; }
         @AuraEnabled public Id departmentId { get; set; }
         @AuraEnabled public Id costCenterId { get; set; }
+        @AuraEnabled public Id projectId { get; set; }
         @AuraEnabled public Decimal amount { get; set; }
     }
 
@@ -88,12 +89,7 @@ public with sharing class SABBudgetService {
             throw new BudgetException('Budget name cannot exceed 80 characters.');
         }
         budget.Name = name;
-        // List<Budget_Line__c> lines = validateLines(request.companyId, request.fiscalYear, toLines(request.lines));
-        // A draft may start empty ("Add lines next"); Submit still requires at least one line.
-        List<Budget_Line__c> requested = toLines(request.lines);
-        List<Budget_Line__c> lines = requested.isEmpty()
-            ? requested
-            : validateLines(request.companyId, request.fiscalYear, requested);
+        List<Budget_Line__c> lines = validateLines(request.companyId, request.fiscalYear, toLines(request.lines));
         new Writer().saveDraft(budget, lines);
         return budget.Id;
     }
@@ -192,7 +188,7 @@ public with sharing class SABBudgetService {
         List<Budget_Line__c> copies = new List<Budget_Line__c>();
         for (Budget_Line__c line : store.lines(approvedBudget.Id)) {
             copies.add(new Budget_Line__c(Accounting_Period__c = line.Accounting_Period__c, GL_Account__c = line.GL_Account__c,
-                Department__c = line.Department__c, Cost_Center__c = line.Cost_Center__c, Amount__c = line.Amount__c));
+                Department__c = line.Department__c, Cost_Center__c = line.Cost_Center__c, Project__c = line.Project__c, Amount__c = line.Amount__c));
         }
         Writer writer = new Writer();
         writer.saveDraft(revisionBudget, copies);
@@ -229,7 +225,7 @@ public with sharing class SABBudgetService {
                 throw new BudgetException('Budget lines cannot be empty.');
             }
             lines.add(new Budget_Line__c(Accounting_Period__c = r.accountingPeriodId, GL_Account__c = r.glAccountId,
-                Department__c = r.departmentId, Cost_Center__c = r.costCenterId, Amount__c = r.amount));
+                Department__c = r.departmentId, Cost_Center__c = r.costCenterId, Project__c = r.projectId, Amount__c = r.amount));
         }
         return lines;
     }
@@ -246,13 +242,14 @@ public with sharing class SABBudgetService {
         Set<Id> accounts = new Set<Id>();
         Set<Id> departments = new Set<Id>();
         Set<Id> costCenters = new Set<Id>();
+        Set<Id> projects = new Set<Id>();
         Set<String> keys = new Set<String>();
         for (Budget_Line__c line : lines) {
             if (line.Accounting_Period__c == null || line.GL_Account__c == null || line.Amount__c == null) {
                 throw new BudgetException('Every budget line needs a period, a GL account and an amount.');
             }
             if (!keys.add(lineKey(null, line))) {
-                throw new BudgetException('Each period, account, department and cost center combination can appear only once.');
+                throw new BudgetException('Each period, account, department, cost center and project combination can appear only once.');
             }
             periods.add(line.Accounting_Period__c);
             accounts.add(line.GL_Account__c);
@@ -261,6 +258,9 @@ public with sharing class SABBudgetService {
             }
             if (line.Cost_Center__c != null) {
                 costCenters.add(line.Cost_Center__c);
+            }
+            if (line.Project__c != null) {
+                projects.add(line.Project__c);
             }
         }
         for (Accounting_Period__c p : [SELECT Id, Company__c, Fiscal_Year__c FROM Accounting_Period__c WHERE Id IN :periods WITH USER_MODE]) {
@@ -287,7 +287,13 @@ public with sharing class SABBudgetService {
             }
             costCenters.remove(c.Id);
         }
-        if (!periods.isEmpty() || !accounts.isEmpty() || !departments.isEmpty() || !costCenters.isEmpty()) {
+        for (Project__c p : [SELECT Id, Company__c, Status__c FROM Project__c WHERE Id IN :projects WITH USER_MODE]) {
+            if (p.Company__c != companyId || p.Status__c == 'Cancelled') {
+                throw new BudgetException('Projects must belong to the company and not be cancelled.');
+            }
+            projects.remove(p.Id);
+        }
+        if (!periods.isEmpty() || !accounts.isEmpty() || !departments.isEmpty() || !costCenters.isEmpty() || !projects.isEmpty()) {
             throw new BudgetException('A period, GL account, department or cost center was not found or is not accessible.');
         }
         return lines;
@@ -296,7 +302,7 @@ public with sharing class SABBudgetService {
     @TestVisible
     private static String lineKey(Id budgetId, Budget_Line__c line) {
         return String.valueOf(budgetId) + '|' + line.Accounting_Period__c + '|' + line.GL_Account__c + '|'
-            + line.Department__c + '|' + line.Cost_Center__c;
+            + line.Department__c + '|' + line.Cost_Center__c + '|' + line.Project__c;
     }
 
     private static String requireKey(String requestKey) {
@@ -365,7 +371,7 @@ public with sharing class SABBudgetService {
             return rows[0];
         }
         List<Budget_Line__c> lines(Id budgetId) {
-            return [SELECT Id, Accounting_Period__c, GL_Account__c, Department__c, Cost_Center__c, Amount__c FROM Budget_Line__c
+            return [SELECT Id, Accounting_Period__c, GL_Account__c, Department__c, Cost_Center__c, Project__c, Amount__c FROM Budget_Line__c
                 WHERE Budget__c = :budgetId WITH SYSTEM_MODE LIMIT 2001];
         }
         Boolean openVersionExists(Id companyId, Integer fiscalYear, Id excludeId) {

@@ -109,6 +109,29 @@ private class SABAppShellControllerTest {
     }
 
     @IsTest
+    static void searchMatchesCodesAndBankNamesByPrefix() {
+        List<SABAppShellController.SearchResult> byCode;
+        List<SABAppShellController.SearchResult> byBank;
+        System.runAs(SABAppShellTestFixture.fixtureUser()) {
+            Test.startTest();
+            byCode = SABAppShellController.search('100');
+            byBank = SABAppShellController.search('Operating');
+            Test.stopTest();
+        }
+        Boolean accountFound = false;
+        for (SABAppShellController.SearchResult row : byCode) {
+            accountFound = accountFound || (row.kind == 'account' && row.title.startsWith('1000'));
+        }
+        System.assert(accountFound, 'An account code matches by prefix without the search index.');
+        System.assertNotEquals(null, byCode[0].companyName, 'Results name their company.');
+        Boolean bankFound = false;
+        for (SABAppShellController.SearchResult row : byBank) {
+            bankFound = bankFound || (row.kind == 'bank' && row.workspace == 'bank');
+        }
+        System.assert(bankFound, 'Bank accounts are searchable by name.');
+    }
+
+    @IsTest
     static void searchIgnoresShortTermsAndEscapes() {
         System.runAs(new User(Id = UserInfo.getUserId())) {
             Test.startTest();

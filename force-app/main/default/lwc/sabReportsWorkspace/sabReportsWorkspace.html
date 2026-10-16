@@ -89,6 +89,23 @@
                 </template>
 
                 <template lwc:elseif={isBs}>
+                    <div class="seg sab-bs-mode" role="group" aria-label="Balance sheet view">
+                        <template for:each={bsModeButtons} for:item="m"><button key={m.id} class={m.className} type="button" aria-pressed={m.pressed} data-id={m.id} onclick={handleBsMode}>{m.label}</button></template>
+                    </div>
+                    <template lwc:if={isRecon}>
+                        <template lwc:if={reconError}><div class="banner t-bad">{reconError}</div></template>
+                        <template lwc:elseif={recon}>
+                            <p class="small muted recon-summary">{reconSummary} The ledger is the source of truth; sources explain it.</p>
+                            <div class="tbl-wrap"><table class="tbl sab-recon">
+                                <thead><tr><th>Section</th><th class="n">Ledger</th><th>Source</th><th class="n">Source total</th><th class="n">Difference</th><th>Status</th></tr></thead>
+                                <tbody><template for:each={reconRows} for:item="r"><tr key={r.key} class="click" tabindex="0" data-key={r.key} onclick={handleReconRow} onkeydown={handleReconRow}>
+                                    <td>{r.label}<div class="small muted">{r.note}</div></td><td class="n num">{r.ledgerText}</td><td>{r.sourceLabel}</td><td class="n num">{r.subledgerText}</td>
+                                    <td class={r.differenceClass}>{r.differenceText}</td><td><span class={r.chip}><span class="dot"></span>{r.status}</span></td></tr></template></tbody>
+                            </table></div>
+                        </template>
+                        <template lwc:else><div class="muted">Reconciling the balance sheet</div></template>
+                    </template>
+                    <template lwc:else>
                     <div class={bs.bannerClass}><c-sab-icon name={bs.bannerIcon}></c-sab-icon><div><b>{bs.bannerTitle}</b><div class="small">{bs.bannerText}</div></div></div>
                     <template lwc:if={bs.empty}><div class="muted">No balances at this date.</div></template>
                     <template lwc:else>
@@ -107,6 +124,7 @@
                             </tbody>
                         </table></div>
                     </template>
+                                    </template>
                 </template>
 
                 <template lwc:elseif={isTb}>
@@ -184,5 +202,20 @@
             </table></div>
         </template>
         <template lwc:else><p class="muted small">Loading journal lines</p></template>
+    </c-sab-drawer>
+
+    <c-sab-drawer open={reconDrawerOpen} heading={reconDrawer.title} subheading={reconDrawer.sub} onclose={handleCloseRecon}>
+        <p class="small muted">{reconDrawer.note}</p>
+        <template lwc:if={reconDrawer.hasAccounts}>
+            <h3 class="section">Ledger accounts</h3>
+            <div class="tbl-wrap"><table class="tbl sab-recon-accounts"><tbody><template for:each={reconDrawer.accounts} for:item="a"><tr key={a.key}><td>{a.label}</td><td class="n num">{a.amountText}</td></tr></template></tbody></table></div>
+        </template>
+        <template lwc:if={reconDrawer.hasSources}>
+            <h3 class="section">Source records</h3>
+            <div class="tbl-wrap"><table class="tbl sab-recon-sources"><tbody><template for:each={reconDrawer.sources} for:item="x"><tr key={x.key}>
+                <td><template lwc:if={reconDrawer.canOpen}><button class="linkish sab-open-source" type="button" data-id={x.recordId} onclick={handleOpenSource}>{x.label}</button></template>
+                    <template lwc:else>{x.label}</template><div class="small muted">{x.detail}</div></td><td class="n num">{x.amountText}</td></tr></template></tbody></table></div>
+        </template>
+        <template lwc:if={reconDrawer.canOpen}><button slot="footer" class="btn sab-open-workspace" type="button" onclick={handleOpenSource}>{reconDrawer.openLabel}</button></template>
     </c-sab-drawer>
 </template>
