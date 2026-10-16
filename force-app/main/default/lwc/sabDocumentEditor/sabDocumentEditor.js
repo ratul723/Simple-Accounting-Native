@@ -5,7 +5,7 @@ import saveInvoice from '@salesforce/apex/SABDocumentEntryService.saveInvoice';
 import saveBill from '@salesforce/apex/SABDocumentEntryService.saveBill';
 import savePayment from '@salesforce/apex/SABDocumentEntryService.savePayment';
 import saveExpenseClaim from '@salesforce/apex/SABDocumentEntryService.saveExpenseClaim';
-import saveParty from '@salesforce/apex/SABSetupActionService.saveParty';
+import quickAddParty from '@salesforce/apex/SABContactService.quickAdd';
 import { formatNumber } from 'c/sabFormat';
 import { reduceError, newKey, todayIso, toast } from 'c/sabMoneyShared';
 
@@ -49,6 +49,10 @@ export default class SabDocumentEditor extends LightningElement {
     requestKey;
     loadedType;
     partyFormOpen = false;
+    newPartyEmail = '';
+    partyDuplicate;
+    detailsOpen = false;
+    detailsPrefill;
     newPartyName = '';
     partyError;
     partySaving = false;
@@ -178,7 +182,12 @@ export default class SabDocumentEditor extends LightningElement {
 
     handleOpenPeople() {
         this.dispatchEvent(new CustomEvent('close'));
-        this.dispatchEvent(new CustomEvent('sabnavigate', { detail: { workspace: 'payroll' }, bubbles: true, composed: true }));
+        this.dispatchEvent(new CustomEvent('sabnavigate', { detail: { workspace: 'payroll', recordId: 'staff' }, bubbles: true, composed: true }));
+    }
+
+    /** Invoices, credit notes, bills and claims have a line table; payments and receipts are a short form. */
+    get modalSize() {
+        return this.isPayment ? 'default' : 'wide';
     }
 
     get partyLabel() {
@@ -262,35 +271,94 @@ export default class SabDocumentEditor extends LightningElement {
         return `New ${this.config.party ? this.config.party.toLowerCase() : 'party'}`;
     }
 
+    get addPartyLabel() {
+        return `Add new ${this.partyLabelLower || 'party'}`;
+    }
+
+    /** A party chosen in the payment and receipt picker. */
+    handlePartyPick(event) {
+        this.form = { ...this.form, partyProfileId: event.detail.value };
+    }
+
+    /** The picker's pinned "Add new customer/supplier" row: open the Name + Add row. */
+    handleAddNewParty() {
+        if (!this.partyFormOpen) {
+            this.handleTogglePartyForm();
+        }
+    }
+
     handleTogglePartyForm() {
         this.partyFormOpen = !this.partyFormOpen;
         this.partyError = undefined;
+        this.partyDuplicate = undefined;
         this.newPartyName = '';
+        this.newPartyEmail = '';
     }
 
     handlePartyName(event) {
         this.newPartyName = event.target.value;
     }
 
-    async handleSaveParty() {
+    handlePartyEmail(event) {
+        this.newPartyEmail = event.target.value;
+    }
+
+    get partyKind() {
+        return this.config.partyList === 'suppliers' ? 'supplier' : 'customer';
+    }
+
+    handleSaveParty() {
+        this.quickAdd(false);
+    }
+
+    handleSavePartyAnyway() {
+        this.quickAdd(true);
+    }
+
+    /** Quick add: a name and optional email; control account, payment term and currency come from company setup. */
+    async quickAdd(confirmDuplicate) {
         if (this.partySaving) {
             return;
         }
-        const supplier = this.config.partyList === 'suppliers';
+        const supplier = this.partyKind === 'supplier';
         this.partySaving = true;
         this.partyError = undefined;
         try {
-            const profileId = await saveParty({ request: { companyId: this.companyId, name: this.newPartyName, isCustomer: !supplier, isSupplier: supplier },
-                requestKey: newKey('PARTY', this.companyId) });
-            this.options = await getEntryOptions({ companyId: this.companyId });
-            this.form = { ...this.form, partyProfileId: profileId };
-            this.partyFormOpen = false;
+            const result = await quickAddParty({ companyId: this.companyId, name: this.newPartyName, email: this.newPartyEmail || null,
+                isCustomer: !supplier, isSupplier: supplier, confirmDuplicate, requestKey: newKey('PARTY', this.companyId) });
+            if (result.duplicateWarning) {
+                this.partyDuplicate = result.duplicateWarning;
+                return;
+            }
+            await this.selectNewParty(result.profileId);
             toast(this, `${this.newPartyName} added`);
         } catch (error) {
             this.partyError = reduceError(error);
         } finally {
             this.partySaving = false;
         }
+    }
+
+    async selectNewParty(profileId) {
+        this.options = await getEntryOptions({ companyId: this.companyId });
+        this.form = { ...this.form, partyProfileId: profileId };
+        this.partyFormOpen = false;
+        this.partyDuplicate = undefined;
+    }
+
+    /** "Add more details": the full customer or supplier form, prefilled with what was typed. */
+    handleMoreDetails() {
+        this.detailsPrefill = { name: this.newPartyName, email: this.newPartyEmail };
+        this.detailsOpen = true;
+    }
+
+    handleDetailsClose() {
+        this.detailsOpen = false;
+    }
+
+    async handleDetailsSaved(event) {
+        this.detailsOpen = false;
+        await this.selectNewParty(event.detail.profileId);
     }
 
     // ---------- input ----------

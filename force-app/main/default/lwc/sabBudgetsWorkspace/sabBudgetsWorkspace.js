@@ -448,6 +448,36 @@ export default class SabBudgetsWorkspace extends LightningElement {
             selected: b.budgetId === this.form.copyFrom }));
     }
 
+    get isCopying() {
+        return Boolean(this.form.copyFrom);
+    }
+
+    /** Fiscal years that have accounting periods, plus the one in the form, newest first. */
+    get newYearOptions() {
+        const years = new Set(((this.data && this.data.periods) || []).map((p) => Number(p.fiscalYear)).filter(Boolean));
+        if (this.form.fiscalYear) {
+            years.add(Number(this.form.fiscalYear));
+        }
+        return [...years].sort((a, b) => b - a).map((y) => ({ value: String(y), label: `FY ${y}`, selected: String(y) === String(this.form.fiscalYear) }));
+    }
+
+    get hasYearOptions() {
+        return ((this.data && this.data.periods) || []).length > 0;
+    }
+
+    /** The version the new draft will get: the next one for that fiscal year. */
+    get newVersionText() {
+        const year = Number(this.form.fiscalYear);
+        const versions = ((this.data && this.data.budgets) || []).filter((b) => Number(b.fiscalYear) === year).map((b) => Number(b.version) || 0);
+        return `v${(versions.length ? Math.max(...versions) : 0) + 1}`;
+    }
+
+    get yearPeriodText() {
+        const year = Number(this.form.fiscalYear);
+        const count = ((this.data && this.data.periods) || []).filter((p) => Number(p.fiscalYear) === year).length;
+        return count ? String(count) : 'None yet: generate them in Company setup';
+    }
+
     get currencyText() {
         return (this.data && this.data.functionalCurrency) || '';
     }
@@ -562,6 +592,10 @@ export default class SabBudgetsWorkspace extends LightningElement {
 
     get isReasonModal() {
         return this.modal === 'return' || this.modal === 'revise';
+    }
+
+    get modalSize() {
+        return this.modal === 'lines' ? 'wide' : 'default';
     }
 
     get isLinesModal() {

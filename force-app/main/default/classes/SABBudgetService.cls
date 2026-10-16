@@ -89,7 +89,7 @@ public with sharing class SABBudgetService {
             throw new BudgetException('Budget name cannot exceed 80 characters.');
         }
         budget.Name = name;
-        List<Budget_Line__c> lines = validateLines(request.companyId, request.fiscalYear, toLines(request.lines));
+        List<Budget_Line__c> lines = validateLines(request.companyId, request.fiscalYear, toLines(request.lines), true);
         new Writer().saveDraft(budget, lines);
         return budget.Id;
     }
@@ -108,7 +108,7 @@ public with sharing class SABBudgetService {
         }
         Budget__c budget = store.lockBudget(budgetId);
         requireStatus(budget, DRAFT, 'Only a Draft budget can be submitted.');
-        validateLines(budget.Company__c, budget.Fiscal_Year__c.intValue(), store.lines(budget.Id));
+        validateLines(budget.Company__c, budget.Fiscal_Year__c.intValue(), store.lines(budget.Id), false);
         budget.Status__c = SUBMITTED;
         budget.Submitted_By__c = UserInfo.getUserId();
         budget.Submitted_At__c = System.now();
@@ -234,9 +234,13 @@ public with sharing class SABBudgetService {
      * Line rules shared by saveDraft and submit: periods of the company's fiscal year, active GL accounts, departments
      * and cost centers of the company, an amount on every line, and one line per period/account/department/cost center.
      */
-    private static List<Budget_Line__c> validateLines(Id companyId, Integer fiscalYear, List<Budget_Line__c> lines) {
-        if (lines.isEmpty() || lines.size() > MAX_LINES) {
-            throw new BudgetException('A budget needs between 1 and ' + MAX_LINES + ' lines.');
+    // A draft may start empty (lines are added after it is created); submitting needs at least one line.
+    private static List<Budget_Line__c> validateLines(Id companyId, Integer fiscalYear, List<Budget_Line__c> lines, Boolean allowEmpty) {
+        if (lines.isEmpty() && !allowEmpty) {
+            throw new BudgetException('Add at least one budget line before submitting.');
+        }
+        if (lines.size() > MAX_LINES) {
+            throw new BudgetException('A budget can have up to ' + MAX_LINES + ' lines.');
         }
         Set<Id> periods = new Set<Id>();
         Set<Id> accounts = new Set<Id>();

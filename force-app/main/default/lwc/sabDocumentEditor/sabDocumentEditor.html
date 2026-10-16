@@ -1,20 +1,24 @@
 <template>
-    <c-sab-modal open={open} heading={heading} subheading={subheading} onclose={handleClose}>
+    <c-sab-modal open={open} heading={heading} subheading={subheading} size={modalSize} onclose={handleClose}>
         <template lwc:if={formError}><div class="banner t-bad form-error" role="alert"><c-sab-icon name="alert"></c-sab-icon><div>{formError}</div></div></template>
         <template lwc:if={loading}><div class="muted" role="status">Loading</div></template>
         <template lwc:elseif={options}>
             <template lwc:if={isPayment}>
                 <div class="grid g2 form">
                     <div class="field party">
-                        <label class="field"><span>{partyLabel}</span><select class="select" data-field="partyProfileId" onchange={handleField}><option value="">Select</option>
-                        <template for:each={partyOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template><option value="__new__">+ Add new {partyLabelLower}</option></select></label></select></label>
+                        <c-sab-party-picker class="sab-party-picker" label={partyLabel} options={partyOptions} value={form.partyProfileId}
+                            add-label={addPartyLabel} onchange={handlePartyPick} onaddnew={handleAddNewParty}></c-sab-party-picker>
                         <template lwc:if={partyFormOpen}>
                             <div class="party-form">
                                 <input class="input sab-party-name" value={newPartyName} placeholder="Name" aria-label="Name" oninput={handlePartyName} />
+                                <input class="input sab-party-email" type="email" value={newPartyEmail} placeholder="Email (optional)" aria-label="Email" oninput={handlePartyEmail} />
                                 <button class="btn sm primary sab-party-save" type="button" disabled={partySaving} onclick={handleSaveParty}>Add</button>
                                 <button class="btn sm" type="button" onclick={handleTogglePartyForm}>Cancel</button>
                             </div>
                             <template lwc:if={partyError}><div class="small down party-error">{partyError}</div></template>
+                            <template lwc:if={partyDuplicate}><div class="small party-duplicate">{partyDuplicate}
+                                <button class="linkish sab-party-anyway" type="button" onclick={handleSavePartyAnyway}>Add anyway</button></div></template>
+                            <button class="linkish sab-party-more" type="button" onclick={handleMoreDetails}>Add more details</button>
                         </template>
                     </div>
                     <label class="field"><span>Bank account</span><select class="select" data-field="bankAccountId" onchange={handleField}><option value="">Select</option>
@@ -47,10 +51,15 @@
                             <template lwc:if={partyFormOpen}>
                                 <div class="party-form">
                                     <input class="input sab-party-name" value={newPartyName} placeholder="Name" aria-label="Name" oninput={handlePartyName} />
+                                <input class="input sab-party-email" type="email" value={newPartyEmail} placeholder="Email (optional)" aria-label="Email" oninput={handlePartyEmail} />
                                     <button class="btn sm primary sab-party-save" type="button" disabled={partySaving} onclick={handleSaveParty}>Add</button>
                                     <button class="btn sm" type="button" onclick={handleTogglePartyForm}>Cancel</button>
                                 </div>
                                 <template lwc:if={partyError}><div class="small down party-error">{partyError}</div></template>
+
+                            <template lwc:if={partyDuplicate}><div class="small party-duplicate">{partyDuplicate}
+                                <button class="linkish sab-party-anyway" type="button" onclick={handleSavePartyAnyway}>Add anyway</button></div></template>
+                            <button class="linkish sab-party-more" type="button" onclick={handleMoreDetails}>Add more details</button>
                             </template>
                         </div>
                         <template lwc:if={isCredit}>
@@ -110,4 +119,6 @@
         <button slot="footer" class="btn ghost sab-doc-cancel" type="button" onclick={handleClose}>Cancel</button>
         <button slot="footer" class="btn primary sab-doc-save" type="button" disabled={saveDisabled} onclick={handleSave}>Save draft</button>
     </c-sab-modal>
+    <c-sab-contact-form company-id={companyId} kind={partyKind} prefill={detailsPrefill} open={detailsOpen}
+        onclose={handleDetailsClose} onsaved={handleDetailsSaved}></c-sab-contact-form>
 </template>

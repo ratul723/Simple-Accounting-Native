@@ -1,0 +1,99 @@
+@import 'c/sabStyles';
+
+.picker {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.lbl {
+    font-size: 12.5px;
+    color: var(--muted);
+}
+
+.trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+}
+
+.trigger.empty .value {
+    color: var(--muted);
+}
+
+.value {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.panel-list {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin-top: 4px;
+    z-index: 20;
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.16);
+    overflow: hidden;
+}
+
+.panel-list.open {
+    display: block;
+}
+
+.list {
+    max-height: 220px;
+    overflow-y: auto;
+    padding: 4px 0;
+}
+
+.opt,
+.none {
+    padding: 8px 12px;
+    font-size: 13.5px;
+}
+
+.opt {
+    cursor: pointer;
+}
+
+.opt.active,
+.opt:hover {
+    background: var(--surface-2);
+}
+
+.opt.sel {
+    font-weight: 600;
+}
+
+.none {
+    color: var(--muted);
+}
+
+.add-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border-top: 1px solid var(--line-strong);
+    background: var(--surface-2);
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--accent);
+    cursor: pointer;
+}
+
+.add-row.active,
+.add-row:hover {
+    background: var(--line);
+}

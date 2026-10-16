@@ -242,9 +242,12 @@ describe('c-sab-budgets-workspace', () => {
         const root = el.shadowRoot;
         root.querySelector('.sab-new-budget').click();
         await flush();
-        expect(root.querySelector('c-sab-modal .ro').textContent).toBe('AUD');
+        expect(root.querySelector('.sab-new-facts').textContent).toContain('AUD');
+        expect(root.querySelector('.sab-new-facts').textContent).toContain('Draft');
+        expect(root.querySelector('c-sab-modal [data-field="adjustPercent"]')).toBeNull();
         setModal(root, 'name', 'FY27 Stretch');
         setModal(root, 'copyFrom', 'B1');
+        await flush();
         setModal(root, 'adjustPercent', '10');
         root.querySelector('.sab-modal-save').click();
         await flush();
@@ -252,6 +255,12 @@ describe('c-sab-budgets-workspace', () => {
         expect(request.lines).toEqual([{ accountingPeriodId: 'P1', glAccountId: 'G1', departmentId: null, costCenterId: null, projectId: null, amount: 1100 }]);
         root.querySelector('.sab-edit-lines').click();
         await flush();
+        root.querySelector('.sab-spread').click();
+        await flush();
+        root.querySelector('.sab-spread-cancel').click();
+        await flush();
+        expect(root.querySelector('.sab-spread-apply')).toBeNull();
+        expect(root.querySelector('.line-actions .sab-add-line').className).toContain('primary');
         root.querySelector('.sab-spread').click();
         await flush();
         root.querySelector('.sab-spread-apply').click();
@@ -269,7 +278,7 @@ describe('c-sab-budgets-workspace', () => {
         const amounts = Array.from(root.querySelectorAll('.sab-lines [data-field="amount"]')).map((i) => i.value);
         expect(amounts.slice(-2)).toEqual(['500', '500.01']);
 
-        getWorkspace.mockResolvedValue(ws({ periods: [{ value: 'P1', label: 'Jul 2026', fiscalYear: 2027 }] }));
+        getWorkspace.mockResolvedValue(ws({ periods: [] }));
         const el2 = mount();
         await flush();
         el2.shadowRoot.querySelector('.sab-new-budget').click();

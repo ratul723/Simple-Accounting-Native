@@ -24,14 +24,15 @@ public class SABImportTestFixture {
             }
             insert as system created.values();
             Map<String, Set<String>> setsByUser = new Map<String, Set<String>>{
-                IMPORTER => new Set<String>{'SAB_Import_User', 'SAB_Manage_Imports_Action', 'SAB_Commit_Imports_Action', 'SAB_View_Integration_Log_Action'},
+                IMPORTER => new Set<String>{'SAB_Import_User', 'SAB_Manage_Imports_Action', 'SAB_Commit_Imports_Action', 'SAB_View_Integration_Log_Action',
+                    'SAB_Manage_Contacts_Action'},
                 OUTSIDER => new Set<String>{'SAB_Import_User', 'SAB_Manage_Imports_Action', 'SAB_View_Integration_Log_Action'}};
             Map<String, Id> setIds = new Map<String, Id>();
             for (PermissionSet p : [SELECT Id, Name FROM PermissionSet WHERE Name IN ('SAB_Import_User', 'SAB_Manage_Imports_Action',
-                    'SAB_Commit_Imports_Action', 'SAB_View_Integration_Log_Action') WITH SYSTEM_MODE]) {
+                    'SAB_Commit_Imports_Action', 'SAB_View_Integration_Log_Action', 'SAB_Manage_Contacts_Action') WITH SYSTEM_MODE]) {
                 setIds.put(p.Name, p.Id);
             }
-            System.assertEquals(4, setIds.size(), 'Deploy the G20 permission sets first.');
+            System.assertEquals(5, setIds.size(), 'Deploy the G20 permission sets and SAB Manage Contacts Action first.');
             List<PermissionSetAssignment> rows = new List<PermissionSetAssignment>();
             for (String who : setsByUser.keySet()) {
                 for (String name : setsByUser.get(who)) {

@@ -151,7 +151,7 @@ describe('c-sab-imports-workspace', () => {
         expect(root.querySelector('.drop .strong').textContent).toBe('coa.csv');
         expect(root.querySelector('.drop .small').textContent).toBe('2 data rows, 0 KB');
         expect(root.querySelector('.hint-line').textContent).toContain('account_code');
-        for (const [type, text] of [['Customers', 'credit_limit'], ['Suppliers', 'accounts payable'], ['Budgets', 'budget_name']]) {
+        for (const [type, text] of [['Customers', 'receivable'], ['Suppliers', 'bank columns'], ['Budgets', 'budget_name']]) {
             select.value = type;
             select.dispatchEvent(new CustomEvent('change'));
             // eslint-disable-next-line no-await-in-loop

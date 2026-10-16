@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <customPermissions>
+        <enabled>true</enabled>
+        <name>SAB_Manage_Contacts</name>
+    </customPermissions>
+    <description>Create, edit, deactivate and import customers and suppliers. Requires SAB App User.</description>
+    <hasActivationRequired>false</hasActivationRequired>
+    <label>SAB Manage Contacts Action</label>
+</PermissionSet>

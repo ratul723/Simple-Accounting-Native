@@ -75,6 +75,11 @@ export default class SabPeopleWorkspace extends LightningElement {
 
     connectedCallback() {
         const key = this.persona && this.persona.key;
+        // Other screens can open a view directly, e.g. the expense claim form's "Add employees" link opens Employees & pay.
+        if (this.recordId === 'staff') {
+            this.view = 'staff';
+            return;
+        }
         this.view = key === 'HR' ? 'prep' : key === 'TREASURY' ? 'settle' : 'post';
     }
 

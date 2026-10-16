@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Bank_Routing_Code__c</fullName>
+    <description>BSB, sort code, routing or SWIFT code for the supplier bank account. Changes are audited.</description>
+    <externalId>false</externalId>
+    <label>Bank Routing Code</label>
+    <length>40</length>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

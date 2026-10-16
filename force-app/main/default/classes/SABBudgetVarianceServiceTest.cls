@@ -42,13 +42,14 @@ private class SABBudgetVarianceServiceTest {
         System.assertEquals(350, supplies.budget, 'Supplies budget across both periods.');
         System.assertEquals(300, supplies.actual, 'The Draft journal of 999 is excluded.');
         System.assertEquals(true, supplies.favourable, 'Expense below budget is favourable.');
-        SABBudgetVarianceService.VarianceRow bank = rows.get('1100');
-        System.assertEquals(true, bank.unbudgeted, 'Accounts with actuals but no budget appear as unbudgeted.');
-        System.assertEquals(700, bank.actual, 'Bank actual is the debit balance.');
-        System.assertEquals(null, bank.favourable, 'Balance-sheet accounts carry no favourable flag.');
+        System.assertEquals(null, rows.get('1100'), 'The unbudgeted bank account is a balance sheet account, so it is not compared.');
         System.assertEquals(1000, result.totalRevenueActual, 'Revenue total.');
         System.assertEquals(350, result.totalExpenseBudget, 'Expense budget total.');
-        System.assertEquals('1100', result.rows[0].accountCode, 'Rows are ordered by account code.');
+        System.assertEquals('4000', result.rows[0].accountCode, 'Rows are ordered by account code.');
+        for (SABBudgetVarianceService.VarianceRow row : result.rows) {
+            System.assert(row.accountType == 'Revenue' || row.accountType == 'Expense' || row.budget != 0,
+                'Unbudgeted balance sheet accounts are not compared: ' + row.accountCode);
+        }
     }
 
     @IsTest

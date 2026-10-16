@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Default_Tax_Code__c</fullName>
+    <description>Tax code pre-filled on new document lines for this contact.</description>
+    <externalId>false</externalId>
+    <label>Default Tax Code</label>
+    <deleteConstraint>Restrict</deleteConstraint>
+    <referenceTo>Tax_Code__c</referenceTo>
+    <relationshipLabel>Contact Defaults (Default Tax Code)</relationshipLabel>
+    <relationshipName>Party_Profiles_Default_Tax</relationshipName>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Lookup</type>
+</CustomField>

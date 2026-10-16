@@ -1,0 +1,28 @@
+@import 'c/sabStyles';
+
+.form {
+    gap: 12px 14px;
+}
+
+.section {
+    margin: 16px 0 8px;
+}
+
+.section:first-of-type {
+    margin-top: 0;
+}
+
+.wide {
+    grid-column: 1 / -1;
+}
+
+.roles {
+    flex-direction: row;
+    align-items: center;
+    gap: 16px;
+}
+
+.form-error,
+.duplicate {
+    margin-bottom: 14px;
+}

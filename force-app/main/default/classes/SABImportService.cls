@@ -10,8 +10,13 @@
  *   Chart of Accounts   account_code, name, account_type [, normal_balance] [, is_active]       -> GL accounts
  *   Journal Entries     journal_key, accounting_date (yyyy-mm-dd), account_code, debit, credit [, description] [, explanation]
  *   Opening Balances    same columns as Journal Entries
- *   Customers           name [, tax_number] [, credit_limit]                                    -> account + customer profile
- *   Suppliers           name [, tax_number]                                                     -> account + supplier profile
+ *   Customers           name [, display_name, email, phone, tax_number, credit_limit, currency, payment_term,
+ *                       billing_street, billing_city, billing_state, billing_postal_code, billing_country,
+ *                       shipping_street, shipping_city, shipping_state, shipping_postal_code, shipping_country,
+ *                       preferred_payment_method]                                               -> account + customer profile
+ *   Suppliers           the customer columns without credit_limit and shipping_*, plus bank_account_name,
+ *                       bank_account_number, bank_routing_code                                   -> account + supplier profile
+ *   Customer and supplier imports need SAB_Manage_Contacts; payment_term matches a term name or key of the company.
  *   Budgets             budget_name, fiscal_year, period_key, account_code, amount [, department_code] [, cost_center_code] [, project_code]
  *                       -> one Draft budget version per budget_name and fiscal_year, through SABBudgetService.saveDraft
  * Party imports use the company's first active AR or AP control account and skip names that already have a profile.
@@ -132,7 +137,11 @@ public with sharing class SABImportService {
     }
 
     private static void checkParties(Import_Job__c job, List<Import_Row__c> rows, Store store) {
+        if (!SABContactService.canManage()) {
+            throw new ImportException('Importing customers and suppliers needs the SAB Manage Contacts Action permission set.');
+        }
         Boolean customers = job.Import_Type__c == 'Customers';
+        Map<String, Id> terms = store.termsByName(job.Company__c);
         Id control = store.controlAccount(job.Company__c, customers ? 'AR' : 'AP');
         Set<String> existing = store.partyNames(job.Company__c, customers);
         Map<String, Integer> inFile = new Map<String, Integer>();
@@ -159,6 +168,15 @@ public with sharing class SABImportService {
             }
             if (customers && String.isNotBlank(v.get('credit_limit')) && (parseAmount(v.get('credit_limit')) == null || parseAmount(v.get('credit_limit')) < 0)) {
                 errors.add('credit_limit must be a positive number');
+            }
+            if (String.isNotBlank(v.get('payment_term')) && !terms.containsKey(v.get('payment_term').trim().toLowerCase())) {
+                errors.add('payment_term is not an active payment term of the company');
+            }
+            if (String.isNotBlank(v.get('currency')) && !Pattern.matches('[A-Za-z]{3}', v.get('currency').trim())) {
+                errors.add('currency must be a three-letter code');
+            }
+            if (String.isNotBlank(v.get('email')) && !Pattern.matches('[^@\\s]+@[^@\\s]+\\.[^@\\s]+', v.get('email').trim())) {
+                errors.add('email is not a valid email address');
             }
             mark(row, errors);
         }
@@ -438,9 +456,18 @@ public with sharing class SABImportService {
     private static void commitParties(Import_Job__c job, List<Import_Row__c> valid, Store store) {
         Boolean customers = job.Import_Type__c == 'Customers';
         Id control = store.controlAccount(job.Company__c, customers ? 'AR' : 'AP');
+        if (!SABContactService.canManage()) {
+            throw new ImportException('Importing customers and suppliers needs the SAB Manage Contacts Action permission set.');
+        }
+        Map<String, Id> terms = store.termsByName(job.Company__c);
         List<Account> accounts = new List<Account>();
         for (Import_Row__c row : valid) {
-            accounts.add(new Account(Name = values(row).get('name').trim()));
+            Map<String, String> v = values(row);
+            accounts.add(new Account(Name = v.get('name').trim(), Phone = cell(v, 'phone'), BillingStreet = cell(v, 'billing_street'),
+                BillingCity = cell(v, 'billing_city'), BillingState = cell(v, 'billing_state'), BillingPostalCode = cell(v, 'billing_postal_code'),
+                BillingCountry = cell(v, 'billing_country'), ShippingStreet = customers ? cell(v, 'shipping_street') : null,
+                ShippingCity = customers ? cell(v, 'shipping_city') : null, ShippingState = customers ? cell(v, 'shipping_state') : null,
+                ShippingPostalCode = customers ? cell(v, 'shipping_postal_code') : null, ShippingCountry = customers ? cell(v, 'shipping_country') : null));
         }
         new Writer().insertRecords(accounts);
         List<Party_Accounting_Profile__c> profiles = new List<Party_Accounting_Profile__c>();
@@ -450,13 +477,24 @@ public with sharing class SABImportService {
                 Is_Supplier__c = !customers, Is_Active__c = true, Profile_Key__c = (String.valueOf(job.Company__c) + '-' + accounts[i].Id).left(80),
                 AR_Control_Account__c = customers ? control : null, AP_Control_Account__c = customers ? null : control,
                 Tax_Registration_Number__c = String.isBlank(v.get('tax_number')) ? null : v.get('tax_number'),
-                Credit_Limit__c = customers && String.isNotBlank(v.get('credit_limit')) ? parseAmount(v.get('credit_limit')) : null));
+                Credit_Limit__c = customers && String.isNotBlank(v.get('credit_limit')) ? parseAmount(v.get('credit_limit')) : null,
+                Display_Name__c = cell(v, 'display_name'), Email__c = cell(v, 'email'), Phone__c = cell(v, 'phone'),
+                Currency__c = cell(v, 'currency') == null ? null : cell(v, 'currency').toUpperCase(),
+                Payment_Term__c = cell(v, 'payment_term') == null ? store.defaultTerm(job.Company__c) : terms.get(cell(v, 'payment_term').toLowerCase()),
+                Preferred_Payment_Method__c = cell(v, 'preferred_payment_method'),
+                Bank_Account_Name__c = customers ? null : cell(v, 'bank_account_name'), Bank_Account_Number__c = customers ? null : cell(v, 'bank_account_number'),
+                Bank_Routing_Code__c = customers ? null : cell(v, 'bank_routing_code')));
         }
         new Writer().insertRecords(profiles);
         for (Integer i = 0; i < valid.size(); i++) {
             valid[i].Validation_Status__c = 'Committed';
             valid[i].Committed_Record_Id__c = profiles[i].Id;
         }
+    }
+
+    private static String cell(Map<String, String> v, String column) {
+        String value = v.get(column);
+        return String.isBlank(value) ? null : value.trim();
     }
 
     // Budget lines go through SABBudgetService.saveDraft, so its permission, period and account rules apply.
@@ -642,6 +680,28 @@ public with sharing class SABImportService {
                 rows.put(p.Period_Key__c, p);
             }
             return rows;
+        }
+
+        Map<String, Id> termsByName(Id companyId) {
+            Map<String, Id> rows = new Map<String, Id>();
+            for (Payment_Term__c t : [SELECT Id, Name, Term_Key__c FROM Payment_Term__c WHERE Company__c = :companyId AND Is_Active__c = true WITH SYSTEM_MODE LIMIT 500]) {
+                rows.put(t.Name.toLowerCase(), t.Id);
+                if (String.isNotBlank(t.Term_Key__c)) {
+                    rows.put(t.Term_Key__c.toLowerCase(), t.Id);
+                }
+            }
+            return rows;
+        }
+
+        Id defaultTerm(Id companyId) {
+            List<Payment_Term__c> rows = [SELECT Id, Due_Days__c FROM Payment_Term__c WHERE Company__c = :companyId AND Is_Active__c = true
+                WITH SYSTEM_MODE ORDER BY Due_Days__c LIMIT 200];
+            for (Payment_Term__c t : rows) {
+                if (t.Due_Days__c == 30) {
+                    return t.Id;
+                }
+            }
+            return rows.isEmpty() ? null : rows[0].Id;
         }
 
         Map<String, Id> projectsByCode(Id companyId) {

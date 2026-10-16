@@ -301,6 +301,9 @@ public with sharing class SABSetupActionService {
             throw new SetupActionException('Accounting Company is required.');
         }
         assertCompany(request.companyId);
+        if (!SABContactService.canManage()) {
+            throw new SetupActionException('You do not have permission to manage customers and suppliers. Ask for the SAB Manage Contacts Action permission set.');
+        }
         if (!Schema.SObjectType.Account.isCreateable() || !Schema.SObjectType.Party_Accounting_Profile__c.isCreateable()) {
             throw new SetupActionException('You do not have permission to create customers or suppliers.');
         }

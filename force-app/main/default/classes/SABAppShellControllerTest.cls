@@ -22,6 +22,8 @@ private class SABAppShellControllerTest {
         System.assert(!context.visibleWorkspaces.contains('projects'), 'Optional modules need their view permission.');
         System.assertNotEquals(null, context.disabledFeatures, 'Disabled features are listed.');
         System.assertEquals(false, context.companyInactive, 'The fixture company is active.');
+        System.assertEquals(context.visibleWorkspaces.contains('customers'), context.visibleWorkspaces.contains('suppliers'),
+            'Customers and Suppliers follow the same access rule.');
         System.assert(!context.visibleWorkspaces.contains('allocations'), 'Allocations need SAB_View_Allocations.');
         System.assert(!context.visibleWorkspaces.contains('fx') && !context.visibleWorkspaces.contains('expenses'), 'FX and expenses need their view permissions.');
         System.assert(context.hasPeriod, 'The current month period is found.');

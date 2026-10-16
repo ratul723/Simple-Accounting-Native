@@ -13,8 +13,8 @@ jest.mock('@salesforce/apex/SABDocumentEntryService.saveInvoice', () => ({ defau
 jest.mock('@salesforce/apex/SABDocumentEntryService.saveBill', () => ({ default: jest.fn() }), { virtual: true });
 jest.mock('@salesforce/apex/SABDocumentEntryService.savePayment', () => ({ default: jest.fn() }), { virtual: true });
 jest.mock('@salesforce/apex/SABDocumentEntryService.saveExpenseClaim', () => ({ default: jest.fn() }), { virtual: true });
-jest.mock('@salesforce/apex/SABSetupActionService.saveParty', () => ({ default: jest.fn() }), { virtual: true });
-import saveParty from '@salesforce/apex/SABSetupActionService.saveParty';
+jest.mock('@salesforce/apex/SABContactService.quickAdd', () => ({ default: jest.fn() }), { virtual: true });
+import saveParty from '@salesforce/apex/SABContactService.quickAdd';
 
 const OPTIONS = {
     currencyCode: 'AUD', customers: [{ value: 'C1', label: 'Greenfield' }, { value: 'C2', label: 'Coastal' }], suppliers: [{ value: 'S1', label: 'Fuel Co' }],
@@ -203,12 +203,14 @@ describe('c-sab-document-editor', () => {
     });
 
     it('adds a new supplier from the bill and a new customer from a receipt', async () => {
-        saveParty.mockRejectedValueOnce({ body: { message: 'Add an active accounts payable control account in Chart of accounts first.' } }).mockResolvedValueOnce('S9');
+        saveParty.mockRejectedValueOnce({ body: { message: 'Add an active accounts payable control account in Chart of accounts first.' } })
+            .mockResolvedValueOnce({ duplicateWarning: 'A supplier called Riverside Property already exists.' }).mockResolvedValueOnce({ profileId: 'S9' });
         const el = mount('bill');
         await flush();
         const root = el.shadowRoot;
-        expect(root.querySelector('.sab-new-party').textContent).toBe('New supplier');
-        root.querySelector('.sab-new-party').click();
+        const partySelect = root.querySelector('[data-field="partyProfileId"]');
+        partySelect.value = '__new__';
+        partySelect.dispatchEvent(new CustomEvent('change'));
         await flush();
         const name = root.querySelector('.sab-party-name');
         name.value = 'Riverside Property';
@@ -216,21 +218,47 @@ describe('c-sab-document-editor', () => {
         root.querySelector('.sab-party-save').click();
         await flush();
         expect(root.querySelector('.party-error').textContent).toContain('accounts payable control account');
-        getEntryOptions.mockResolvedValueOnce({ ...OPTIONS, suppliers: [...OPTIONS.suppliers, { value: 'S9', label: 'Riverside Property' }] });
         root.querySelector('.sab-party-save').click();
         await flush();
-        expect(saveParty.mock.calls[1][0].request).toEqual({ companyId: 'a01000000000001AAA', name: 'Riverside Property', isCustomer: false, isSupplier: true });
+        expect(root.querySelector('.party-duplicate').textContent).toContain('already exists');
+        getEntryOptions.mockResolvedValueOnce({ ...OPTIONS, suppliers: [...OPTIONS.suppliers, { value: 'S9', label: 'Riverside Property' }] });
+        root.querySelector('.sab-party-anyway').click();
+        await flush();
+        expect(saveParty.mock.calls[2][0]).toMatchObject({ companyId: 'a01000000000001AAA', name: 'Riverside Property', email: null, isCustomer: false,
+            isSupplier: true, confirmDuplicate: true });
         expect(root.querySelector('[data-field="partyProfileId"]').value).toBe('S9');
         expect(root.querySelector('.sab-party-name')).toBeNull();
 
-        saveParty.mockResolvedValueOnce('C9');
+        saveParty.mockResolvedValueOnce({ profileId: 'C9' });
         const el2 = mount('receipt');
         await flush();
-        el2.shadowRoot.querySelector('.sab-new-party').click();
+        const picker = el2.shadowRoot.querySelector('c-sab-party-picker');
+        expect(picker.addLabel).toBe('Add new customer');
+        picker.dispatchEvent(new CustomEvent('change', { detail: { value: 'C1' } }));
+        await flush();
+        expect(picker.value).toBe('C1');
+        picker.dispatchEvent(new CustomEvent('addnew'));
         await flush();
         el2.shadowRoot.querySelector('.sab-party-save').click();
         await flush();
-        expect(saveParty.mock.calls[2][0].request).toMatchObject({ isCustomer: true, isSupplier: false });
+        expect(saveParty.mock.calls[3][0]).toMatchObject({ isCustomer: true, isSupplier: false, confirmDuplicate: false });
+        expect(picker.value).toBe('C9');
+        picker.dispatchEvent(new CustomEvent('addnew'));
+        await flush();
+        const email = el2.shadowRoot.querySelector('.sab-party-email');
+        email.value = 'ap@x.example';
+        email.dispatchEvent(new CustomEvent('input'));
+        el2.shadowRoot.querySelector('.sab-party-more').click();
+        await flush();
+        const form = el2.shadowRoot.querySelector('c-sab-contact-form');
+        expect(form.open).toBe(true);
+        expect(form.kind).toBe('customer');
+        expect(form.prefill).toEqual({ name: '', email: 'ap@x.example' });
+        getEntryOptions.mockResolvedValueOnce({ ...OPTIONS, customers: [...OPTIONS.customers, { value: 'C10', label: 'Full form customer' }] });
+        form.dispatchEvent(new CustomEvent('saved', { detail: { profileId: 'C10' } }));
+        await flush();
+        expect(picker.value).toBe('C10');
+        form.dispatchEvent(new CustomEvent('close'));
     });
 
     it('tags lines with a project and cost center and points to People when there are no employees', async () => {
@@ -255,7 +283,7 @@ describe('c-sab-document-editor', () => {
         el2.addEventListener('close', closed);
         expect(el2.shadowRoot.querySelector('[data-field="costCenterId"]')).toBeNull();
         el2.shadowRoot.querySelector('.sab-open-people').click();
-        expect(nav.mock.calls[0][0].detail.workspace).toBe('payroll');
+        expect(nav.mock.calls[0][0].detail).toEqual({ workspace: 'payroll', recordId: 'staff' });
         expect(closed).toHaveBeenCalled();
     });
 });

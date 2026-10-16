@@ -63,6 +63,17 @@ function readFile(file) {
  * Import and integration center (G22F): staged CSV imports with row validation and commit, and the integration
  * outbox, on SABImportService and SABIntegrationLogService.
  */
+const CONTACT_COLUMNS = ['name', 'display_name', 'email', 'phone', 'tax_number', 'payment_term', 'currency', 'preferred_payment_method',
+    'billing_street', 'billing_city', 'billing_state', 'billing_postal_code', 'billing_country'];
+const TEMPLATES = {
+    Customers: [[...CONTACT_COLUMNS, 'credit_limit', 'shipping_street', 'shipping_city', 'shipping_state', 'shipping_postal_code', 'shipping_country'],
+        ['Greenfield Produce', 'Greenfield', 'ap@greenfield.example', '+61 2 5550 1000', '53 004 085 616', 'Net 30', '', 'Bank Transfer',
+            '1 Market St', 'Sydney', 'NSW', '2000', 'Australia', '20000', '', '', '', '', '']],
+    Suppliers: [[...CONTACT_COLUMNS, 'bank_account_name', 'bank_account_number', 'bank_routing_code'],
+        ['Fuel Co', 'Fuel Co Pty Ltd', 'accounts@fuel.example', '+61 2 5550 2000', '12 345 678 901', 'Net 14', '', 'Bank Transfer',
+            '9 Depot Rd', 'Newcastle', 'NSW', '2300', 'Australia', 'Fuel Co Pty Ltd', '123456789', '062-000']]
+};
+
 export default class SabImportsWorkspace extends LightningElement {
     @api companyName;
     @api currencyCode;
@@ -352,11 +363,28 @@ export default class SabImportsWorkspace extends LightningElement {
         return `${plural(this.form.lineCount || 0, 'data row')}, ${formatNumber((this.form.size || 0) / 1024, 0)} KB`;
     }
 
+    /** A downloadable CSV template: the header row and one example row, with the same columns as the full form. */
+    handleTemplate() {
+        const t = TEMPLATES[this.form.importType];
+        if (!t) {
+            return;
+        }
+        const csv = `${t[0].join(',')}\n${t[1].map((v) => (v.includes(',') ? `"${v}"` : v)).join(',')}\n`;
+        const link = this.template.querySelector('.sab-template-download');
+        link.href = `data:text/csv;charset=utf-8,${encodeURIComponent(csv)}`;
+        link.download = `${this.form.importType.toLowerCase().replace(/\s+/g, '-')}-template.csv`;
+        link.click();
+    }
+
+    get hasTemplate() {
+        return Boolean(TEMPLATES[this.form.importType]);
+    }
+
     get columnsHint() {
         const hints = {
             'Chart of Accounts': 'Columns: account_code, name, account_type, optional normal_balance and is_active.',
-            Customers: 'Columns: name, optional tax_number and credit_limit. Uses your accounts receivable control account.',
-            Suppliers: 'Columns: name, optional tax_number. Uses your accounts payable control account.',
+            Customers: 'Columns: name, then optional contact, address, tax, terms and payment columns (download the template). Uses your accounts receivable control account.',
+            Suppliers: 'Columns: name, then optional contact, address, tax, terms, payment and bank columns (download the template). Uses your accounts payable control account.',
             Budgets: 'Columns: budget_name, fiscal_year, period_key, account_code, amount, optional department_code and cost_center_code. One draft budget per name and year.'
         };
         return hints[this.form.importType]

@@ -8,6 +8,8 @@ export default class SabModal extends LightningElement {
     @api heading;
     @api subheading;
     @api closeLabel = 'Close dialog';
+    /** 'default' (forms), or 'wide' for dialogs with a table of lines (budget lines, invoices, bills). */
+    @api size = 'default';
     hasFooter = false;
     wasOpen = false;
     isOpen = false;
@@ -21,7 +23,7 @@ export default class SabModal extends LightningElement {
     }
 
     get modalClass() {
-        return this.isOpen ? 'modal open' : 'modal';
+        return `modal${this.isOpen ? ' open' : ''}${this.size === 'wide' ? ' wide' : ''}`;
     }
 
     get footerClass() {

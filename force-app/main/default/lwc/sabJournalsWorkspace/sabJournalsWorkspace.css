@@ -4,21 +4,43 @@
     background: var(--accent-soft);
     box-shadow: inset 3px 0 0 var(--accent);
 }
+.li.sel .chip {
+    background: color-mix(in srgb, var(--good) 22%, var(--surface));
+    box-shadow: none;
+}
 
 .li .right {
-    text-align: right;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;   /* badge and amount share one right edge */
+    gap: 4px;
+    flex: none;
 }
 
-.total {
-    margin-top: 4px;
-}
-
-.je-title {
+/* .panel-h .je-title beats sabStyles' ".panel-h h2" */
+.panel-h .je-title {
     font-family: var(--serif);
     font-size: 22px;
     font-weight: 500;
+    line-height: 1.2;
+    display: flex;
+    align-items: center;   /* chip centred on the title */
+    gap: 10px;
+    margin: 0;
 }
 
+/* The chip sizes itself: fixed height, text centred by flexbox, not by line-height */
+.panel-h .je-title .chip {
+    font-family: var(--font);      /* same sans font as the list badges */
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1;                /* no extra space above or below the letters */
+    height: 22px;
+    padding: 0 9px 0 8px;
+    display: inline-flex;
+    align-items: center;
+    align-self: center;
+}
 .pad-top {
     padding: 12px 18px 0;
 }

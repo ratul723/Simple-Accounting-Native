@@ -1,0 +1,82 @@
+<template>
+    <template lwc:if={errorMessage}>
+        <section class="panel"><div class="empty"><div class="ill"><c-sab-icon name="alert" size="30"></c-sab-icon></div>
+            <h3>The list could not be loaded</h3><p>{errorMessage}</p>
+            <div class="row center"><button class="btn primary" type="button" onclick={handleRetry}>Try again</button></div></div></section>
+    </template>
+    <template lwc:elseif={loaded}>
+        <div class="row toolbar">
+            <input class="input sab-contact-search" type="search" placeholder="Search name, email or phone" aria-label="Search" value={search} oninput={handleSearch} />
+            <div class="seg sab-contact-filter" role="group" aria-label="Status">
+                <template for:each={filterButtons} for:item="f"><button key={f.id} class={f.className} type="button" aria-pressed={f.pressed} data-id={f.id} onclick={handleFilter}>{f.label}</button></template>
+            </div>
+            <span class="spacer"></span>
+            <button class="btn primary sab-new-contact" type="button" disabled={newDisabled} title={newTitle} onclick={handleNew}><c-sab-icon name="plus" size="16"></c-sab-icon>{newLabel}</button>
+        </div>
+        <section class="panel">
+            <div class="panel-h"><div><div class="sub">{summary}</div></div></div>
+            <template lwc:if={data.balanceNote}><div class="panel-b"><div class="banner t-warn small">{data.balanceNote}</div></div></template>
+            <div class="panel-b flush">
+                <template lwc:if={hasRows}>
+                    <div class="tbl-wrap"><table class="tbl sab-contacts">
+                        <thead><tr><th>Name</th><th>Email or phone</th><th class="n">Outstanding</th><th class="n">Overdue</th><th>Status</th><th class="act"></th></tr></thead>
+                        <tbody><template for:each={rows} for:item="r"><tr key={r.profileId} class={r.rowClass} tabindex="0" data-id={r.profileId} onclick={handleRow} onkeydown={handleRow}>
+                            <td><span class="strong">{r.name}</span><div class="small muted">{r.bothText}</div></td>
+                            <td class="small">{r.contactText}</td>
+                            <td class="n num">{r.outstandingText}</td><td class={r.overdueClass}>{r.overdueText}</td>
+                            <td><span class={r.chip}><span class="dot"></span>{r.statusText}</span></td>
+                            <td class="act"><template lwc:if={canManage}>
+                                <button class="btn btn-edit sab-row-edit" type="button" data-id={r.profileId} onclick={handleEdit}><c-sab-icon name="edit" size="15"></c-sab-icon>Edit</button>
+                                <button class="btn sm ghost sab-row-toggle" type="button" data-id={r.profileId} disabled={busy} onclick={handleToggle}>{r.toggleLabel}</button>
+                            </template></td></tr></template></tbody>
+                    </table></div>
+                </template>
+                <template lwc:else><div class="panel-b muted sab-contacts-empty">{emptyText}</div></template>
+            </div>
+        </section>
+    </template>
+    <template lwc:else><section class="panel"><div class="panel-b muted" role="status">Loading</div></section></template>
+
+    <c-sab-drawer open={drawerOpen} heading={drawerTitle} subheading={drawerSub} onclose={handleCloseDrawer}>
+        <template lwc:if={detailError}><div class="banner t-bad">{detailError}</div></template>
+        <template lwc:elseif={detail}>
+            <div class="tabs" role="tablist">
+                <template for:each={tabs} for:item="t"><button key={t.id} class={t.className} role="tab" aria-selected={t.selected} type="button" data-id={t.id} onclick={handleTab}>{t.label}</button></template>
+            </div>
+            <template lwc:if={isInfo}>
+                <dl class="kv facts sab-contact-facts"><template for:each={infoFacts} for:item="f"><dt key={f.key}>{f.label}</dt><dd key={f.valueKey}>{f.value}</dd></template></dl>
+            </template>
+            <template lwc:if={isDocs}>
+                <template lwc:if={hasDocuments}>
+                    <table class="tbl sab-contact-docs"><tbody><template for:each={documents} for:item="x"><tr key={x.key} class="click" data-id={x.recordId} onclick={handleOpenDocument}>
+                        <td>{x.reference}<div class="small muted">{x.kind}, {x.dateText}</div></td><td class="n num">{x.amountText}</td>
+                        <td><span class={x.chip}><span class="dot"></span>{x.status}</span></td></tr></template></tbody></table>
+                </template>
+                <template lwc:else><p class="muted">No documents yet.</p></template>
+            </template>
+            <template lwc:if={isPayments}>
+                <template lwc:if={hasPayments}>
+                    <table class="tbl sab-contact-payments"><tbody><template for:each={payments} for:item="x"><tr key={x.key} class="click" data-id={x.recordId} onclick={handleOpenDocument}>
+                        <td>{x.reference}<div class="small muted">{x.kind}, {x.dateText}</div></td><td class="n num">{x.amountText}</td>
+                        <td><span class={x.chip}><span class="dot"></span>{x.status}</span></td></tr></template></tbody></table>
+                </template>
+                <template lwc:else><p class="muted">No payments yet.</p></template>
+            </template>
+            <template lwc:if={isStatement}>
+                <template lwc:if={hasStatement}>
+                    <table class="tbl sab-contact-statement"><thead><tr><th>Date</th><th>Reference</th><th class="n">Charged</th><th class="n">Paid</th><th class="n">Balance</th></tr></thead>
+                        <tbody><template for:each={statement} for:item="s"><tr key={s.key}><td>{s.dateText}</td><td>{s.reference}<div class="small muted">{s.description}</div></td>
+                            <td class="n num">{s.chargeText}</td><td class="n num">{s.paidText}</td><td class="n num">{s.balanceText}</td></tr></template></tbody></table>
+                </template>
+                <template lwc:else><p class="muted">Nothing posted yet.</p></template>
+            </template>
+        </template>
+        <template lwc:else><div class="muted">Loading</div></template>
+        <template lwc:if={canManage}>
+            <button slot="footer" class="btn sab-detail-toggle" type="button" disabled={busy} onclick={handleToggle}>{detailToggleLabel}</button>
+            <button slot="footer" class="btn btn-edit sab-detail-edit" type="button" onclick={handleEdit}><c-sab-icon name="edit" size="15"></c-sab-icon>Edit</button>
+        </template>
+    </c-sab-drawer>
+
+    <c-sab-contact-form company-id={companyId} kind={kind} profile-id={formProfileId} open={formOpen} onclose={handleFormClose} onsaved={handleFormSaved}></c-sab-contact-form>
+</template>

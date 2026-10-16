@@ -32,7 +32,8 @@ describe('c-sab-toast', () => {
         expect(el.shadowRoot.querySelector('.toast').className).toContain('out');
         jest.advanceTimersByTime(400);
         await flush();
-        expect(el.shadowRoot.querySelectorAll('.toast').length).toBe(0);
+        // The error stays until the user clicks; the confirmations are gone.
+        expect(Array.from(el.shadowRoot.querySelectorAll('.toast')).map((t) => t.textContent)).toEqual(['Four']);
     });
 
     it('clears timers when removed', () => {
@@ -41,5 +42,31 @@ describe('c-sab-toast', () => {
         el.show('Bye');
         document.body.removeChild(el);
         expect(jest.getTimerCount()).toBe(0);
+    });
+
+    it('keeps an error until the user clicks anywhere', async () => {
+        jest.useFakeTimers();
+        const el = createElement('c-sab-toast', { is: SabToast });
+        document.body.appendChild(el);
+        el.show('Saved', 'good');
+        el.show('Something failed', 'bad');
+        await Promise.resolve();
+        const errorToast = () => Array.from(el.shadowRoot.querySelectorAll('.toast')).find((t) => t.textContent === 'Something failed');
+        expect(errorToast().getAttribute('role')).toBe('alert');
+        jest.advanceTimersByTime(10000);
+        await Promise.resolve();
+        expect(el.shadowRoot.querySelectorAll('.toast').length).toBe(1);
+        expect(errorToast().className).not.toContain('out');
+        document.body.click();
+        await Promise.resolve();
+        expect(errorToast().className).toContain('out');
+        jest.advanceTimersByTime(400);
+        await Promise.resolve();
+        expect(el.shadowRoot.querySelectorAll('.toast').length).toBe(0);
+        el.show('Again', 'bad');
+        jest.advanceTimersByTime(1);
+        document.body.removeChild(el);
+        document.body.click();
+        jest.useRealTimers();
     });
 });

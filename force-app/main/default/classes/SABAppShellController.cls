@@ -31,6 +31,8 @@ public with sharing class SABAppShellController {
         new WorkspaceRule('audit', null, Business_Action__c.SObjectType, ACCESS_READ, null),
         new WorkspaceRule('sales', null, Invoice__c.SObjectType, ACCESS_READ, null),
         new WorkspaceRule('purchases', 'SAB_View_Accounts_Payable_Workspace', null, null, null),
+        new WorkspaceRule('customers', null, Party_Accounting_Profile__c.SObjectType, ACCESS_READ, null),
+        new WorkspaceRule('suppliers', null, Party_Accounting_Profile__c.SObjectType, ACCESS_READ, null),
         new WorkspaceRule('payments', null, Accounting_Payment__c.SObjectType, ACCESS_READ, null),
         new WorkspaceRule('expenses', 'SAB_View_Expense_Operations', null, null, null),
         new WorkspaceRule('bank', null, Bank_Reconciliation__c.SObjectType, ACCESS_READ, null),

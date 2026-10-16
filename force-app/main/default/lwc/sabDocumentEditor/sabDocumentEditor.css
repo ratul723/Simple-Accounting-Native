@@ -74,3 +74,15 @@ td.cat {
     gap: 12px 14px;
     align-items: start;   /* stop fields stretching to the tallest cell in the row */
 }
+.party-form {
+    flex-wrap: wrap;
+}
+
+.party-duplicate {
+    margin-top: 4px;
+    color: var(--warn, #9a6700);
+}
+
+.sab-party-more {
+    margin-top: 4px;
+}

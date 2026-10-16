@@ -1,0 +1,29 @@
+@import 'c/sabStyles';
+
+.toolbar {
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+}
+
+.sab-contact-search {
+    max-width: 320px;
+}
+
+.act {
+    text-align: right;
+    white-space: nowrap;
+}
+
+.act .btn {
+    margin-left: 6px;
+}
+
+tr.sel {
+    background: var(--surface-2);
+}
+
+.tabs {
+    margin-bottom: 12px;
+}

@@ -5,8 +5,12 @@ private class SABSetupActionServiceTest {
     static void setupData() {
         SABAppShellTestFixture.seed();
         System.runAs(new User(Id = UserInfo.getUserId())) {
-            insert as system new PermissionSetAssignment(AssigneeId = SABAppShellTestFixture.fixtureUser().Id,
-                PermissionSetId = [SELECT Id FROM PermissionSet WHERE Name = 'SAB_Manage_Company_Setup_Action' WITH SYSTEM_MODE LIMIT 1].Id);
+            Id fixtureUserId = SABAppShellTestFixture.fixtureUser().Id;
+            List<PermissionSetAssignment> grants = new List<PermissionSetAssignment>();
+            for (PermissionSet p : [SELECT Id FROM PermissionSet WHERE Name IN ('SAB_Manage_Company_Setup_Action', 'SAB_Manage_Contacts_Action') WITH SYSTEM_MODE]) {
+                grants.add(new PermissionSetAssignment(AssigneeId = fixtureUserId, PermissionSetId = p.Id));
+            }
+            insert as system grants;
         }
         SABTestGovernor.assertSetupWithin(50);
     }

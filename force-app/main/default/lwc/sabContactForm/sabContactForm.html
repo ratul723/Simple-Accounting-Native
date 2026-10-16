@@ -1,0 +1,75 @@
+<template>
+    <c-sab-modal open={isOpen} heading={heading} subheading={subheading} onclose={handleClose}>
+        <template lwc:if={formError}><div class="banner t-bad form-error" role="alert"><c-sab-icon name="alert"></c-sab-icon><div>{formError}</div></div></template>
+        <template lwc:if={duplicateWarning}>
+            <div class="banner t-warn duplicate" role="alert"><c-sab-icon name="alert"></c-sab-icon><div class="small">{duplicateWarning}</div>
+                <span class="spacer"></span><button class="btn sm sab-save-anyway" type="button" onclick={handleSaveAnyway}>Save anyway</button></div>
+        </template>
+        <template lwc:if={ready}>
+            <h3 class="section">Basic</h3>
+            <div class="grid g2 form">
+                <label class="field"><span>Name</span><input class="input" data-field="name" value={form.name} oninput={handleField} /></label>
+                <label class="field"><span>Display name</span><input class="input" data-field="displayName" value={form.displayName} placeholder="Shown on documents" oninput={handleField} /></label>
+                <label class="field"><span>Email</span><input class="input" type="email" data-field="email" value={form.email} oninput={handleField} /></label>
+                <label class="field"><span>Phone</span><input class="input" data-field="phone" value={form.phone} oninput={handleField} /></label>
+                <div class="field roles"><span>Role</span>
+                    <label class="check"><input type="checkbox" data-field="isCustomer" checked={form.isCustomer} onchange={handleField} />Customer</label>
+                    <label class="check"><input type="checkbox" data-field="isSupplier" checked={form.isSupplier} onchange={handleField} />Supplier</label></div>
+            </div>
+            <h3 class="section">Address</h3>
+            <div class="grid g2 form">
+                <label class="field wide"><span>Billing street</span><input class="input" data-field="billingStreet" value={form.billingStreet} oninput={handleField} /></label>
+                <label class="field"><span>City</span><input class="input" data-field="billingCity" value={form.billingCity} oninput={handleField} /></label>
+                <label class="field"><span>State</span><input class="input" data-field="billingState" value={form.billingState} oninput={handleField} /></label>
+                <label class="field"><span>Postal code</span><input class="input" data-field="billingPostalCode" value={form.billingPostalCode} oninput={handleField} /></label>
+                <label class="field"><span>Country</span><input class="input" data-field="billingCountry" value={form.billingCountry} oninput={handleField} /></label>
+                <template lwc:if={isCustomer}>
+                    <label class="field wide"><span>Shipping street</span><input class="input" data-field="shippingStreet" value={form.shippingStreet} oninput={handleField} /></label>
+                    <label class="field"><span>City</span><input class="input" data-field="shippingCity" value={form.shippingCity} oninput={handleField} /></label>
+                    <label class="field"><span>State</span><input class="input" data-field="shippingState" value={form.shippingState} oninput={handleField} /></label>
+                    <label class="field"><span>Postal code</span><input class="input" data-field="shippingPostalCode" value={form.shippingPostalCode} oninput={handleField} /></label>
+                    <label class="field"><span>Country</span><input class="input" data-field="shippingCountry" value={form.shippingCountry} oninput={handleField} /></label>
+                </template>
+            </div>
+            <h3 class="section">Tax and terms</h3>
+            <div class="grid g2 form">
+                <label class="field"><span>Tax registration number</span><input class="input" data-field="taxNumber" value={form.taxNumber} oninput={handleField} /></label>
+                <label class="field"><span>Default tax code</span><select class="select" data-field="taxCodeId" onchange={handleField}><option value="">None</option>
+                    <template for:each={taxOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+                <label class="field"><span>Payment term</span><select class="select" data-field="paymentTermId" onchange={handleField}><option value="">None</option>
+                    <template for:each={termOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+                <label class="field"><span>Currency</span><input class="input" data-field="currencyCode" value={form.currencyCode} maxlength="3" placeholder={currencyPlaceholder} oninput={handleField} /></label>
+                <template lwc:if={isCustomer}><label class="field"><span>Credit limit</span><input class="input n" type="number" step="0.01" data-field="creditLimit" value={form.creditLimit} oninput={handleField} /></label></template>
+            </div>
+            <h3 class="section">Accounting</h3>
+            <div class="grid g2 form">
+                <template lwc:if={isCustomer}>
+                    <label class="field"><span>AR control account</span><select class="select" data-field="arControlId" onchange={handleField}><option value="">Company default</option>
+                        <template for:each={arOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+                    <label class="field"><span>Default revenue account</span><select class="select" data-field="revenueAccountId" onchange={handleField}><option value="">None</option>
+                        <template for:each={revenueOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+                </template>
+                <template lwc:if={isSupplier}>
+                    <label class="field"><span>AP control account</span><select class="select" data-field="apControlId" onchange={handleField}><option value="">Company default</option>
+                        <template for:each={apOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+                    <label class="field"><span>Default expense account</span><select class="select" data-field="expenseAccountId" onchange={handleField}><option value="">None</option>
+                        <template for:each={expenseOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+                </template>
+            </div>
+            <h3 class="section">Payment</h3>
+            <div class="grid g2 form">
+                <label class="field"><span>Preferred payment method</span><select class="select" data-field="paymentMethod" onchange={handleField}><option value="">None</option>
+                    <template for:each={methodOptions} for:item="o"><option key={o.value} value={o.value} selected={o.selected}>{o.label}</option></template></select></label>
+                <template lwc:if={isSupplier}>
+                    <label class="field"><span>Bank account name</span><input class="input" data-field="bankAccountName" value={form.bankAccountName} oninput={handleField} /></label>
+                    <label class="field"><span>Bank account number</span><input class="input" data-field="bankAccountNumber" value={form.bankAccountNumber} oninput={handleField} /></label>
+                    <label class="field"><span>BSB, sort or routing code</span><input class="input" data-field="bankRoutingCode" value={form.bankRoutingCode} oninput={handleField} /></label>
+                    <p class="small muted wide">Bank detail changes are recorded in Audit history.</p>
+                </template>
+            </div>
+        </template>
+        <template lwc:elseif={loading}><div class="muted" role="status">Loading</div></template>
+        <button slot="footer" class="btn ghost sab-contact-cancel" type="button" onclick={handleClose}>Cancel</button>
+        <button slot="footer" class="btn primary sab-contact-save" type="button" disabled={saveDisabled} title={saveTitle} onclick={handleSave}>Save</button>
+    </c-sab-modal>
+</template>

@@ -5,8 +5,9 @@ const VISIBLE_MS = 3200;
 const FADE_MS = 320;
 
 /**
- * Bottom-centre toast stack. Call show(message) on the instance; at most three stay visible and
- * each fades out after 3.2 seconds, as in the demo.
+ * Bottom-centre toast stack. Call show(message, tone) on the instance; at most three stay visible.
+ * Confirmations fade out after 3.2 seconds. Errors (tone 'bad') stay until the user clicks anywhere on the page,
+ * so a message is never missed.
  */
 export default class SabToast extends LightningElement {
     toasts = [];
@@ -20,10 +21,42 @@ export default class SabToast extends LightningElement {
         }
         const id = ++this.sequence;
         const next = this.toasts.slice(-(MAX_VISIBLE - 1));
-        next.push({ id, message, icon: tone === 'bad' ? 'alert' : 'check', className: `toast t-${tone || 'good'}` });
+        const sticky = tone === 'bad';
+        next.push({ id, message, sticky, icon: sticky ? 'alert' : 'check', className: `toast t-${tone || 'good'}${sticky ? ' sticky' : ''}`,
+            role: sticky ? 'alert' : 'status' });
         this.toasts = next;
+        if (sticky) {
+            this.listenForClick();
+        } else {
+            // eslint-disable-next-line @lwc/lwc/no-async-operation
+            this.timers.push(setTimeout(() => this.fade(id), VISIBLE_MS));
+        }
+    }
+
+    // Registered after the current click finishes, so the click that caused the error does not dismiss it.
+    listenForClick() {
+        if (this.clickListener) {
+            return;
+        }
+        this.clickListener = () => this.dismissSticky();
         // eslint-disable-next-line @lwc/lwc/no-async-operation
-        this.timers.push(setTimeout(() => this.fade(id), VISIBLE_MS));
+        this.timers.push(setTimeout(() => {
+            if (this.clickListener) {
+                document.addEventListener('click', this.clickListener, true);
+            }
+        }, 0));
+    }
+
+    dismissSticky() {
+        this.stopListening();
+        this.toasts.filter((t) => t.sticky).forEach((t) => this.fade(t.id));
+    }
+
+    stopListening() {
+        if (this.clickListener) {
+            document.removeEventListener('click', this.clickListener, true);
+            this.clickListener = undefined;
+        }
     }
 
     fade(id) {
@@ -37,6 +70,7 @@ export default class SabToast extends LightningElement {
     }
 
     disconnectedCallback() {
+        this.stopListening();
         this.timers.forEach((timer) => clearTimeout(timer));
         this.timers = [];
     }

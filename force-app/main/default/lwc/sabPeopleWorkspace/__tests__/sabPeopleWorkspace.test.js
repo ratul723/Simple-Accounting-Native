@@ -346,4 +346,10 @@ describe('c-sab-people-workspace', () => {
         await flush();
         expect(el2.shadowRoot.querySelector('.sab-prep-hint').textContent).toContain('No active employees yet');
     });
+
+    it('opens Employees & pay when another screen asks for it', async () => {
+        const el = mount({ key: 'FINANCE_MANAGER', label: 'Finance Manager' }, { recordId: 'staff' });
+        await flush();
+        expect(el.shadowRoot.querySelector('c-sab-employees')).not.toBeNull();
+    });
 });

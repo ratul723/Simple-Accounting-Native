@@ -1,0 +1,21 @@
+<template>
+    <div class="field picker" onfocusout={handleFocusOut}>
+        <span class="lbl">{label}</span>
+        <button class={buttonClass} type="button" aria-haspopup="listbox" aria-expanded={expanded} aria-controls={listId}
+            onclick={handleToggle} onkeydown={handleKeydown}>
+            <span class="value">{selectedLabel}</span>
+            <c-sab-icon name="chevron" size="14"></c-sab-icon>
+        </button>
+        <div class={panelClass} onmousedown={handlePanelMousedown}>
+            <div class="list" id={listId} role="listbox" aria-label={label}>
+                <template for:each={items} for:item="o">
+                    <div key={o.key} class={o.className} role="option" aria-selected={o.selected} data-index={o.index} onclick={handleOptionClick}>{o.label}</div>
+                </template>
+                <template lwc:if={noOptions}><div class="none">None yet</div></template>
+            </div>
+            <div class={addClass} role="option" aria-selected="false" onclick={handleAddClick}>
+                <c-sab-icon name="plus" size="15"></c-sab-icon><span>{addLabel}</span>
+            </div>
+        </div>
+    </div>
+</template>

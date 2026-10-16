@@ -204,6 +204,8 @@
             </template>
         </label>
         <p class="small muted hint-line">{columnsHint}</p>
+        <template lwc:if={hasTemplate}><button class="btn sm sab-template" type="button" onclick={handleTemplate}><c-sab-icon name="down" size="14"></c-sab-icon>Download CSV template</button>
+            <a class="sab-template-download" hidden></a></template>
         <p class="small muted">Files are staged first. Nothing changes in the ledger until you commit, and staging the same file again returns the same import.</p>
         <button slot="footer" class="btn ghost cancel" type="button" onclick={handleCloseModal}>Cancel</button>
         <button slot="footer" class="btn primary stage-import" type="button" disabled={stageDisabled} onclick={handleStage}>Stage and validate</button>

@@ -135,6 +135,12 @@ public with sharing class SABBudgetVarianceService {
             if (account == null) {
                 continue;
             }
+            // Budgets plan income and spending: balance sheet accounts (bank, payables, equity...) are left out
+            // unless a budget line was put on one.
+            Boolean profitAndLoss = account.Account_Type__c == 'Revenue' || account.Account_Type__c == 'Expense';
+            if (!profitAndLoss && row.budget == 0) {
+                continue;
+            }
             row.accountCode = account.Account_Code__c;
             row.accountName = account.Name;
             row.accountType = account.Account_Type__c;

@@ -29,7 +29,7 @@
     color: var(--text);
     border-radius: var(--r-panel);
     box-shadow: var(--shadow-pop);
-    width: min(680px, 100%);
+    width: min(760px, 100%);
     max-height: 88vh;
     display: flex;
     flex-direction: column;
@@ -96,4 +96,8 @@
 
 .icon-btn:hover {
     background: var(--surface-2);
+}
+/* Dialogs with line tables get room for every column. */
+.modal.wide .modal-card {
+    width: min(1100px, 96vw);
 }
