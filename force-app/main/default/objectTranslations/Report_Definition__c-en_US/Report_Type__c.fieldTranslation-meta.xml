@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Report Type --></label>
+    <name>Report_Type__c</name>
+    <picklistValues>
+        <masterLabel>Balance Sheet</masterLabel>
+        <translation><!-- Balance Sheet --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Cash Flow</masterLabel>
+        <translation><!-- Cash Flow --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Custom Statement</masterLabel>
+        <translation><!-- Custom Statement --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>P&amp;L</masterLabel>
+        <translation><!-- P&amp;L --></translation>
+    </picklistValues>
+</CustomFieldTranslation>

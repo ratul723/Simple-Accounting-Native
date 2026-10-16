@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Realized FX State --></label>
+    <name>Realized_FX_State__c</name>
+    <picklistValues>
+        <masterLabel>Calculated</masterLabel>
+        <translation><!-- Calculated --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>None</masterLabel>
+        <translation><!-- None --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Posted</masterLabel>
+        <translation><!-- Posted --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Reversed</masterLabel>
+        <translation><!-- Reversed --></translation>
+    </picklistValues>
+</CustomFieldTranslation>

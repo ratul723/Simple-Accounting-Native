@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Status --></label>
+    <name>Status__c</name>
+    <picklistValues>
+        <masterLabel>Committed</masterLabel>
+        <translation><!-- Committed --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Failed</masterLabel>
+        <translation><!-- Failed --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Parsed</masterLabel>
+        <translation><!-- Parsed --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Part Failed</masterLabel>
+        <translation><!-- Part Failed --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Ready</masterLabel>
+        <translation><!-- Ready --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Uploaded</masterLabel>
+        <translation><!-- Uploaded --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Validated</masterLabel>
+        <translation><!-- Validated --></translation>
+    </picklistValues>
+</CustomFieldTranslation>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Rounding Policy --></label>
+    <name>Rounding_Policy__c</name>
+    <picklistValues>
+        <masterLabel>Largest Remainder</masterLabel>
+        <translation><!-- Largest Remainder --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Last Target</masterLabel>
+        <translation><!-- Last Target --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Rounding Account</masterLabel>
+        <translation><!-- Rounding Account --></translation>
+    </picklistValues>
+</CustomFieldTranslation>

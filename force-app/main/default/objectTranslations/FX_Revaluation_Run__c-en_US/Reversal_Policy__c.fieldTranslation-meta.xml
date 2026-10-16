@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Reversal Policy --></label>
+    <name>Reversal_Policy__c</name>
+    <picklistValues>
+        <masterLabel>First Day of Next Period</masterLabel>
+        <translation><!-- First Day of Next Period --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Next Open Period</masterLabel>
+        <translation><!-- Next Open Period --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>No Automatic Reversal</masterLabel>
+        <translation><!-- No Automatic Reversal --></translation>
+    </picklistValues>
+</CustomFieldTranslation>

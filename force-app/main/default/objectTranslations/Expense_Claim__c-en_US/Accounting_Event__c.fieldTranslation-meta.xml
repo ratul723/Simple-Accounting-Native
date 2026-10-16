@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Accounting Event --></label>
+    <name>Accounting_Event__c</name>
+    <relationshipLabel><!-- Expense Claim Accounting Event --></relationshipLabel>
+</CustomFieldTranslation>

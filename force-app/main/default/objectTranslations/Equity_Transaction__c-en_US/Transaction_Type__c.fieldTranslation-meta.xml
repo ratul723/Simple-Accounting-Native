@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Transaction Type --></label>
+    <name>Transaction_Type__c</name>
+    <picklistValues>
+        <masterLabel>Capital Contribution</masterLabel>
+        <translation><!-- Capital Contribution --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Issue</masterLabel>
+        <translation><!-- Issue --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Redemption</masterLabel>
+        <translation><!-- Redemption --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Transfer</masterLabel>
+        <translation><!-- Transfer --></translation>
+    </picklistValues>
+</CustomFieldTranslation>

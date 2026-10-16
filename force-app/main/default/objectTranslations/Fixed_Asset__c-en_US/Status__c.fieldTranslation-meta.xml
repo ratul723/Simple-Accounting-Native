@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Status --></label>
+    <name>Status__c</name>
+    <picklistValues>
+        <masterLabel>Disposed</masterLabel>
+        <translation><!-- Disposed --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Impaired</masterLabel>
+        <translation><!-- Impaired --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>In Service</masterLabel>
+        <translation><!-- In Service --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Planned</masterLabel>
+        <translation><!-- Planned --></translation>
+    </picklistValues>
+</CustomFieldTranslation>

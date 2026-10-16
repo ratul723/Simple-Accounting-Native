@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Depreciation Method --></label>
+    <name>Depreciation_Method__c</name>
+    <picklistValues>
+        <masterLabel>Other Supported</masterLabel>
+        <translation><!-- Other Supported --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Straight Line</masterLabel>
+        <translation><!-- Straight Line --></translation>
+    </picklistValues>
+</CustomFieldTranslation>

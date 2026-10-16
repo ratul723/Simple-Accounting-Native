@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObjectTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <caseValues>
+        <plural>false</plural>
+        <value>Cost Center</value>
+    </caseValues>
+    <caseValues>
+        <plural>true</plural>
+        <value>Cost Centers</value>
+    </caseValues>
+    <layouts>
+        <layout>Cost Center Layout</layout>
+        <sections>
+            <label><!-- Custom Links --></label>
+            <section>Custom Links</section>
+        </sections>
+    </layouts>
+    <startsWith>Consonant</startsWith>
+    <validationRules>
+        <errorMessage><!-- Active To must be on or after Active From. --></errorMessage>
+        <name>Active_Dates_Valid</name>
+    </validationRules>
+</CustomObjectTranslation>

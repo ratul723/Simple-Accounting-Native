@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Unrealized FX Gain Account --></label>
+    <name>Unrealized_FX_Gain_Account__c</name>
+    <relationshipLabel><!-- Companies Using Unrealized FX Gain Account --></relationshipLabel>
+</CustomFieldTranslation>

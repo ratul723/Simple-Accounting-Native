@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Rule Type --></label>
+    <name>Rule_Type__c</name>
+    <picklistValues>
+        <masterLabel>End of Month</masterLabel>
+        <translation><!-- End of Month --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Installment</masterLabel>
+        <translation><!-- Installment --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Net Days</masterLabel>
+        <translation><!-- Net Days --></translation>
+    </picklistValues>
+</CustomFieldTranslation>

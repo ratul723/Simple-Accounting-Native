@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Status --></label>
+    <name>Status__c</name>
+    <picklistValues>
+        <masterLabel>Due</masterLabel>
+        <translation><!-- Due --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Paid</masterLabel>
+        <translation><!-- Paid --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Planned</masterLabel>
+        <translation><!-- Planned --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Reversed</masterLabel>
+        <translation><!-- Reversed --></translation>
+    </picklistValues>
+</CustomFieldTranslation>

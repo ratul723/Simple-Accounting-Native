@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Configuration Status --></label>
+    <name>Configuration_Status__c</name>
+    <picklistValues>
+        <masterLabel>Blocked</masterLabel>
+        <translation><!-- Blocked --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>In Progress</masterLabel>
+        <translation><!-- In Progress --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Not Configured</masterLabel>
+        <translation><!-- Not Configured --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Valid</masterLabel>
+        <translation><!-- Valid --></translation>
+    </picklistValues>
+</CustomFieldTranslation>

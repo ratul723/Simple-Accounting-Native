@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Driver Type --></label>
+    <name>Driver_Type__c</name>
+    <picklistValues>
+        <masterLabel>Manual Driver</masterLabel>
+        <translation><!-- Manual Driver --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Percent</masterLabel>
+        <translation><!-- Percent --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Supported Metric</masterLabel>
+        <translation><!-- Supported Metric --></translation>
+    </picklistValues>
+</CustomFieldTranslation>

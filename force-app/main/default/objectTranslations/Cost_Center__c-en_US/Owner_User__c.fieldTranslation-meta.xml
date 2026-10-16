@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Owner User --></label>
+    <name>Owner_User__c</name>
+    <relationshipLabel><!-- Cost Center Owner User --></relationshipLabel>
+</CustomFieldTranslation>

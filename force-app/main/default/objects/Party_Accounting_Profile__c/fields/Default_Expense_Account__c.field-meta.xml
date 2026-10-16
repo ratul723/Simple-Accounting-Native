@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Default_Expense_Account__c</fullName>
-    <description>Expense account pre-filled on new bill lines for this supplier.</description>
-    <externalId>false</externalId>
-    <label>Default Expense Account</label>
     <deleteConstraint>Restrict</deleteConstraint>
+    <description>Expense account pre-filled on new bill lines for this supplier.</description>
+    <label>Default Expense Account</label>
     <referenceTo>GL_Account__c</referenceTo>
     <relationshipLabel>Contact Defaults (Default Expense Account)</relationshipLabel>
     <relationshipName>Party_Profiles_Default_Expense</relationshipName>
     <required>false</required>
+    <trackHistory>false</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Lookup</type>
 </CustomField>

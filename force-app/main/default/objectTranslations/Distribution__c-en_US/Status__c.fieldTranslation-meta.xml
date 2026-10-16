@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Status --></label>
+    <name>Status__c</name>
+    <picklistValues>
+        <masterLabel>Approved</masterLabel>
+        <translation><!-- Approved --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Cancelled</masterLabel>
+        <translation><!-- Cancelled --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Draft</masterLabel>
+        <translation><!-- Draft --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Part Settled</masterLabel>
+        <translation><!-- Part Settled --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Posted Payable</masterLabel>
+        <translation><!-- Posted Payable --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Settled</masterLabel>
+        <translation><!-- Settled --></translation>
+    </picklistValues>
+</CustomFieldTranslation>

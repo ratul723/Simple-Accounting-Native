@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Journal Entry Line --></label>
+    <name>Journal_Entry_Line__c</name>
+    <relationshipLabel><!-- Reconciliation Match Journal Entry Line --></relationshipLabel>
+</CustomFieldTranslation>

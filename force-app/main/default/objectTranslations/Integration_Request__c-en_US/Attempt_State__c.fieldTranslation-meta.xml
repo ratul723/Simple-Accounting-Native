@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Attempt State --></label>
+    <name>Attempt_State__c</name>
+    <picklistValues>
+        <masterLabel>Cancelled</masterLabel>
+        <translation><!-- Cancelled --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Failed</masterLabel>
+        <translation><!-- Failed --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>In Flight</masterLabel>
+        <translation><!-- In Flight --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Pending</masterLabel>
+        <translation><!-- Pending --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Retry</masterLabel>
+        <translation><!-- Retry --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Succeeded</masterLabel>
+        <translation><!-- Succeeded --></translation>
+    </picklistValues>
+</CustomFieldTranslation>

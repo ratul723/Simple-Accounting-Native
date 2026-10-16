@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Import Type --></label>
+    <name>Import_Type__c</name>
+    <picklistValues>
+        <masterLabel>Bank Statement</masterLabel>
+        <translation><!-- Bank Statement --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Budgets</masterLabel>
+        <translation><!-- Budgets --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Chart of Accounts</masterLabel>
+        <translation><!-- Chart of Accounts --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Customers</masterLabel>
+        <translation><!-- Customers --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Employees</masterLabel>
+        <translation><!-- Employees --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Fixed Assets</masterLabel>
+        <translation><!-- Fixed Assets --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Invoices</masterLabel>
+        <translation><!-- Invoices --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Journal Entries</masterLabel>
+        <translation><!-- Journal Entries --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Opening Balances</masterLabel>
+        <translation><!-- Opening Balances --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Other</masterLabel>
+        <translation><!-- Other --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Payments</masterLabel>
+        <translation><!-- Payments --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Supplier Bills</masterLabel>
+        <translation><!-- Supplier Bills --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Suppliers</masterLabel>
+        <translation><!-- Suppliers --></translation>
+    </picklistValues>
+</CustomFieldTranslation>

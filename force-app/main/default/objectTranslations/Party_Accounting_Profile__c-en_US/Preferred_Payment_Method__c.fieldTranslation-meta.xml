@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Preferred Payment Method --></label>
+    <name>Preferred_Payment_Method__c</name>
+    <picklistValues>
+        <masterLabel>Bank Transfer</masterLabel>
+        <translation><!-- Bank Transfer --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Card</masterLabel>
+        <translation><!-- Card --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Cash</masterLabel>
+        <translation><!-- Cash --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Check</masterLabel>
+        <translation><!-- Check --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Direct Debit</masterLabel>
+        <translation><!-- Direct Debit --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Other</masterLabel>
+        <translation><!-- Other --></translation>
+    </picklistValues>
+</CustomFieldTranslation>

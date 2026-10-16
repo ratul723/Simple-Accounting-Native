@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObjectTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <caseValues>
+        <plural>false</plural>
+        <value>Company User Access</value>
+    </caseValues>
+    <caseValues>
+        <plural>true</plural>
+        <value>Company User Access</value>
+    </caseValues>
+    <layouts>
+        <layout>Company User Access Layout</layout>
+        <sections>
+            <label><!-- Custom Links --></label>
+            <section>Custom Links</section>
+        </sections>
+    </layouts>
+    <startsWith>Consonant</startsWith>
+    <validationRules>
+        <errorMessage><!-- Approval Limit cannot be negative. --></errorMessage>
+        <name>Approval_Limit_Nonnegative</name>
+    </validationRules>
+    <validationRules>
+        <errorMessage><!-- Effective To must be on or after Effective From. --></errorMessage>
+        <name>Effective_Dates_Valid</name>
+    </validationRules>
+    <validationRules>
+        <errorMessage><!-- User is required for Company User Access. --></errorMessage>
+        <name>User_Is_Required</name>
+    </validationRules>
+</CustomObjectTranslation>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Transaction Type --></label>
+    <name>Transaction_Type__c</name>
+    <picklistValues>
+        <masterLabel>Acquisition</masterLabel>
+        <translation><!-- Acquisition --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Disposal</masterLabel>
+        <translation><!-- Disposal --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Fee</masterLabel>
+        <translation><!-- Fee --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Income</masterLabel>
+        <translation><!-- Income --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Valuation</masterLabel>
+        <translation><!-- Valuation --></translation>
+    </picklistValues>
+</CustomFieldTranslation>

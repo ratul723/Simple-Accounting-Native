@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Validation Status --></label>
+    <name>Validation_Status__c</name>
+    <picklistValues>
+        <masterLabel>Committed</masterLabel>
+        <translation><!-- Committed --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Error</masterLabel>
+        <translation><!-- Error --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Pending</masterLabel>
+        <translation><!-- Pending --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Valid</masterLabel>
+        <translation><!-- Valid --></translation>
+    </picklistValues>
+</CustomFieldTranslation>

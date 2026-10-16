@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Exchange Rate --></label>
+    <name>Exchange_Rate__c</name>
+    <relationshipLabel><!-- FX Revaluation Lines - Exchange Rate --></relationshipLabel>
+</CustomFieldTranslation>

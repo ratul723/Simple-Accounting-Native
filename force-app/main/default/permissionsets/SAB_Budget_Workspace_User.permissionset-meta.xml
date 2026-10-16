@@ -11,22 +11,17 @@
     <description>G13B: open the Budget Workspace read-only. Use with SAB Budget User (which also grants budget versus actual); actions need the G13 _Action sets.</description>
     <fieldPermissions>
         <editable>false</editable>
-        <field>Journal_Entry_Line__c.Project__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>false</editable>
         <field>Budget_Line__c.Cost_Center__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
         <editable>false</editable>
-        <field>Budget_Line__c.Project__c</field>
+        <field>Budget_Line__c.Department__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
         <editable>false</editable>
-        <field>Budget_Line__c.Department__c</field>
+        <field>Budget_Line__c.Project__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -47,6 +42,11 @@
     <fieldPermissions>
         <editable>false</editable>
         <field>GL_Account__c.Is_Active__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Journal_Entry_Line__c.Project__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <hasActivationRequired>false</hasActivationRequired>

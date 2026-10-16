@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Document Type --></label>
+    <name>Document_Type__c</name>
+    <picklistValues>
+        <masterLabel>Credit Note</masterLabel>
+        <translation><!-- Credit Note --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Expense Claim</masterLabel>
+        <translation><!-- Expense Claim --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Invoice</masterLabel>
+        <translation><!-- Invoice --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Other</masterLabel>
+        <translation><!-- Other --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Payment Disbursement</masterLabel>
+        <translation><!-- Payment Disbursement --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Payment Receipt</masterLabel>
+        <translation><!-- Payment Receipt --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Purchase Order</masterLabel>
+        <translation><!-- Purchase Order --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Supplier Bill</masterLabel>
+        <translation><!-- Supplier Bill --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Supplier Credit</masterLabel>
+        <translation><!-- Supplier Credit --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Tax Return</masterLabel>
+        <translation><!-- Tax Return --></translation>
+    </picklistValues>
+</CustomFieldTranslation>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Category --></label>
+    <name>Category__c</name>
+    <picklistValues>
+        <masterLabel>Basic Salary</masterLabel>
+        <translation><!-- Basic Salary --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Deduction</masterLabel>
+        <translation><!-- Deduction --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Employer Contribution</masterLabel>
+        <translation><!-- Employer Contribution --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Food Allowance</masterLabel>
+        <translation><!-- Food Allowance --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Incentive</masterLabel>
+        <translation><!-- Incentive --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Other</masterLabel>
+        <translation><!-- Other --></translation>
+    </picklistValues>
+</CustomFieldTranslation>

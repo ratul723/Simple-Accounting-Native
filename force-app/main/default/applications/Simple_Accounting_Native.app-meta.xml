@@ -15,17 +15,7 @@
     <isOmniPinnedViewEnabled>false</isOmniPinnedViewEnabled>
     <label>Simple Accounting (Native)</label>
     <navType>Standard</navType>
-    <tabs>Simple_Accounting_Workspace</tabs>
     <tabs>Simple_Accounting_Workspace1</tabs>
-    <tabs>Allocation_Workspace</tabs>
-    <tabs>Taxation_Workspace</tabs>
-    <tabs>Account_Receivable_Workspace</tabs>
-    <tabs>Fixed_Asset_Workspace</tabs>
-    <tabs>Bank_Reconciliation</tabs>
-    <tabs>HR_Workspace</tabs>
-    <tabs>Simple_Accounting_Reports</tabs>
-    <tabs>Finance_User_Workspace</tabs>
-    <tabs>Account_Payable_Workspace</tabs>
     <uiType>Lightning</uiType>
     <utilityBar>Simple_Accounting_Native_UtilityBar</utilityBar>
 </CustomApplication>

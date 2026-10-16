@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Schedule Method --></label>
+    <name>Schedule_Method__c</name>
+    <picklistValues>
+        <masterLabel>Annuity</masterLabel>
+        <translation><!-- Annuity --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Equal Principal</masterLabel>
+        <translation><!-- Equal Principal --></translation>
+    </picklistValues>
+</CustomFieldTranslation>

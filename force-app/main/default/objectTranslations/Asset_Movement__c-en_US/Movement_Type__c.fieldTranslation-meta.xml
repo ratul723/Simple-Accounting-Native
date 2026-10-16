@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Movement Type --></label>
+    <name>Movement_Type__c</name>
+    <picklistValues>
+        <masterLabel>Acquisition</masterLabel>
+        <translation><!-- Acquisition --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Depreciation</masterLabel>
+        <translation><!-- Depreciation --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Disposal</masterLabel>
+        <translation><!-- Disposal --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Impairment</masterLabel>
+        <translation><!-- Impairment --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Transfer</masterLabel>
+        <translation><!-- Transfer --></translation>
+    </picklistValues>
+</CustomFieldTranslation>

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObjectTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <caseValues>
+        <plural>false</plural>
+        <value>Party Accounting Profile</value>
+    </caseValues>
+    <caseValues>
+        <plural>true</plural>
+        <value>Party Accounting Profiles</value>
+    </caseValues>
+    <layouts>
+        <layout>Party Accounting Profile Layout</layout>
+        <sections>
+            <label><!-- Custom Links --></label>
+            <section>Custom Links</section>
+        </sections>
+    </layouts>
+    <startsWith>Consonant</startsWith>
+    <validationRules>
+        <errorMessage><!-- AP Control Account must be an active AP control-account configuration. --></errorMessage>
+        <name>AP_Account_Must_Be_AP_Control</name>
+    </validationRules>
+    <validationRules>
+        <errorMessage><!-- AP Control Account must belong to the same Accounting Company. --></errorMessage>
+        <name>AP_Account_Same_Company</name>
+    </validationRules>
+    <validationRules>
+        <errorMessage><!-- AR Control Account must be an active AR control-account configuration. --></errorMessage>
+        <name>AR_Account_Must_Be_AR_Control</name>
+    </validationRules>
+    <validationRules>
+        <errorMessage><!-- AR Control Account must belong to the same Accounting Company. --></errorMessage>
+        <name>AR_Account_Same_Company</name>
+    </validationRules>
+    <validationRules>
+        <errorMessage><!-- Credit Limit cannot be negative. --></errorMessage>
+        <name>Credit_Limit_Nonnegative</name>
+    </validationRules>
+    <validationRules>
+        <errorMessage><!-- The party must be marked as Customer, Supplier, or both. --></errorMessage>
+        <name>Customer_Or_Supplier_Required</name>
+    </validationRules>
+    <validationRules>
+        <errorMessage><!-- AR Control Account is required when the party is a Customer. --></errorMessage>
+        <name>Customer_Requires_AR_Account</name>
+    </validationRules>
+    <validationRules>
+        <errorMessage><!-- Payment Term must be global or belong to the same Accounting Company. --></errorMessage>
+        <name>Payment_Term_Same_Company</name>
+    </validationRules>
+    <validationRules>
+        <errorMessage><!-- AP Control Account is required when the party is a Supplier. --></errorMessage>
+        <name>Supplier_Requires_AP_Account</name>
+    </validationRules>
+</CustomObjectTranslation>

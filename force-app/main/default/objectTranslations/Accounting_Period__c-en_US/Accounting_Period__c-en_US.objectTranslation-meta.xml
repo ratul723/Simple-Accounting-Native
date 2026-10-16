@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObjectTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <caseValues>
+        <plural>false</plural>
+        <value>Accounting Period</value>
+    </caseValues>
+    <caseValues>
+        <plural>true</plural>
+        <value>Accounting Periods</value>
+    </caseValues>
+    <layouts>
+        <layout>Accounting Period Layout</layout>
+        <sections>
+            <label><!-- Custom Links --></label>
+            <section>Custom Links</section>
+        </sections>
+    </layouts>
+    <startsWith>Consonant</startsWith>
+    <validationRules>
+        <errorMessage><!-- A closed accounting period must have Closed At and Closed By populated. --></errorMessage>
+        <name>Closed_Period_Requires_Audit</name>
+    </validationRules>
+    <validationRules>
+        <errorMessage><!-- Fiscal Quarter must be between 1 and 4. --></errorMessage>
+        <name>Fiscal_Quarter_Valid</name>
+    </validationRules>
+    <validationRules>
+        <errorMessage><!-- Period Number must be between 1 and 13. --></errorMessage>
+        <name>Period_Number_Valid</name>
+    </validationRules>
+    <validationRules>
+        <errorMessage><!-- Start Date must be on or before End Date. --></errorMessage>
+        <name>Start_Date_Before_End_Date</name>
+    </validationRules>
+</CustomObjectTranslation>

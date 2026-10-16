@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Entry Type --></label>
+    <name>Entry_Type__c</name>
+    <picklistValues>
+        <masterLabel>Allocation</masterLabel>
+        <translation><!-- Allocation --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Consolidation Adjustment</masterLabel>
+        <translation><!-- Consolidation Adjustment --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>FX</masterLabel>
+        <translation><!-- FX --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Manual</masterLabel>
+        <translation><!-- Manual --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Opening</masterLabel>
+        <translation><!-- Opening --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Reversal</masterLabel>
+        <translation><!-- Reversal --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Subledger</masterLabel>
+        <translation><!-- Subledger --></translation>
+    </picklistValues>
+</CustomFieldTranslation>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Direction --></label>
+    <name>Direction__c</name>
+    <picklistValues>
+        <masterLabel>Disbursement</masterLabel>
+        <translation><!-- Disbursement --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Receipt</masterLabel>
+        <translation><!-- Receipt --></translation>
+    </picklistValues>
+</CustomFieldTranslation>

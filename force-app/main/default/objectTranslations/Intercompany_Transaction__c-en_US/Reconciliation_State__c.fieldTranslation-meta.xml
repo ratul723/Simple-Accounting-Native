@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Reconciliation State --></label>
+    <name>Reconciliation_State__c</name>
+    <picklistValues>
+        <masterLabel>Corrected</masterLabel>
+        <translation><!-- Corrected --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Difference</masterLabel>
+        <translation><!-- Difference --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Matched</masterLabel>
+        <translation><!-- Matched --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Open</masterLabel>
+        <translation><!-- Open --></translation>
+    </picklistValues>
+</CustomFieldTranslation>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Bank Reconciliation --></label>
+    <name>Bank_Reconciliation__c</name>
+    <relationshipLabel><!-- Reconciliation Match Bank Reconciliation --></relationshipLabel>
+</CustomFieldTranslation>

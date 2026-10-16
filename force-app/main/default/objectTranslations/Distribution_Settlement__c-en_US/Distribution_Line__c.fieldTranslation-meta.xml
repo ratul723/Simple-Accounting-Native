@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Distribution Line --></label>
+    <name>Distribution_Line__c</name>
+    <relationshipLabel><!-- Distribution Settlement Distribution Lin --></relationshipLabel>
+</CustomFieldTranslation>
